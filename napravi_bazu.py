@@ -31,8 +31,7 @@ CREATE TABLE artikal (
     prodajna_cena REAL NOT NULL DEFAULT 0.00 CHECK (prodajna_cena >= 0),
     nabavna_cena_ponderisana REAL NOT NULL DEFAULT 0.0000 CHECK (nabavna_cena_ponderisana >= 0),
     jedinica_mere TEXT NOT NULL,
-    aktivan INTEGER NOT NULL DEFAULT 0 CHECK (aktivan IN (0,1)),
-    CONSTRAINT uq_artikal_bar_kod UNIQUE (bar_kod)
+    aktivan INTEGER NOT NULL DEFAULT 0 CHECK (aktivan IN (0,1))
 );
 
 CREATE TABLE dobavljac_artikal (
