@@ -149,15 +149,45 @@ async function napraviListuArtikala(missingData, cnt) {
 
 }
 
+function dodaj_artikal(red) {
+
+    naziv = red.querySelector('[name="naziv"]').value;
+    jedinica_mere = red.querySelector('[name="jedinica_mere"]').value;
+    bar_kod = red.querySelector('[name="bar_kod"]').value;
+    kategorija = red.querySelector('[name="kategorija"]').value;
+    prodajna_cena = red.querySelector('[name="prodajna_cena"]').value;
+    nabavna_cena_ponderisana = red.querySelector('[data-polje="nabavna_cena"]').value;
+    dobavljac_id = document.getElementById('dobavljac').value;
+    pdv = red.querySelector('[data-polje="pdv"]').value;
+    sifra_dobavljac = red.querySelector('[data-polje="sifra_dobavljac"]').value;
+
+    const sviPodaci = {
+        naziv,
+        kategorija,
+        bar_kod,
+        stanje: 0,
+        prodajna_cena,
+        nabavna_cena_ponderisana,
+        jedinica_mere,
+        aktivan: 1,
+        dobavljac_id,
+        pdv,
+        sifra_dobavljac
+    };
+
+    return sviPodaci;   
+}
+
 novi_artikal_lista.addEventListener("click", async (event) => {
             
     event.preventDefault();
     const dodaj = event.target.closest(".dodaj");
 
     if (dodaj) {
-        sviArtikli.push(dodaj_artikal());
-        console.log(sviArtikli);
         const red = dodaj.closest(".novi-artikal");
+        sviArtikli.push(dodaj_artikal(red));
+        console.log(sviArtikli);
+        
         if (red) {  
             red.remove();
             cnt -= 1;
@@ -193,36 +223,6 @@ document.getElementById('novi-artikli-odustani').addEventListener("click", (even
     dijalog.close();
     zavrsiDijalog(cnt);
 });
-
-
-function dodaj_artikal() {
-
-    naziv = document.querySelector('[name="naziv"]').value;
-    jedinica_mere = document.querySelector('[name="jedinica_mere"]').value;
-    bar_kod = document.querySelector('[name="bar_kod"]').value;
-    kategorija = document.querySelector('[name="kategorija"]').value;
-    prodajna_cena = document.querySelector('[name="prodajna_cena"]').value;
-    nabavna_cena_ponderisana = document.querySelector('[data-polje="nabavna_cena"]').value;
-    dobavljac_id = document.getElementById('dobavljac').value;
-    pdv = document.querySelector('[name="pdv"]').value;
-    sifra_dobavljac = document.querySelector('[data-polje="sifra_dobavljac"]').value;
-
-    const sviPodaci = {
-        naziv,
-        kategorija,
-        bar_kod,
-        stanje: 0,
-        prodajna_cena,
-        nabavna_cena_ponderisana,
-        jedinica_mere,
-        aktivan: 1,
-        dobavljac_id,
-        pdv,
-        sifra_dobavljac
-    };
-
-    return sviPodaci;   
-}
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
