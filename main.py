@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -199,7 +201,11 @@ def ne_postoji(stavke):
                 stavke_fale.append(stavka)
         return stavke_fale
     except Exception as e:
-        print(e)
+        print(type(e).__name__, e)          # tip + poruka
+        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
+        raise  
+    except sqlite3.Error as e:
+        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
     finally:
         konekcija.close()
 
@@ -211,7 +217,11 @@ def unesi_artikle(artikli: list[Artikal]):
             sacuvaj_dobavljac_artikal(konekcija, sifra, a.sifra_dobavljac, a.dobavljac_id, a.naziv, a.nabavna_cena_ponderisana, a.pdv)
         konekcija.commit()
     except Exception as e:
-        print(e)
+        print(type(e).__name__, e)          # tip + poruka
+        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
+        raise
+    except sqlite3.Error as e:
+        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
     finally:
         konekcija.close()
     
