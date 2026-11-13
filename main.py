@@ -103,10 +103,10 @@ async def proveri_stavke(stavke: Stavka):
     stavke_fale = ne_postoji(stavke.stavke)
     return stavke_fale
 
-@app.post('/artikal')
+@app.post('/novi-artikli')
 async def kreiraj_artikal(artikli: list[Artikal]):
     print(artikli)
-    #unesi_artikal()
+    unesi_artikle(artikli)
 
 # EXCEPTION-i
 
@@ -202,11 +202,12 @@ def ne_postoji(stavke):
     finally:
         konekcija.close()
 
-def unesi_artikal(a: Artikal):
+def unesi_artikle(artikli: list[Artikal]):
     try:
         konekcija = konektuj_se()
-        sifra = sacuvaj_artikal(konekcija, a)
-        sacuvaj_dobavljac_artikal(konekcija, sifra, a.sifra_dobavljac, a.dobavljac_id, a.naziv, a.nabavna_cena_ponderisana, a.pdv)
+        for a in artikli:
+            sifra = sacuvaj_artikal(konekcija, a)
+            sacuvaj_dobavljac_artikal(konekcija, sifra, a.sifra_dobavljac, a.dobavljac_id, a.naziv, a.nabavna_cena_ponderisana, a.pdv)
         konekcija.commit()
     except Exception as e:
         print(e)

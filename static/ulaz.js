@@ -53,9 +53,16 @@ const form = document.getElementById("forma-ulaz");
 const novi_artikal_lista = document.getElementById("novi-artikli-lista");
 const novi_artikal_form = document.querySelectorAll("#novi-artikal");
 
+const dijalog = document.getElementById("novi-artikli-dijalog");
+let cnt = 0;
+let sviArtikli = [];
+let zavrsiDijalog = null;
+
 async function dodaj_ulaz() {
 
   listaStavki = document.querySelectorAll('.stavka');
+  novi_artikal_lista.replaceChildren();
+  sviArtikli = [];
 
   const stavke = [];
   listaStavki.forEach((red) => {
@@ -85,12 +92,17 @@ async function dodaj_ulaz() {
         body: JSON.stringify({ stavke })
     });
     const missingData = await missing.json();
-
+    
     if (missingData.length > 0) {
         cnt = missingData.length;
-        await napraviListuArtikala(missingData, cnt);
+        const podatak = await napraviListuArtikala(missingData, cnt);
+        if (podatak !== 0) {
+            form.reset();
+            document.getElementById("poruka").textContent = "Ponistili ste ceo unos!";
+            return;
+        }
     }
-    document.getElementById("poruka").textContent = "Uspesno uneto ranije!";
+
     const response = await fetch("/ulazi", {
         method: "POST",
         headers: {
@@ -115,7 +127,7 @@ async function dodaj_ulaz() {
 
 async function napraviListuArtikala(missingData, cnt) {
     return new Promise((resolve) => {
-
+        zavrsiDijalog = resolve;
         for (let i = 0; i < missingData.length; i++) {
             sablon = document.getElementById("novi-artikal-sablon");
             klon = sablon.content.cloneNode(true);
@@ -131,62 +143,56 @@ async function napraviListuArtikala(missingData, cnt) {
 
             document.getElementById("novi-artikli-lista").appendChild(klon);
         }
-
-        dijalog = document.getElementById('novi-artikli-dijalog');
-        dijalog.showModal()
-
-        sviArtikli = [];
-
-        novi_artikal_lista.addEventListener("click", async (event) => {
-            
-            event.preventDefault();
-            const dodaj = event.target.closest(".dodaj");
-
-            if (dodaj) {
-                sviArtikli.push(dodaj_artikal());
-                console.log(sviArtikli);
-                const red = dodaj.closest(".novi-artikal");
-                if (red) {  
-                    red.remove();
-                    cnt -= 1;
-                }
-                if (cnt == 0) {
-                    try {
-                        const response = await fetch('/artikal', {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify(sviArtikli)
-                        });
-
-                        const result = await response.json();
-
-                    } catch (error) {
-                        if (error instanceof Error) {
-                            document.getElementById("poruka").textContent = error.message;
-                        }
-                    dijalog.close();
-                    }
-                }
-                
-            }
-
-        });
-
-        document.getElementById('novi-artikli-odustani').addEventListener("click", (event) => {
-            event.preventDefault();
-            dijalog.close();
-        });
+        dijalog.showModal();
         
-        document.getElementById('novi-artikli-odustani').addEventListener("click", () => {
-            dijalog.close();
-        }, { once: true });
     });
-    
+
 }
 
+novi_artikal_lista.addEventListener("click", async (event) => {
+            
+    event.preventDefault();
+    const dodaj = event.target.closest(".dodaj");
 
+    if (dodaj) {
+        sviArtikli.push(dodaj_artikal());
+        console.log(sviArtikli);
+        const red = dodaj.closest(".novi-artikal");
+        if (red) {  
+            red.remove();
+            cnt -= 1;
+        }
+        if (cnt == 0) {
+            try {
+                const response = await fetch('/novi-artikli', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(sviArtikli)
+                });
+
+                const result = await response.json();
+
+            } catch (error) {
+                if (error instanceof Error) {
+                    document.getElementById("poruka").textContent = error.message;
+                }
+            
+            }
+            dijalog.close();
+            zavrsiDijalog(cnt);
+        }
+        
+    }
+
+});
+
+document.getElementById('novi-artikli-odustani').addEventListener("click", (event) => {
+    event.preventDefault();
+    dijalog.close();
+    zavrsiDijalog(cnt);
+});
 
 
 function dodaj_artikal() {
