@@ -100,6 +100,7 @@ async def kreiraj_ulaz(ulaz: Ulaz):
 
 @app.post("/provera")
 async def proveri_stavke(stavke: Stavka):
+    print(stavke)
     stavke_fale = ne_postoji(stavke.stavke)
     return stavke_fale
 
@@ -175,7 +176,7 @@ def unesi_ulaz(u: Ulaz):
         konekcija = konektuj_se()
         ulaz_id = sacuvaj_ulaz(konekcija, u.dobavljac_id, u.racun_broj, u.racun_poziv_na_broj, u.datum_vreme)
         for stavka in u.stavke:
-            sifra_artikal = proveri_postojanje(konekcija, stavka['sifra'])
+            sifra_artikal = proveri_postojanje(konekcija, stavka['sifra'], stavka['dobavljac_id'])
             sacuvaj_stavka_ulaza(konekcija, ulaz_id, u.dobavljac_id, stavka, sifra_artikal[0])
             azuriraj_ponderisanu_cenu(konekcija, sifra_artikal[0], stavka['kolicina'], stavka['nabavna_cena'])
         konekcija.commit()
@@ -193,7 +194,7 @@ def ne_postoji(stavke):
         konekcija = konektuj_se()
         stavke_fale = []
         for stavka in stavke:
-            provera = proveri_postojanje(konekcija, stavka['sifra'])
+            provera = proveri_postojanje(konekcija, stavka['sifra'], stavka['dobavljac_id'])
             if not provera:
                 stavke_fale.append(stavka)
         return stavke_fale

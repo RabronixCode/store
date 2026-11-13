@@ -5,10 +5,10 @@ def sacuvaj_ulaz(konekcija, dobavljac_id, racun_broj, racun_poziv_na_broj, datum
     veza.execute(upit, vrednosti)
     return veza.lastrowid
 
-def proveri_postojanje(konekcija, sifra_dobavljac):
+def proveri_postojanje(konekcija, sifra_dobavljac, dobavljac_id):
     veza = konekcija.cursor()
-    upit = "SELECT sifra_artikal FROM dobavljac_artikal WHERE sifra_dobavljac = ?"
-    vrednosti = (sifra_dobavljac,)
+    upit = "SELECT sifra_artikal FROM dobavljac_artikal WHERE sifra_dobavljac = ? and dobavljac_id = ?"
+    vrednosti = (sifra_dobavljac,dobavljac_id)
     veza.execute(upit, vrednosti)
     return veza.fetchone()
 

@@ -70,7 +70,8 @@ async function dodaj_ulaz() {
         sifra: Number(red.querySelector('[name="sifra"]').value),
         kolicina: Number(red.querySelector('[name="kolicina"]').value),
         nabavna_cena: Number(red.querySelector('[name="nabavna_cena"]').value),
-        pdv: Number(red.querySelector('[name="pdv"]').value)
+        pdv: Number(red.querySelector('[name="pdv"]').value),
+        dobavljac_id: document.getElementById('dobavljac').value
     };
     stavke.push(stavka);
   });
