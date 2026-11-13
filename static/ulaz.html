@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ulaz robe</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <nav>
+      <a href="/">Korisnici</a>
+      <a href="dobavljaci.html">Dobavljači</a>
+      <a href="ulaz.html" aria-current="page">Ulaz robe</a>
+    </nav>
+
+    <h1>Novi ulaz robe</h1>
+
+    <!-- required, min i step su samo udobnost za korisnika. Server uvek proverava ponovo. -->
+    <form id="forma-ulaz">
+      <label>Dobavljač
+        <!-- Opcije dodaje JavaScript iz spiska dobavljača sa servera -->
+        <select id="dobavljac" name="dobavljac_id" required>
+          <option value="">Izaberi dobavljača</option>
+        </select>
+      </label>
+
+      <label>Broj računa
+        <input id="racun_broj" name="racun_broj" type="text" required maxlength="100" autocomplete="off">
+      </label>
+
+      <label>Poziv na broj (nije obavezan)
+        <input id="racun_poziv_na_broj" name="racun_poziv_na_broj" type="text" maxlength="100" autocomplete="off">
+      </label>
+
+      <label>Datum računa (ako ostane prazno, upisuje se trenutni)
+        <input id="datum_vreme" name="datum_vreme" type="date">
+      </label>
+
+      <fieldset>
+        <legend>Stavke</legend>
+
+        <!-- Spisak stavki: početna stavka. Nove pravi JavaScript kopiranjem šablona ispod. -->
+        <div id="stavke">
+          <div class="stavka">
+            <label>Šifra artikla
+              <input name="sifra" type="number" min="1" step="1" inputmode="numeric" required>
+            </label>
+            <label>Količina
+              <input name="kolicina" type="number" min="0.001" step="0.001" inputmode="decimal" required>
+            </label>
+            <label>Nabavna cena (bez PDV)
+              <input name="nabavna_cena" type="number" min="0" step="0.01" inputmode="decimal" required>
+            </label>
+            <label>PDV (%)
+              <input name="pdv" type="number" min="0" step="0.01" inputmode="decimal" value="20" required>
+            </label>
+            <button type="button" class="opasno ukloni-stavku" aria-label="Ukloni stavku">Ukloni</button>
+          </div>
+        </div>
+
+        <button type="button" id="dodaj-stavku" class="sekundarno">Dodaj stavku</button>
+      </fieldset>
+
+      <button type="submit">Sačuvaj ulaz</button>
+    </form>
+
+    <p id="poruka" role="status"></p>
+  </main>
+
+  <!-- Šablon za novu stavku: JavaScript ga kopira (template.content.cloneNode(true)) -->
+  <template id="stavka-sablon">
+    <div class="stavka">
+      <label>Šifra artikla
+        <input name="sifra" type="number" min="1" step="1" inputmode="numeric" required>
+      </label>
+      <label>Količina
+        <input name="kolicina" type="number" min="0.001" step="0.001" inputmode="decimal" required>
+      </label>
+      <label>Nabavna cena (bez PDV)
+        <input name="nabavna_cena" type="number" min="0" step="0.01" inputmode="decimal" required>
+      </label>
+      <label>PDV (%)
+        <input name="pdv" type="number" min="0" step="0.01" inputmode="decimal" value="20" required>
+      </label>
+      <button type="button" class="opasno ukloni-stavku" aria-label="Ukloni stavku">Ukloni</button>
+    </div>
+  </template>
+
+  <!--
+    Iskačući prozor za artikle koji ne postoje u bazi.
+    JavaScript: dijalog.showModal() otvara, dijalog.close() zatvara.
+    Za svaku nepoznatu stavku JS kopira šablon ispod u #novi-artikli-lista.
+  -->
+  <dialog id="novi-artikli-dijalog" aria-labelledby="novi-artikli-naslov">
+    <header class="dijalog-zaglavlje">
+      <h2 id="novi-artikli-naslov">Artikli koji ne postoje</h2>
+      <p>
+        Ovi artikli sa fakture nisu pronađeni. Popuni podatke i klikni
+        „Dodaj artikal“ za svaki. Preostalo: <strong id="novi-artikli-preostalo">0</strong>
+      </p>
+    </header>
+
+    <div id="novi-artikli-lista"></div>
+
+    <footer class="dijalog-podnozje">
+      <button type="button" id="novi-artikli-odustani" class="opasno">Odustani od unosa ulaza</button>
+    </footer>
+  </dialog>
+
+  <!-- Šablon jedne forme za novi artikal. Tekstove u data-polje popunjava JavaScript. -->
+  <template id="novi-artikal-sablon">
+  <!-- Šta već znamo sa fakture (samo za prikaz, ne menja se) -->
+    
+    <form class="novi-artikal">
+      <dl class="sazetak">
+        <div><dt>Šifra dobavljača</dt><dd data-polje="sifra_dobavljac"></dd></div>
+        <div><dt>Količina</dt><dd data-polje="kolicina"></dd></div>
+        <div><dt>Nabavna cena</dt><dd data-polje="nabavna_cena"></dd></div>
+        <div><dt>PDV (%)</dt><dd data-polje="pdv"></dd></div>
+      </dl>
+
+      <!-- Šta moramo da dopunimo. required i maxlength su samo udobnost, server proverava ponovo. -->
+      <label>Naziv artikla
+        <input name="naziv" type="text" required maxlength="255" autocomplete="off">
+      </label>
+
+      <label>Jedinica mere
+        <input name="jedinica_mere" type="text" required maxlength="10" list="jedinice-mere" autocomplete="off">
+      </label>
+
+      <label>Bar kod (nije obavezan)
+        <input name="bar_kod" type="text" maxlength="50" inputmode="numeric" autocomplete="off">
+      </label>
+
+      <label>Kategorija (nije obavezna)
+        <input name="kategorija" type="text" maxlength="100" autocomplete="off" value="Nema">
+      </label>
+
+      <label>Prodajna cena (može i kasnije)
+        <input name="prodajna_cena" type="number" min="0" step="0.01" inputmode="decimal" value="0">
+      </label>
+
+      <button type="submit" class="dodaj">Dodaj artikal</button>
+    </form>
+  </template>
+
+  <!-- Predlozi za jedinicu mere (korisnik može da upiše i svoju) -->
+  <datalist id="jedinice-mere">
+    <option value="kom"></option>
+    <option value="kg"></option>
+    <option value="g"></option>
+    <option value="l"></option>
+    <option value="m"></option>
+    <option value="pak"></option>
+  </datalist>
+
+  <script src="ulaz.js"></script>
+</body>
+</html>

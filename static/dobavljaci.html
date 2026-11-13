@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dobavljači</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <nav>
+      <a href="/">Korisnici</a>
+      <a href="dobavljaci.html" aria-current="page">Dobavljači</a>
+      <a href="ulaz.html">Ulaz robe</a>
+    </nav>
+
+    <h1>Novi dobavljač</h1>
+
+    <!-- required i maxlength su samo udobnost za korisnika. Server uvek proverava ponovo. -->
+    <form id="forma-dobavljac">
+      <label>Naziv dobavljača
+        <input id="naziv" name="naziv" type="text" required maxlength="100" autocomplete="off">
+      </label>
+      <button type="submit">Sačuvaj</button>
+    </form>
+
+    <!-- Ovde će kod iz JavaScript fajla ispisivati uspeh ili grešku -->
+    <p id="poruka" role="status"></p>
+  </main>
+
+  <script src="dobavljaci.js"></script>
+</body>
+</html>
