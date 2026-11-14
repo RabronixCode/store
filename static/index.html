@@ -8,25 +8,13 @@
 </head>
 <body>
   <main>
-    <h1>Korisnici</h1>
+    <h1>POCETNA</h1>
 
     <!-- Veze ka drugim stranicama izgledaju kao dugmad (a, ne button: ovo vodi na drugu stranicu) -->
     <div class="dugmad">
       <a class="dugme" href="dobavljaci.html">Dobavljači</a>
       <a class="dugme" href="ulaz.html">Ulaz robe</a>
     </div>
-
-    <!-- required i maxlength su samo udobnost za korisnika. Server uvek proverava ponovo. -->
-    <form id="forma">
-      <label>Ime
-        <input id="ime" name="ime" type="text" required maxlength="50" autocomplete="off">
-      </label>
-      <label>Datum rođenja
-        <!-- value je unapred upisan datum radi lakšeg testiranja (format godina-mesec-dan) -->
-        <input id="datum" name="datum_rodjenja" type="date" value="2000-01-01" required>
-      </label>
-      <button type="submit">Sačuvaj</button>
-    </form>
 
     <!-- Ovde će kod iz app.js ispisivati uspeh ili grešku -->
     <p id="poruka" role="status"></p>

@@ -29,5 +29,3 @@ form.addEventListener("submit", (event) => {
   event.preventDefault();
   dodaj_dobavljaca();
 });
-
-vrati_dobavljace();

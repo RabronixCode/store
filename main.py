@@ -12,14 +12,10 @@ from Errors.NotAdultError import NotAdultError
 from Errors.DuplicateInputError import DuplicateInputError
 
 from db import konektuj_se
-from korisnici import sacuvaj_korisnika
 from dobavljaci import sacuvaj_dobavljaca
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
 from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu
 
-class Korisnik(BaseModel):
-    ime: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    datum_rodjenja: date
 
 class Dobavljac(BaseModel):
     naziv: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -63,22 +59,6 @@ app.add_middleware(
 
 
 # RUTE
-
-@app.get("/korisnici")
-async def lista_korisnika():
-    konekcija = konektuj_se()
-    konekcija.row_factory = sqlite3.Row
-    veza = konekcija.cursor()
-    korisnici = veza.execute("SELECT * FROM korisnici").fetchall()
-    return korisnici
-
-
-@app.post("/korisnici")
-async def kreiraj_korisnika(korisnik: Korisnik):
-    proveri_duplikat(korisnik)
-    if punoletan(korisnik.datum_rodjenja):
-        unesi_korisnika(korisnik)
-        return "Korisnik sacuvan!"
 
 @app.get("/dobavljaci")
 async def lista_dobavljaca():
@@ -130,11 +110,7 @@ def obradjivac_duplikata(request, e: DuplicateInputError):
 def proveri_duplikat(podatak: object):
     konekcija = konektuj_se()
     veza = konekcija.cursor()
-    if (type(podatak) == Korisnik):
-        upit = "SELECT * FROM korisnici WHERE ime=? AND datum_rodjenja=?"
-        vrednosti = (podatak.ime, podatak.datum_rodjenja)
-        rezultat = veza.execute(upit, vrednosti).fetchone()
-    elif (type(podatak) == Dobavljac):
+    if (type(podatak) == Dobavljac):
         upit = "SELECT * FROM dobavljac WHERE naziv=?"
         vrednosti = (podatak.naziv,)
         rezultat = veza.execute(upit, vrednosti).fetchone()
@@ -152,19 +128,6 @@ def punoletan(datum_rodjenja: date):
         raise NotAdultError()
     else:
         return True
-
-def unesi_korisnika(k: Korisnik):
-    try:
-        konekcija = konektuj_se() # iz DB.py
-        sacuvaj_korisnika(konekcija, k.ime, k.datum_rodjenja) # iz KORISNICI.py
-        konekcija.commit()
-    except sqlite3.IntegrityError as e:
-        err_code = e.sqlite_errorcode
-        if err_code == sqlite3.SQLITE_CONSTRAINT_UNIQUE:
-            konekcija.rollback()
-            raise DuplicateInputError()
-    finally:
-        konekcija.close()
 
 def unesi_dobavljaca(d: Dobavljac):
     try:
