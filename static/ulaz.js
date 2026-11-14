@@ -84,8 +84,15 @@ async function dodaj_ulaz() {
   data = { dobavljac_id, racun_broj, racun_poziv_na_broj, datum_vreme, stavke };
 
   try {
+    const params = new URLSearchParams({ dobavljac_id, racun_broj });
+    const provera_racuna = await fetch(`/provera-broj-racuna?${params}`);
 
-    const missing = await fetch("/provera", {
+    const racun = await provera_racuna.json();
+    if (racun) {
+        throw new Error("Racun/otpremnica sa tim brojem i dobavljacem vec postoji!");
+    }
+
+    const missing = await fetch("/provera-stavki", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -112,11 +119,10 @@ async function dodaj_ulaz() {
         body: JSON.stringify(data)
     });
 
-    document.getElementById("poruka").textContent = "Uspesno uneto!";
     const result = await response.json();
     if (response.status == 409) throw new Error("Racun/otpremnica sa tim brojem i dobavljacem vec postoji!");
-
-    document.getElementById("poruka").textContent = "Uspesno uneto!";
+    alert(result);
+    //document.getElementById("poruka").textContent = result;
     form.reset();
 
   } catch (error) {
@@ -187,7 +193,6 @@ novi_artikal_lista.addEventListener("click", async (event) => {
     if (dodaj) {
         const red = dodaj.closest(".novi-artikal");
         sviArtikli.push(dodaj_artikal(red));
-        console.log(sviArtikli);
         
         if (red) {  
             red.remove();
@@ -204,6 +209,7 @@ novi_artikal_lista.addEventListener("click", async (event) => {
                 });
 
                 const result = await response.json();
+                alert(result);
 
             } catch (error) {
                 if (error instanceof Error) {
@@ -213,6 +219,7 @@ novi_artikal_lista.addEventListener("click", async (event) => {
             }
             dijalog.close();
             zavrsiDijalog(cnt);
+            
         }
         
     }

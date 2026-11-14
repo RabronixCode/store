@@ -99,10 +99,10 @@ async def kreiraj_dobavljaca(dobavljac: Dobavljac):
 @app.post("/ulazi")
 async def kreiraj_ulaz(ulaz: Ulaz):
     unesi_ulaz(ulaz)
+    return "Ulaz uspesno unet!"
 
-@app.post("/provera")
+@app.post("/provera-stavki")
 async def proveri_stavke(stavke: Stavka):
-    print(stavke)
     stavke_fale = ne_postoji(stavke.stavke)
     return stavke_fale
 
@@ -110,6 +110,11 @@ async def proveri_stavke(stavke: Stavka):
 async def kreiraj_artikal(artikli: list[Artikal]):
     print(artikli)
     unesi_artikle(artikli)
+    return "Novi artikli uspesno uneti!"
+
+@app.get('/provera-broj-racuna')
+async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str):
+    return broj_racuna_postoji(dobavljac_id, racun_broj)
 
 # EXCEPTION-i
 
@@ -225,4 +230,22 @@ def unesi_artikle(artikli: list[Artikal]):
     finally:
         konekcija.close()
     
-       
+def broj_racuna_postoji(dobavljac_id, broj_racuna):
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+        veza = konekcija.cursor()
+        upit = "SELECT * FROM ulaz WHERE dobavljac_id = ? AND racun_broj = ?"
+        vrednosti = (dobavljac_id, broj_racuna)
+        rezultat = veza.execute(upit, vrednosti).fetchall()
+        print(rezultat, "REZULTAT")
+        if len(rezultat) > 0:
+            raise DuplicateInputError("Racun/otpremnica sa tim brojem vec postoji!")
+        else:
+            return False
+    except Exception as e:
+        print(type(e).__name__, e)          # tip + poruka
+        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
+        raise
+    finally:
+        konekcija.close()
