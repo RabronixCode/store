@@ -52,7 +52,7 @@ CREATE TABLE ulaz (
     dobavljac_id INTEGER NOT NULL,
     racun_broj TEXT NOT NULL,
     racun_poziv_na_broj TEXT,
-    datum_vreme TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    datum_vreme TEXT NOT NULL DEFAULT (date('now', 'localtime')),
     CONSTRAINT fk_ulaz_dobavljac FOREIGN KEY (dobavljac_id) REFERENCES dobavljac(dobavljac_id),
     CONSTRAINT uq_ulaz_racun UNIQUE (dobavljac_id, racun_broj)
 );

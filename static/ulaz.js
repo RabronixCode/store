@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+      
+    });
+document.addEventListener("DOMContentLoaded", () => {
     const dropdown = document.getElementById("dobavljac");
     
     fetch('/dobavljaci')
@@ -25,6 +28,17 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Error loading dropdown options:", error);
             dropdown.innerHTML = '<option value="" disabled>Error loading options</option>';
         });
+
+    const dateInput = document.getElementById("datum_vreme");
+
+      // 2. Get today's date in the user's local timezone
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+      const day = String(today.getDate()).padStart(2, "0");
+
+      // 3. Set the input value using the required YYYY-MM-DD format
+      dateInput.value = `${year}-${month}-${day}`;
 });
 
 document.getElementById("dodaj-stavku").addEventListener("click", (event) => {
@@ -79,7 +93,7 @@ async function dodaj_ulaz() {
   dobavljac_id = document.getElementById('dobavljac').value;
   racun_broj = document.getElementById('racun_broj').value;
   racun_poziv_na_broj = document.getElementById('racun_poziv_na_broj').value;
-  datum_vreme = document.getElementById('datum_vreme').value;
+  datum_vreme = document.getElementById('datum_vreme').value === "" ? null : document.getElementById('datum_vreme').value;
   
   data = { dobavljac_id, racun_broj, racun_poziv_na_broj, datum_vreme, stavke };
 
@@ -121,7 +135,7 @@ async function dodaj_ulaz() {
 
     const result = await response.json();
     if (response.status == 409) throw new Error("Racun/otpremnica sa tim brojem i dobavljacem vec postoji!");
-    alert(result);
+    alert(result, "IZ ULAZA");
     //document.getElementById("poruka").textContent = result;
     form.reset();
 
@@ -209,7 +223,7 @@ novi_artikal_lista.addEventListener("click", async (event) => {
                 });
 
                 const result = await response.json();
-                alert(result);
+                alert(result, "IZ ARTIKALA");
 
             } catch (error) {
                 if (error instanceof Error) {

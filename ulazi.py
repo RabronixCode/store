@@ -1,6 +1,6 @@
 def sacuvaj_ulaz(konekcija, dobavljac_id, racun_broj, racun_poziv_na_broj, datum_vreme):
     veza = konekcija.cursor()
-    upit = "INSERT INTO ulaz (dobavljac_id, racun_broj, racun_poziv_na_broj, datum_vreme) VALUES (?,?,?,?)"
+    upit = "INSERT INTO ulaz (dobavljac_id, racun_broj, racun_poziv_na_broj, datum_vreme) VALUES (?,?,?, COALESCE(?, date('now', 'localtime')))"
     vrednosti = (dobavljac_id, racun_broj, racun_poziv_na_broj, datum_vreme)
     veza.execute(upit, vrednosti)
     return veza.lastrowid

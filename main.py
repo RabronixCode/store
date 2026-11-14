@@ -28,7 +28,7 @@ class Ulaz(BaseModel):
     dobavljac_id: int
     racun_broj: str
     racun_poziv_na_broj: str
-    datum_vreme: date
+    datum_vreme: date | None = None
     stavke: list
 
 class Stavka(BaseModel):
