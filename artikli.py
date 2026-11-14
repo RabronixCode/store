@@ -1,14 +1,15 @@
 def sacuvaj_artikal(konekcija, a):
     veza = konekcija.cursor()
+    bar_kod = None if a.bar_kod == "" else a.bar_kod
     upit = "INSERT INTO artikal (naziv, kategorija, bar_kod, stanje, prodajna_cena, nabavna_cena_ponderisana, jedinica_mere, aktivan) VALUES (?,?,?,?,?,?,?,?)"
-    vrednosti = (a.naziv, a.kategorija, a.bar_kod, a.stanje, a.prodajna_cena, a.nabavna_cena_ponderisana, a.jedinica_mere, a.aktivan)
+    vrednosti = (a.naziv, a.kategorija, bar_kod, 0, a.prodajna_cena, 0, a.jedinica_mere, 1)
     veza.execute(upit, vrednosti)
     return veza.lastrowid
 
-def sacuvaj_dobavljac_artikal(konekcija, sifra_artikal, sifra_dobavljac, dobavljac_id, naziv, nabavna_cena_ponderisana, pdv):
+def sacuvaj_dobavljac_artikal(konekcija, sifra_artikal, sifra_dobavljac, dobavljac_id, naziv, nabavna_cena, pdv):
     veza = konekcija.cursor()
     upit = "INSERT INTO dobavljac_artikal (dobavljac_id, sifra_artikal, sifra_dobavljac, naziv, nabavna_cena_bez_pdv, pdv) VALUES (?,?,?,?,?,?)"
-    vrednosti = (dobavljac_id, sifra_artikal, sifra_dobavljac, naziv, nabavna_cena_ponderisana, pdv)
+    vrednosti = (dobavljac_id, sifra_artikal, sifra_dobavljac, naziv, nabavna_cena, pdv)
     veza.execute(upit, vrednosti)
 
 def azuriraj_stanje(konekcija, kolicina, sifra):

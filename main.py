@@ -38,11 +38,9 @@ class Artikal(BaseModel):
     naziv: str
     kategorija: str
     bar_kod: str
-    stanje: float
     prodajna_cena: float
-    nabavna_cena_ponderisana: float
     jedinica_mere: str
-    aktivan: int
+    nabavna_cena: float
     dobavljac_id: int
     pdv: float
     sifra_dobavljac: int
@@ -219,14 +217,14 @@ def unesi_artikle(artikli: list[Artikal]):
         konekcija = konektuj_se()
         for a in artikli:
             sifra = sacuvaj_artikal(konekcija, a)
-            sacuvaj_dobavljac_artikal(konekcija, sifra, a.sifra_dobavljac, a.dobavljac_id, a.naziv, a.nabavna_cena_ponderisana, a.pdv)
+            sacuvaj_dobavljac_artikal(konekcija, sifra, a.sifra_dobavljac, a.dobavljac_id, a.naziv, a.nabavna_cena, a.pdv)
         konekcija.commit()
+    except sqlite3.Error as e:
+        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
     except Exception as e:
         print(type(e).__name__, e)          # tip + poruka
         traceback.print_exc()               # ceo trag, sa linijom gde je pukla
         raise
-    except sqlite3.Error as e:
-        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
     finally:
         konekcija.close()
     

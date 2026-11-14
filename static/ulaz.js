@@ -177,7 +177,7 @@ function dodaj_artikal(red) {
     bar_kod = red.querySelector('[name="bar_kod"]').value;
     kategorija = red.querySelector('[name="kategorija"]').value;
     prodajna_cena = red.querySelector('[name="prodajna_cena"]').value;
-    nabavna_cena_ponderisana = red.querySelector('[data-polje="nabavna_cena"]').value;
+    nabavna_cena = red.querySelector('[data-polje="nabavna_cena"]').value;
     dobavljac_id = document.getElementById('dobavljac').value;
     pdv = red.querySelector('[data-polje="pdv"]').value;
     sifra_dobavljac = red.querySelector('[data-polje="sifra_dobavljac"]').value;
@@ -186,11 +186,9 @@ function dodaj_artikal(red) {
         naziv,
         kategorija,
         bar_kod,
-        stanje: 0,
         prodajna_cena,
-        nabavna_cena_ponderisana,
         jedinica_mere,
-        aktivan: 1,
+        nabavna_cena,
         dobavljac_id,
         pdv,
         sifra_dobavljac
