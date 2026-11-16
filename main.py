@@ -10,11 +10,13 @@ from datetime import date, datetime
 
 from Errors.NotAdultError import NotAdultError
 from Errors.DuplicateInputError import DuplicateInputError
+from Errors.BadCredentials import BadCredentials
 
 from db import konektuj_se
 from dobavljaci import sacuvaj_dobavljaca
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
 from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu
+from lozinke import hash_password, verifikuj
 
 
 class Dobavljac(BaseModel):
@@ -40,6 +42,10 @@ class Artikal(BaseModel):
     dobavljac_id: int
     pdv: float
     sifra_dobavljac: int
+
+class Korisnik(BaseModel):
+    username: str
+    password: str
 
 
 app = FastAPI()
@@ -94,6 +100,10 @@ async def kreiraj_artikal(artikli: list[Artikal]):
 async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str):
     return broj_racuna_postoji(dobavljac_id, racun_broj)
 
+@app.post('/login')
+async def proveri_login(korisnik: Korisnik):
+    return korisnik_postoji(korisnik)
+
 # EXCEPTION-i
 
 @app.exception_handler(NotAdultError)
@@ -104,6 +114,9 @@ def obradjivac_godina(request, e: NotAdultError):
 def obradjivac_duplikata(request, e: DuplicateInputError):
     return JSONResponse(status_code=409, content=e.message)
 
+@app.exception_handler(BadCredentials)
+def obradjivac_nepostojecih_korisnika(request, e: BadCredentials):
+    return JSONResponse(status_code=401, content=e.message)
 
 # FUNKCIJE
 
@@ -153,6 +166,10 @@ def unesi_ulaz(u: Ulaz):
         if err_code == sqlite3.SQLITE_CONSTRAINT_UNIQUE:
             konekcija.rollback()
             raise DuplicateInputError()
+    except Exception as e:
+        print(type(e).__name__, e)          # tip + poruka
+        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
+        raise  
     finally:
         konekcija.close()
 
@@ -166,12 +183,12 @@ def ne_postoji(stavke):
             if not provera:
                 stavke_fale.append(stavka)
         return stavke_fale
+    except sqlite3.Error as e:
+        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
     except Exception as e:
         print(type(e).__name__, e)          # tip + poruka
         traceback.print_exc()               # ceo trag, sa linijom gde je pukla
         raise  
-    except sqlite3.Error as e:
-        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
     finally:
         konekcija.close()
 
@@ -204,6 +221,26 @@ def broj_racuna_postoji(dobavljac_id, broj_racuna):
             raise DuplicateInputError("Racun/otpremnica sa tim brojem vec postoji!")
         else:
             return False
+    except Exception as e:
+        print(type(e).__name__, e)          # tip + poruka
+        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
+        raise
+    finally:
+        konekcija.close()
+
+
+def korisnik_postoji(k):
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+        veza = konekcija.cursor()
+        upit = "SELECT password_hash FROM korisnik WHERE username = ?"
+        vrednosti = (k.username,)
+        rezultat = veza.execute(upit, vrednosti).fetchall()
+        if len(rezultat) > 0 and verifikuj(k.password, rezultat[0][0]):
+            return True
+        else:
+            raise BadCredentials()
     except Exception as e:
         print(type(e).__name__, e)          # tip + poruka
         traceback.print_exc()               # ceo trag, sa linijom gde je pukla

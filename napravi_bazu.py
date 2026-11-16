@@ -15,7 +15,29 @@ DROP TABLE IF EXISTS ulaz;
 DROP TABLE IF EXISTS dobavljac;
 DROP TABLE IF EXISTS racun;
 
+DROP TABLE IF EXISTS korisnik;
+DROP TABLE IF EXISTS sesija;
 
+
+
+CREATE TABLE korisnik (
+    korisnik_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    email TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    rola TEXT NOT NULL CHECK (rola IN ('vlasnik', 'kasir')),
+    aktivan INTEGER NOT NULL DEFAULT 1 CHECK (aktivan IN (0, 1)),
+    CONSTRAINT uq_username UNIQUE (username),
+    CONSTRAINT uq_email UNIQUE (email)
+);
+
+CREATE TABLE sesija (
+    sesija_id TEXT PRIMARY KEY,
+    korisnik_id INTEGER NOT NULL,
+    pocetak_sesije TEXT NOT NULL DEFAULT (datetime('now')),
+    kraj_sesije TEXT NOT NULL,
+    CONSTRAINT fk_korisnik FOREIGN KEY (korisnik_id) REFERENCES korisnik(korisnik_id)
+);
 
 CREATE TABLE dobavljac (
     dobavljac_id INTEGER PRIMARY KEY AUTOINCREMENT,

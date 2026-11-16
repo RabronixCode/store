@@ -101,8 +101,7 @@ async function dodaj_ulaz() {
     const params = new URLSearchParams({ dobavljac_id, racun_broj });
     const provera_racuna = await fetch(`/provera-broj-racuna?${params}`);
 
-    const racun = await provera_racuna.json();
-    if (racun) {
+    if (provera_racuna.status == 409) {
         throw new Error("Racun/otpremnica sa tim brojem i dobavljacem vec postoji!");
     }
 

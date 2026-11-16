@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Početna</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>POCETNA</h1>
+
+    <!-- Veze ka drugim stranicama izgledaju kao dugmad (a, ne button: ovo vodi na drugu stranicu).
+         Atribut hidden: veze su podrazumevano sakrivene, a JavaScript otkriva samo one
+         čija se rola (data-rola) poklapa sa ulogovanim korisnikom.
+         Ovo je samo izgled. Pravu zaštitu rade rute na serveru. -->
+    <div class="dugmad">
+      <a class="dugme" href="dobavljaci.html" data-rola="vlasnik" hidden>Dobavljači</a>
+      <a class="dugme" href="ulaz.html" data-rola="vlasnik" hidden>Ulaz robe</a>
+    </div>
+
+    <p>Prijavljen: <strong id="ulogovan-korisnik"></strong></p>
+    <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
+
+    <!-- Ovde će kod iz JavaScript fajla ispisivati uspeh ili grešku -->
+    <p id="poruka" role="status"></p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

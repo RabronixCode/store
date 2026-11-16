@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prijava</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="uzak">
+    <h1>Prijava</h1>
+
+    <!-- method="post" je zaštita: kad JavaScript ne bi radio, lozinka ne bi završila u adresi (GET).
+         Slanje na server radi login.js (fetch), a ne ovaj atribut. -->
+    <form id="forma-login" method="post">
+      <label>Korisničko ime
+        <input id="username" name="username" type="text" required maxlength="100"
+               autocomplete="username" autocapitalize="none" spellcheck="false">
+      </label>
+
+      <label>Lozinka
+        <input id="password" name="password" type="password" required maxlength="200"
+               autocomplete="current-password">
+      </label>
+
+      <button type="submit">Prijavi se</button>
+    </form>
+
+    <!-- Ovde će kod iz login.js ispisivati grešku (klasa "greska") ili uspeh (klasa "uspeh") -->
+    <p id="poruka" role="status"></p>
+  </main>
+
+  <script src="login.js"></script>
+</body>
+</html>

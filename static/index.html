@@ -3,23 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Korisnici</title>
-  <link rel="stylesheet" href="style.css">
+  <meta http-equiv="refresh" content="0; url=login.html">
+  <title>Prijava</title>
 </head>
 <body>
-  <main>
-    <h1>POCETNA</h1>
-
-    <!-- Veze ka drugim stranicama izgledaju kao dugmad (a, ne button: ovo vodi na drugu stranicu) -->
-    <div class="dugmad">
-      <a class="dugme" href="dobavljaci.html">Dobavljači</a>
-      <a class="dugme" href="ulaz.html">Ulaz robe</a>
-    </div>
-
-    <!-- Ovde će kod iz app.js ispisivati uspeh ili grešku -->
-    <p id="poruka" role="status"></p>
-  </main>
-
-  <script src="app.js"></script>
+  <!-- Početna adresa "/" šalje na stranicu za prijavu. Kasnije se to može preneti na server. -->
+  <p><a href="login.html">Idi na prijavu</a></p>
 </body>
 </html>
