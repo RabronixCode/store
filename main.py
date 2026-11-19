@@ -1,22 +1,26 @@
 import traceback
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi import Cookie, Depends, FastAPI, Request, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, StringConstraints
 from typing import Annotated
 import sqlite3
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import secrets
 
 from Errors.NotAdultError import NotAdultError
 from Errors.DuplicateInputError import DuplicateInputError
 from Errors.BadCredentials import BadCredentials
+from Errors.ForbiddenAccess import ForbiddenAccess
 
 from db import konektuj_se
 from dobavljaci import sacuvaj_dobavljaca
+from korisnici import proveri_korisnika
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
 from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu
 from lozinke import hash_password, verifikuj
+from sesije import napravi_sesiju, proveri_kolacic, vrati_rolu
 
 
 class Dobavljac(BaseModel):
@@ -49,7 +53,8 @@ class Korisnik(BaseModel):
 
 
 app = FastAPI()
-app.frontend("/", directory="static", check_dir=True)
+app.frontend("/", directory="static", check_dir=True, fallback=None)
+
 
 origins = [
     "http://localhost:8000",
@@ -63,6 +68,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# @app.middleware("http")
+# async def add_no_cache_headers(request: Request, call_next):
+#     response = await call_next(request)
+#     response.headers["Cache-Control"] = (
+#         "no-store"
+#     )
+#     return response
+
+def trenutni_korisnik(trenutna_sesija: str | None = Cookie(default=None)):
+    konekcija = konektuj_se()
+    kolacic = proveri_kolacic(konekcija, trenutna_sesija, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    print(kolacic, "KOLACIC")
+    if kolacic:
+        rola = vrati_rolu(konekcija, trenutna_sesija)
+        print(rola, "ROLA")
+        if rola:
+            return rola
+        else:
+            raise ForbiddenAccess()
+    else:
+        # TODO Ovde treba raise i neki redirect na login.
+        raise ForbiddenAccess()
+
+
+
+# PREUSMERAVANJE
+
+@app.get("/vlasnik/dobavljaci.html")
+async def stranica_dobavljaci(korisnik = Depends(trenutni_korisnik)):
+    print("USAO U DOBAVLJACE")
+    if korisnik == 'vlasnik':
+        return FileResponse("vlasnik/dobavljaci.html", headers={"Cache-Control": "no-store"})
+    else:
+        print("OVO NIJE VLASNIK")
+
+@app.get("/vlasnik/ulaz.html")
+async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
+    print("USAO U ULAZ")
+    if korisnik == 'vlasnik':
+        return FileResponse("vlasnik/ulaz.html", headers={"Cache-Control": "no-store"})
+    else:
+        print("OVO NIJE VLASNIK")
 
 # RUTE
 
@@ -75,7 +122,8 @@ async def lista_dobavljaca():
     return dobavljaci
 
 @app.post("/dobavljaci")
-async def kreiraj_dobavljaca(dobavljac: Dobavljac):
+async def kreiraj_dobavljaca(dobavljac: Dobavljac, korisnik = Depends(trenutni_korisnik)):
+    print(korisnik)
     proveri_duplikat(dobavljac)
     unesi_dobavljaca(dobavljac)
     return "Dobavljac sacuvan!"
@@ -101,8 +149,22 @@ async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str):
     return broj_racuna_postoji(dobavljac_id, racun_broj)
 
 @app.post('/login')
-async def proveri_login(korisnik: Korisnik):
-    return korisnik_postoji(korisnik)
+async def proveri_login(korisnik: Korisnik, response: Response):
+    sesija_id = korisnik_postoji(korisnik)
+    if sesija_id:
+        response.set_cookie(
+            key="trenutna_sesija",
+            value=sesija_id,
+            httponly=True,
+            samesite="lax",
+            max_age=28800,
+            secure=True
+        )
+        return "AAAA"
+
+# @app.get('/ja')
+# async def autentikacija(request: Request):
+#     proveri_autentikaciju(request)
 
 # EXCEPTION-i
 
@@ -117,6 +179,11 @@ def obradjivac_duplikata(request, e: DuplicateInputError):
 @app.exception_handler(BadCredentials)
 def obradjivac_nepostojecih_korisnika(request, e: BadCredentials):
     return JSONResponse(status_code=401, content=e.message)
+
+@app.exception_handler(ForbiddenAccess)
+def obradjivac_zabrane_pristupa(request, e: ForbiddenAccess):
+    #RedirectResponse("/pocetna.html")
+    return JSONResponse(status_code=403, content=e.message)
 
 # FUNKCIJE
 
@@ -233,12 +300,13 @@ def korisnik_postoji(k):
     try:
         konekcija = konektuj_se()
         konekcija.row_factory = sqlite3.Row
-        veza = konekcija.cursor()
-        upit = "SELECT password_hash FROM korisnik WHERE username = ?"
-        vrednosti = (k.username,)
-        rezultat = veza.execute(upit, vrednosti).fetchall()
-        if len(rezultat) > 0 and verifikuj(k.password, rezultat[0][0]):
-            return True
+        rezultat = proveri_korisnika(konekcija, k)
+        if len(rezultat) > 0 and verifikuj(k.password, rezultat[0][1]):
+            sesija_id = secrets.token_urlsafe(64)
+            print(sesija_id)
+            napravi_sesiju(konekcija, rezultat[0][0], sesija_id, datetime.now(), datetime.now() + timedelta(hours=8))
+            konekcija.commit()
+            return sesija_id
         else:
             raise BadCredentials()
     except Exception as e:
@@ -247,3 +315,19 @@ def korisnik_postoji(k):
         raise
     finally:
         konekcija.close()
+
+# def proveri_autentikaciju(request):
+#     try:
+#         konekcija = konektuj_se()
+#         konekcija.row_factory = sqlite3.Row
+#         if ('cookie' not in request.headers):
+#             raise ForbiddenAccess()
+#         else:
+#             proveri_sesiju(konekcija, request.headers['cookie'])
+#             return 
+#         #print(request.query_params)
+#         #print(request.headers['cookie'])
+#         #print(request.client.host)
+#         #print(request.body())
+#     except Exception:
+#         raise

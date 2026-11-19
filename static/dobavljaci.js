@@ -12,9 +12,13 @@ async function dodaj_dobavljaca() {
         },
         body: JSON.stringify(data)
     });
-
+    console.log(response.status);
     if (response.status == 500) throw new Error("Sistem ili network error!");
     else if (response.status == 422) throw new Error("Morate uneti bar jedno slovo za dobavljaca!");
+    else if (response.status == 403) {
+      alert("NEMATE PRISTUP BREE!!! Molimo Vas da se ponovo ulogujete!");
+      //window.location.href = "/login.html";
+    }
 
     const result = await response.json();
     document.getElementById("poruka").textContent = result;

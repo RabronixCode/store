@@ -1,7 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-      
-    });
-document.addEventListener("DOMContentLoaded", () => {
     const dropdown = document.getElementById("dobavljac");
     
     fetch('/dobavljaci')

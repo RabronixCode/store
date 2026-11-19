@@ -14,10 +14,11 @@
          Atribut hidden: veze su podrazumevano sakrivene, a JavaScript otkriva samo one
          čija se rola (data-rola) poklapa sa ulogovanim korisnikom.
          Ovo je samo izgled. Pravu zaštitu rade rute na serveru. -->
-    <div class="dugmad">
-      <a class="dugme" href="dobavljaci.html" data-rola="vlasnik" hidden>Dobavljači</a>
-      <a class="dugme" href="ulaz.html" data-rola="vlasnik" hidden>Ulaz robe</a>
-    </div>
+    <nav>
+      <a href="/pocetna.html">POCETNA</a>
+      <a href="../vlasnik/dobavljaci.html">Dobavljači</a>
+      <a href="../vlasnik/ulaz.html">Ulaz robe</a>
+    </nav>
 
     <p>Prijavljen: <strong id="ulogovan-korisnik"></strong></p>
     <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
@@ -27,5 +28,6 @@
   </main>
 
   <script src="app.js"></script>
+  <script src="auth.js"></script>
 </body>
 </html>

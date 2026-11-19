@@ -21,6 +21,8 @@ async function login() {
             throw new Error(result);
         }
 
+        window.location.href = '/pocetna.html';
+
 
 
     }catch (error) {
@@ -33,6 +35,5 @@ async function login() {
 
 forma.addEventListener('submit', (event) => {
     event.preventDefault();
-    console.log("AAA")
     login();
 })
