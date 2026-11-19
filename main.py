@@ -111,6 +111,14 @@ async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
     else:
         print("OVO NIJE VLASNIK")
 
+@app.get("/pocetna.html")
+async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
+    print("USAO U ULAZ")
+    if korisnik == 'vlasnik':
+        return FileResponse("static/pocetna.html", headers={"Cache-Control": "no-store"})
+    else:
+        print("OVO NIJE VLASNIK")
+
 # RUTE
 
 @app.get("/dobavljaci")
@@ -161,6 +169,11 @@ async def proveri_login(korisnik: Korisnik, response: Response):
             secure=True
         )
         return "AAAA"
+
+@app.get('/logout')
+async def odjavi_se(response: Response):
+    response.delete_cookie(key="trenutna_sesija")
+    return True
 
 # @app.get('/ja')
 # async def autentikacija(request: Request):
