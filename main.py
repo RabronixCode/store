@@ -182,7 +182,8 @@ def obradjivac_nepostojecih_korisnika(request, e: BadCredentials):
 
 @app.exception_handler(ForbiddenAccess)
 def obradjivac_zabrane_pristupa(request, e: ForbiddenAccess):
-    #RedirectResponse("/pocetna.html")
+    if request.url.path.endswith(".html"):
+        return RedirectResponse('/login.html?greska=sesija')
     return JSONResponse(status_code=403, content=e.message)
 
 # FUNKCIJE

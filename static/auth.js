@@ -6,7 +6,6 @@ async function autentikacija() {
     // if (response.status == 403){
     //     alert("DRUZE NEMA!");
     // }
-    alert("AAAAA");
 
 }
 
