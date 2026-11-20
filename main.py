@@ -20,7 +20,7 @@ from korisnici import proveri_korisnika
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
 from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu
 from lozinke import hash_password, verifikuj
-from sesije import napravi_sesiju, proveri_kolacic, vrati_rolu
+from sesije import napravi_sesiju, proveri_kolacic, vrati_rolu, sesija_gotova
 
 
 class Dobavljac(BaseModel):
@@ -88,7 +88,6 @@ def trenutni_korisnik(trenutna_sesija: str | None = Cookie(default=None)):
         else:
             raise ForbiddenAccess()
     else:
-        # TODO Ovde treba raise i neki redirect na login.
         raise ForbiddenAccess()
 
 
@@ -171,8 +170,10 @@ async def proveri_login(korisnik: Korisnik, response: Response):
         return "AAAA"
 
 @app.get('/logout')
-async def odjavi_se(response: Response):
+async def odjavi_se(request: Request, response: Response):
+    zavrsi_sesiju(request.cookies.get('trenutna_sesija'))
     response.delete_cookie(key="trenutna_sesija")
+    
     return True
 
 # @app.get('/ja')
@@ -345,3 +346,14 @@ def korisnik_postoji(k):
 #         #print(request.body())
 #     except Exception:
 #         raise
+
+def zavrsi_sesiju(trenutna_sesija):
+    try:
+        konekcija = konektuj_se()
+        print(trenutna_sesija)
+        sesija_gotova(konekcija, trenutna_sesija, datetime.now())
+        konekcija.commit()
+    except Exception:
+        raise
+    finally:
+        konekcija.close()

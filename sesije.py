@@ -29,3 +29,9 @@ def vrati_rolu(konekcija, trenutna_sesija):
         return False
     else:
         return podaci[0]
+
+def sesija_gotova(konekcija, trenutna_sesija, sada):
+    veza = konekcija.cursor()
+    upit = "UPDATE sesija SET kraj_sesije = ? WHERE sesija_id = ?"
+    vrednosti = (sada, trenutna_sesija)
+    veza.execute(upit, vrednosti)
