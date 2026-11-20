@@ -7,28 +7,15 @@ def napravi_sesiju(konekcija, korisnik_id, sesija_id, pocetak_sesije, kraj_sesij
     except Exception:
         raise
 
-def proveri_kolacic(konekcija, trenutna_sesija, sada):
+def proveri_kolacic_vrati_rolu(konekcija, trenutna_sesija):
     veza = konekcija.cursor()
-    upit = "SELECT kraj_sesije FROM sesija WHERE sesija_id = ?"
+    upit = "SELECT k.rola FROM korisnik k INNER JOIN sesija s ON k.korisnik_id = s.korisnik_id WHERE s.sesija_id = ? AND k.aktivan = 1 AND s.kraj_sesije > datetime('now', 'localtime')"
     vrednosti = (trenutna_sesija,)
-    kraj_sesije = veza.execute(upit, vrednosti).fetchone()
-    zavrsetak_sesije = kraj_sesije[0] if kraj_sesije is not None else None
-    if zavrsetak_sesije is None:
-        return False
-    elif zavrsetak_sesije < sada:
-        return False
+    rola = veza.execute(upit, vrednosti).fetchone()
+    if rola:
+        return rola[0]
     else:
-        return True
-
-def vrati_rolu(konekcija, trenutna_sesija):
-    veza = konekcija.cursor()
-    upit = "SELECT rola FROM korisnik INNER JOIN sesija ON korisnik.korisnik_id = sesija.korisnik_id AND korisnik.aktivan = 1 WHERE sesija_id = ?"
-    vrednosti = (trenutna_sesija,)
-    podaci = veza.execute(upit, vrednosti).fetchone()
-    if podaci is None:
         return False
-    else:
-        return podaci[0]
 
 def sesija_gotova(konekcija, trenutna_sesija, sada):
     veza = konekcija.cursor()

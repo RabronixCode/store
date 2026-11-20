@@ -19,6 +19,9 @@ async function dodaj_dobavljaca() {
       alert("NEMATE PRISTUP BREE!!! Molimo Vas da se ponovo ulogujete!");
       //window.location.href = "/login.html";
     }
+    else if (response.status == 401) {
+      alert("ALO BRE ULOGUJ SE PRVO!!!");
+    }
 
     const result = await response.json();
     document.getElementById("poruka").textContent = result;

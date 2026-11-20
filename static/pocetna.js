@@ -1,5 +1,5 @@
-document.getElementById('odjava').addEventListener('click', (event) => {
+document.getElementById('odjava').addEventListener('click', async (event) => {
     event.preventDefault();
-    const response = fetch('/logout');
+    const response = await fetch('/logout');
     window.location.href = '/login.html'
 });

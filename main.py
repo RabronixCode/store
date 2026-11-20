@@ -13,6 +13,7 @@ from Errors.NotAdultError import NotAdultError
 from Errors.DuplicateInputError import DuplicateInputError
 from Errors.BadCredentials import BadCredentials
 from Errors.ForbiddenAccess import ForbiddenAccess
+from Errors.NotLoggedIn import NotLoggedIn
 
 from db import konektuj_se
 from dobavljaci import sacuvaj_dobavljaca
@@ -20,7 +21,7 @@ from korisnici import proveri_korisnika
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
 from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu
 from lozinke import hash_password, verifikuj
-from sesije import napravi_sesiju, proveri_kolacic, vrati_rolu, sesija_gotova
+from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 
 
 class Dobavljac(BaseModel):
@@ -77,18 +78,26 @@ app.add_middleware(
 #     return response
 
 def trenutni_korisnik(trenutna_sesija: str | None = Cookie(default=None)):
-    konekcija = konektuj_se()
-    kolacic = proveri_kolacic(konekcija, trenutna_sesija, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    print(kolacic, "KOLACIC")
-    if kolacic:
-        rola = vrati_rolu(konekcija, trenutna_sesija)
-        print(rola, "ROLA")
+    if trenutna_sesija:
+        konekcija = konektuj_se()
+        rola = proveri_kolacic_vrati_rolu(konekcija, trenutna_sesija)
         if rola:
             return rola
         else:
             raise ForbiddenAccess()
     else:
-        raise ForbiddenAccess()
+        raise NotLoggedIn()
+    # kolacic = proveri_kolacic(konekcija, trenutna_sesija, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    # print(kolacic, "KOLACIC")
+    # if kolacic:
+    #     rola = vrati_rolu(konekcija, trenutna_sesija)
+    #     print(rola, "ROLA")
+    #     if rola:
+    #         return rola
+    #     else:
+    #         raise ForbiddenAccess()
+    # else:
+    #     raise ForbiddenAccess()
 
 
 
@@ -111,7 +120,7 @@ async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
         print("OVO NIJE VLASNIK")
 
 @app.get("/pocetna.html")
-async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
+async def stranica_pocetna(korisnik = Depends(trenutni_korisnik)):
     print("USAO U ULAZ")
     if korisnik == 'vlasnik':
         return FileResponse("static/pocetna.html", headers={"Cache-Control": "no-store"})
@@ -121,7 +130,7 @@ async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
 # RUTE
 
 @app.get("/dobavljaci")
-async def lista_dobavljaca():
+async def lista_dobavljaca(korisnik = Depends(trenutni_korisnik)):
     konekcija = konektuj_se()
     konekcija.row_factory = sqlite3.Row
     veza = konekcija.cursor()
@@ -130,29 +139,28 @@ async def lista_dobavljaca():
 
 @app.post("/dobavljaci")
 async def kreiraj_dobavljaca(dobavljac: Dobavljac, korisnik = Depends(trenutni_korisnik)):
-    print(korisnik)
     proveri_duplikat(dobavljac)
     unesi_dobavljaca(dobavljac)
     return "Dobavljac sacuvan!"
 
 @app.post("/ulazi")
-async def kreiraj_ulaz(ulaz: Ulaz):
+async def kreiraj_ulaz(ulaz: Ulaz, korisnik = Depends(trenutni_korisnik)):
     unesi_ulaz(ulaz)
     return "Ulaz uspesno unet!"
 
 @app.post("/provera-stavki")
-async def proveri_stavke(stavke: Stavka):
+async def proveri_stavke(stavke: Stavka, korisnik = Depends(trenutni_korisnik)):
     stavke_fale = ne_postoji(stavke.stavke)
     return stavke_fale
 
 @app.post('/novi-artikli')
-async def kreiraj_artikal(artikli: list[Artikal]):
+async def kreiraj_artikal(artikli: list[Artikal], korisnik = Depends(trenutni_korisnik)):
     print(artikli)
     unesi_artikle(artikli)
     return "Novi artikli uspesno uneti!"
 
 @app.get('/provera-broj-racuna')
-async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str):
+async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str, korisnik = Depends(trenutni_korisnik)):
     return broj_racuna_postoji(dobavljac_id, racun_broj)
 
 @app.post('/login')
@@ -199,6 +207,12 @@ def obradjivac_zabrane_pristupa(request, e: ForbiddenAccess):
     if request.url.path.endswith(".html"):
         return RedirectResponse('/login.html?greska=sesija')
     return JSONResponse(status_code=403, content=e.message)
+
+@app.exception_handler(NotLoggedIn)
+def obradjivac_korisnickog_logovanja(request, e: NotLoggedIn):
+    if request.url.path.endswith(".html"):
+        return RedirectResponse('/login.html?greska=korisnik')
+    return JSONResponse(status_code=401, content=e.message)
 
 # FUNKCIJE
 

@@ -1,11 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
-    console.log(params, "PARAMETRIII");
     const kod = params.get("greska");
-    console.log(kod, "KODDDD");
     if (kod == 'sesija') {
-        alert("Sesija je istekla ili niste prijavljeni.");
+        alert("Sesija je istekla!");
+    } else if (kod == 'korisnik') {
+        alert("Niste ulogovani!");
     }
+    
 });
 
 const forma = document.getElementById('forma-login');
