@@ -1,0 +1,229 @@
+/* Stil za kasu. Dopuna za style.css, koristi iste promenljive (boje). */
+
+:root {
+  /* Visina jednog predloga u pretrazi. Lista prikazuje tačno 5 redova, ostalo se skroluje. */
+  --visina-reda: 3rem;
+  --vidljivih-redova: 5;
+  --izabrano: #eaf0fe;
+}
+
+main.kasa { max-width: 960px; }
+
+/* Tekst koji vide samo čitači ekrana */
+.samo-citac {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Pretraga ---------- */
+
+.pretraga {
+  position: relative;       /* lista se pozicionira u odnosu na ovo */
+  display: grid;
+  gap: 4px;
+  margin: 0 0 16px;
+}
+.pretraga label { font-size: 0.9rem; color: var(--prigusen); }
+
+#pretraga {
+  font-size: 1.1rem;        /* ostaje iznad 16px zbog telefona */
+  padding: 14px 12px;
+}
+
+/* Lista predloga: sakrivena atributom hidden, a ovde se display namerno ne podešava. */
+.rezultati {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--kartica);
+  border: 1px solid var(--linija);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(20, 24, 35, 0.15);
+  /* 5 redova plus 2px za gornju i donju ivicu. Šesti i dalje se dobijaju skrolom. */
+  max-height: calc(var(--visina-reda) * var(--vidljivih-redova) + 2px);
+  overflow-y: auto;
+  overscroll-behavior: contain;   /* skrol liste ne pomera stranicu */
+}
+
+.rezultat {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  height: var(--visina-reda);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--linija);
+  cursor: pointer;
+}
+.rezultat:last-child { border-bottom: 0; }
+.rezultat:hover,
+.rezultat[aria-selected="true"] { background: var(--izabrano); }
+
+.rezultat .sifra { font-weight: 600; font-variant-numeric: tabular-nums; }
+.rezultat .naziv {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rezultat .stanje,
+.rezultat .cena {
+  text-align: right;
+  white-space: nowrap;
+  color: var(--prigusen);
+  font-variant-numeric: tabular-nums;
+}
+.rezultat .stanje { min-width: 5.5rem; }
+.rezultat .cena { min-width: 5rem; }
+
+/* Stanje 0 ili manje: JS dodaje klasu "malo" na .stanje */
+.stanje.malo { color: var(--greska); font-weight: 600; }
+
+.nema-rezultata {
+  display: flex;
+  align-items: center;
+  height: var(--visina-reda);
+  padding: 0 12px;
+  color: var(--prigusen);
+}
+
+/* ---------- Korpa ---------- */
+
+#forma-kasa h2 { margin: 0; }
+
+.prazno { margin: 0; color: var(--prigusen); }
+
+/* .korpa-okvir nema display, da atribut hidden radi */
+.korpa-okvir { overflow-x: auto; }
+
+/* Tabela je već u kartici forme, pa gasimo njen sopstveni okvir iz style.css */
+.korpa-tabela {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.korpa-tabela th,
+.korpa-tabela td { vertical-align: middle; }
+.korpa-tabela th.sifra,
+.korpa-tabela td.sifra { width: 5rem; }
+
+.desno { text-align: right; }
+.sredina { text-align: center; }
+
+.stavka-korpe { cursor: pointer; }
+.stavka-korpe:hover { background: #f4f7fe; }
+.stavka-korpe[aria-current="true"] {
+  background: var(--izabrano);
+  box-shadow: inset 3px 0 0 var(--akcenat);
+}
+.stavka-korpe:focus-visible { outline: 2px solid var(--akcenat); outline-offset: -2px; }
+
+.stavka-korpe .sifra,
+.stavka-korpe .cena,
+.stavka-korpe .stanje,
+.stavka-korpe .ukupno { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stavka-korpe .naziv { font-weight: 600; overflow-wrap: anywhere; }
+.stavka-korpe .ukupno { font-weight: 600; }
+
+.pomoc { margin: 8px 0 0; font-size: 0.8rem; color: var(--prigusen); }
+
+/* Količina: [ - ] [ broj ] [ + ] */
+.kolicina-kontrola { display: inline-flex; align-items: stretch; }
+.kolicina-kontrola button {
+  width: 2.5rem;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--tekst);
+  background: var(--kartica);
+  border: 1px solid var(--linija);
+}
+.kolicina-kontrola button:hover { background: var(--izabrano); }
+.kolicina-kontrola .manje { border-radius: 6px 0 0 6px; }
+.kolicina-kontrola .vise { border-radius: 0 6px 6px 0; }
+.kolicina-kontrola input {
+  width: 4.5rem;
+  padding: 10px 4px;
+  text-align: center;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;   /* sklanja ugrađene strelice, imamo svoje dugmiće */
+}
+.kolicina-kontrola input::-webkit-outer-spin-button,
+.kolicina-kontrola input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.zbir {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 4px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.zbir .iznos { font-variant-numeric: tabular-nums; }
+
+/* ---------- Uski ekran: red korpe postaje kartica ---------- */
+
+@media (max-width: 719px) {
+  .korpa-tabela thead {              /* zaglavlje ostaje za čitače, ne vidi se */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .korpa-tabela,
+  .korpa-tabela tbody { display: block; }
+
+  .stavka-korpe {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--linija);
+  }
+  .stavka-korpe td {
+    display: block;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    width: auto;
+  }
+  .stavka-korpe td.naziv { order: -1; flex: 1 0 100%; }
+  .stavka-korpe td[data-oznaka]::before {
+    content: attr(data-oznaka) ": ";
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--prigusen);
+  }
+  .stavka-korpe td.kolicina { text-align: left; }
+  .stavka-korpe td.ukupno { margin-left: auto; font-size: 1.05rem; }
+}
+
+/* ---------- Dugme KUPI ---------- */
+
+#kupi {
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  padding: 16px;
+  background: var(--uspeh);
+}
+#kupi:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

@@ -1,6 +1,6 @@
 import traceback
 
-from fastapi import Cookie, Depends, FastAPI, Request, Response
+from fastapi import Cookie, Depends, FastAPI, Query, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, StringConstraints
@@ -8,6 +8,7 @@ from typing import Annotated
 import sqlite3
 from datetime import date, datetime, timedelta
 import secrets
+import unicodedata
 
 from Errors.NotAdultError import NotAdultError
 from Errors.DuplicateInputError import DuplicateInputError
@@ -19,7 +20,7 @@ from db import konektuj_se
 from dobavljaci import sacuvaj_dobavljaca
 from korisnici import proveri_korisnika
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
-from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu
+from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu, prikazi_artikle
 from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 
@@ -124,9 +125,18 @@ async def stranica_pocetna(korisnik = Depends(trenutni_korisnik)):
     print("USAO U ULAZ")
     if korisnik == 'vlasnik':
         return FileResponse("static/pocetna.html", headers={"Cache-Control": "no-store"})
+    elif korisnik == 'kasir':
+        return FileResponse("kasa/kasa.html", headers={"Cache-Control": "no-store"})
     else:
         print("OVO NIJE VLASNIK")
 
+@app.get("/kasa/kasa.html")
+async def stranica_kasa(korisnik = Depends(trenutni_korisnik)):
+    print("USAO U ULAZ")
+    if korisnik == 'kasir':
+        return FileResponse("kasa/kasa.html", headers={"Cache-Control": "no-store"})
+    else:
+        print("OVO NIJE KASIR")
 # RUTE
 
 @app.get("/dobavljaci")
@@ -162,6 +172,10 @@ async def kreiraj_artikal(artikli: list[Artikal], korisnik = Depends(trenutni_ko
 @app.get('/provera-broj-racuna')
 async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str, korisnik = Depends(trenutni_korisnik)):
     return broj_racuna_postoji(dobavljac_id, racun_broj)
+
+@app.get('/artikli')
+async def pretrazi_artikle(request: Request, korisnik = Depends(trenutni_korisnik)):
+    return vrati_artikle(request.query_params['q'], request.query_params['limit'])
 
 @app.post('/login')
 async def proveri_login(korisnik: Korisnik, response: Response):
@@ -345,25 +359,10 @@ def korisnik_postoji(k):
     finally:
         konekcija.close()
 
-# def proveri_autentikaciju(request):
-#     try:
-#         konekcija = konektuj_se()
-#         konekcija.row_factory = sqlite3.Row
-#         if ('cookie' not in request.headers):
-#             raise ForbiddenAccess()
-#         else:
-#             proveri_sesiju(konekcija, request.headers['cookie'])
-#             return 
-#         #print(request.query_params)
-#         #print(request.headers['cookie'])
-#         #print(request.client.host)
-#         #print(request.body())
-#     except Exception:
-#         raise
-
 def zavrsi_sesiju(trenutna_sesija):
     try:
         konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
         print(trenutna_sesija)
         sesija_gotova(konekcija, trenutna_sesija, datetime.now())
         konekcija.commit()
@@ -371,3 +370,29 @@ def zavrsi_sesiju(trenutna_sesija):
         raise
     finally:
         konekcija.close()
+
+def vrati_artikle(text, limit):
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+
+        artikli = prikazi_artikle(konekcija, za_like(text), limit)
+        print(artikli)
+        return artikli
+    except:
+        raise
+    finally:
+        konekcija.close()
+
+# TEKST
+
+def normalizuj(tekst):
+    if tekst is None:
+        return ""
+    tekst = tekst.lower().replace("đ", "dj")   # đ nema razlaganje, mora ručno
+    razlozeno = unicodedata.normalize("NFD", tekst)
+    return "".join(c for c in razlozeno if not unicodedata.combining(c))
+
+def za_like(tekst):
+    tekst = normalizuj(tekst)
+    return tekst.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

@@ -49,7 +49,7 @@ CREATE TABLE artikal (
     naziv TEXT NOT NULL,
     kategorija TEXT,
     bar_kod TEXT,
-    stanje REAL NOT NULL DEFAULT 0.000 CHECK (stanje >= 0),
+    stanje REAL NOT NULL DEFAULT 0.000,
     prodajna_cena REAL NOT NULL DEFAULT 0.00 CHECK (prodajna_cena >= 0),
     nabavna_cena_ponderisana REAL NOT NULL DEFAULT 0.0000 CHECK (nabavna_cena_ponderisana >= 0),
     jedinica_mere TEXT NOT NULL,

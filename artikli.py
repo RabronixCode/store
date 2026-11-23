@@ -35,3 +35,21 @@ def azuriraj_ponderisanu_cenu(konekcija, sifra, kolicina, nabavna_cena):
     veza.execute(upit, vrednosti)
 
     azuriraj_stanje(konekcija, kolicina, sifra)
+
+def prikazi_artikle(konekcija, text, limit):
+    veza = konekcija.cursor()
+    if int(limit) > 50:
+        limit = 50
+    if text == "":
+        upit = "SELECT sifra, naziv, stanje, jedinica_mere, prodajna_cena FROM artikal ORDER BY sifra ASC, naziv ASC LIMIT ?"
+        vrednosti = (limit,)
+        veza.execute(upit, vrednosti)
+        redovi  = [dict(red) for red in veza.fetchall()]
+        return redovi
+    pocinje = f"{text}%"  # "123%"  (Starts with)
+    sadrzi = f"%{text}%"    # "%123%" (Contains anywhere)
+    upit = "SELECT sifra, naziv, stanje, jedinica_mere, prodajna_cena FROM artikal WHERE sifra LIKE ? OR naziv LIKE ? ORDER BY CASE WHEN sifra = ? THEN 1 WHEN sifra LIKE ? THEN 2 WHEN sifra LIKE ? THEN 3 WHEN naziv LIKE ? THEN 4 ELSE 5 END, sifra ASC, naziv ASC LIMIT ?"
+    vrednosti = (sadrzi, sadrzi, text, pocinje, sadrzi, pocinje, limit)
+    veza.execute(upit, vrednosti)
+    redovi  = [dict(red) for red in veza.fetchall()]
+    return redovi
