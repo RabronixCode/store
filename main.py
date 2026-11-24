@@ -51,6 +51,7 @@ class Artikal(BaseModel):
     dobavljac_id: int
     pdv: float
     sifra_dobavljac: int
+    minimalno_stanje: Annotated[float, Field(ge=0)] = 0
     # Ako je popunjeno: artikal kod nas VEĆ postoji (npr. dodat na stranici Artikli),
     # pa se samo povezuje sa dobavljačem, umesto da se pravi novi (duplikat).
     sifra_lokalna: int | None = None
@@ -64,6 +65,7 @@ class NoviArtikal(BaseModel):
     bar_kod: TekstNeobavezan = ""
     prodajna_cena: Annotated[float, Field(ge=0)] = 0
     jedinica_mere: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)]
+    minimalno_stanje: Annotated[float, Field(ge=0)] = 0
     aktivan: bool = True
 
 class IzmenaArtikla(BaseModel):
@@ -72,6 +74,7 @@ class IzmenaArtikla(BaseModel):
     kategorija: TekstNeobavezan | None = None
     bar_kod: TekstNeobavezan | None = None
     jedinica_mere: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)] | None = None
+    minimalno_stanje: Annotated[float, Field(ge=0)] | None = None
     aktivan: bool | None = None
 
 class Korisnik(BaseModel):
@@ -474,7 +477,7 @@ def unesi_jedan_artikal(a: NoviArtikal):
         konekcija.row_factory = sqlite3.Row
         sifra = dodaj_jedan_artikal(
             konekcija, a.naziv, a.kategorija or None, a.bar_kod or None,
-            a.prodajna_cena, a.jedinica_mere, 1 if a.aktivan else 0
+            a.prodajna_cena, a.jedinica_mere, 1 if a.aktivan else 0, a.minimalno_stanje
         )
         konekcija.commit()
         return jedan_artikal(konekcija, sifra)
@@ -489,7 +492,7 @@ def unesi_jedan_artikal(a: NoviArtikal):
 def sacuvaj_izmenu_artikla(sifra, izmena: IzmenaArtikla):
     izmene = izmena.model_dump(exclude_unset=True)
     # Kolone koje ne smeju biti prazne: null znači "nije poslato", ne "obriši"
-    izmene = {k: v for k, v in izmene.items() if not (v is None and k in ("naziv", "jedinica_mere", "aktivan"))}
+    izmene = {k: v for k, v in izmene.items() if not (v is None and k in ("naziv", "jedinica_mere", "minimalno_stanje", "aktivan"))}
     if "aktivan" in izmene:
         izmene["aktivan"] = 1 if izmene["aktivan"] else 0
     for k in ("kategorija", "bar_kod"):

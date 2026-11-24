@@ -320,3 +320,106 @@ label.cekiraj input { width: 1.15rem; height: 1.15rem; margin: 0; accent-color: 
 @media (max-width: 560px) {
   .polja { grid-template-columns: 1fr; }
 }
+
+/* ---------- Izveštaji: Na minimumu / U minusu ---------- */
+
+:root {
+  --upozorenje: #b45309;
+  --upozorenje-pozadina: #fff4e5;
+  --opasnost-pozadina: #fdecea;
+}
+
+.akcije { flex-wrap: wrap; align-items: center; }
+
+button.izvestaj {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--kartica);
+  border: 1px solid currentColor;
+}
+button.izvestaj.upozorenje { color: var(--upozorenje); }
+button.izvestaj.opasnost { color: var(--greska); }
+button.izvestaj.upozorenje:hover { background: var(--upozorenje-pozadina); }
+button.izvestaj.opasnost:hover { background: var(--opasnost-pozadina); }
+
+.znacka {
+  min-width: 1.6rem;
+  padding: 0 7px;
+  font-size: 0.8rem;
+  line-height: 1.45rem;
+  text-align: center;
+  color: #fff;
+  background: currentColor;
+  border-radius: 999px;
+}
+/* tekst značke mora biti beo, a pozadina u boji dugmeta */
+button.izvestaj.upozorenje .znacka { background: var(--upozorenje); }
+button.izvestaj.opasnost .znacka { background: var(--greska); }
+
+/* Kad nema ništa za prikaz, dugme je smireno (sivo), ali i dalje može da se klikne */
+button.izvestaj.prazan { color: var(--prigusen); border-color: var(--linija); }
+button.izvestaj.prazan .znacka { background: #b4bac6; }
+
+/* Stanje palo na minimum (narandžasto); u minusu ostaje crveno (.minus) */
+.na-minimumu { color: var(--upozorenje); font-weight: 600; }
+.jako { font-weight: 700; }
+
+.izmena-polje.broj { text-align: right; -moz-appearance: textfield; appearance: textfield; }
+.izmena-polje.broj::-webkit-outer-spin-button,
+.izmena-polje.broj::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Popup sa spiskom */
+#dijalog-lista {
+  width: min(760px, 94vw);
+  padding: 0;
+  background: var(--kartica);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(20, 24, 35, 0.3);
+}
+#dijalog-lista[open] { animation: iskoci 0.15s ease-out; }
+#dijalog-lista .dijalog-zaglavlje { padding: 20px 20px 12px; }
+#dijalog-lista .dijalog-zaglavlje h2 { font-size: 1.3rem; }
+
+.lista-okvir {
+  max-height: 60vh;
+  overflow: auto;
+  margin: 0 20px;
+  border: 1px solid var(--linija);
+  border-radius: 10px;
+}
+.tabela-lista {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+}
+.tabela-lista th {
+  position: sticky;
+  top: 0;
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--prigusen);
+  background: var(--zaglavlje);
+  border-bottom: 1px solid var(--linija);
+  white-space: nowrap;
+}
+.tabela-lista th.broj { text-align: right; }
+.tabela-lista th.sredina { text-align: center; }
+.tabela-lista td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #eceff4;
+}
+.tabela-lista tr:last-child td { border-bottom: 0; }
+.tabela-lista tbody tr:hover td { background: var(--prelaz); }
+.tabela-lista td.naziv { font-weight: 600; }
+.tabela-lista tr.neaktivan td { color: #9aa2b1; }
+.tabela-lista tr.neaktivan td.minus { color: var(--greska); }
+
+#dijalog-lista .dijalog-podnozje { padding: 16px 20px 20px; }
+#dijalog-lista .dijalog-podnozje button { padding: 10px 22px; }

@@ -31,6 +31,13 @@
       </div>
       <div class="akcije">
         <button type="button" id="ponisti-filtere" class="sekundarno" hidden>Poništi filtere</button>
+        <!-- Izveštaji: otvaraju popup sa spiskom. Broj u značkama osvežava JS. -->
+        <button type="button" id="prikazi-minimum" class="izvestaj upozorenje">
+          Na minimumu <span class="znacka" id="broj-minimum">0</span>
+        </button>
+        <button type="button" id="prikazi-minus" class="izvestaj opasnost">
+          U minusu <span class="znacka" id="broj-minus">0</span>
+        </button>
         <button type="button" id="dodaj-artikal">
           <span aria-hidden="true">+</span> Dodaj artikal
         </button>
@@ -51,6 +58,7 @@
             <th scope="col" data-kolona="bar_kod"><button type="button" class="sortiraj">Bar kod</button></th>
             <th scope="col" data-kolona="jedinica_mere"><button type="button" class="sortiraj">JM</button></th>
             <th scope="col" data-kolona="stanje" class="broj"><button type="button" class="sortiraj">Stanje</button></th>
+            <th scope="col" data-kolona="minimalno_stanje" class="broj"><button type="button" class="sortiraj" title="Kad stanje padne na ovo, artikal treba naručiti">Min. stanje</button></th>
             <th scope="col" data-kolona="prodajna_cena" class="broj"><button type="button" class="sortiraj">Prodajna cena</button></th>
             <th scope="col" data-kolona="nabavna_cena_ponderisana" class="broj"><button type="button" class="sortiraj">Nabavna cena</button></th>
             <th scope="col" data-kolona="aktivan" class="sredina"><button type="button" class="sortiraj">Aktivan</button></th>
@@ -63,6 +71,7 @@
             <td><input type="search" data-filter="bar_kod" placeholder="Traži…" aria-label="Filter bar kod"></td>
             <td><input type="search" data-filter="jedinica_mere" placeholder="Traži…" aria-label="Filter jedinica mere"></td>
             <td><input type="search" data-filter="stanje" placeholder="npr. <=0" aria-label="Filter stanje"></td>
+            <td><input type="search" data-filter="minimalno_stanje" placeholder="npr. >0" aria-label="Filter minimalno stanje"></td>
             <td><input type="search" data-filter="prodajna_cena" placeholder="npr. >100" aria-label="Filter prodajna cena"></td>
             <td><input type="search" data-filter="nabavna_cena_ponderisana" placeholder="npr. >100" aria-label="Filter nabavna cena"></td>
             <td>
@@ -80,7 +89,7 @@
     </div>
 
     <p class="pomoc">
-      Klikni na naziv, kategoriju, bar kod ili jedinicu mere da ih izmeniš.
+      Klikni na naziv, kategoriju, bar kod, jedinicu mere ili minimalno stanje da ih izmeniš.
       <kbd>Enter</kbd> ili klik van polja čuva, <kbd>Esc</kbd> odustaje.
     </p>
   </main>
@@ -94,6 +103,7 @@
       <td class="izmenjivo mono" data-polje="bar_kod" data-tip="tekst" tabindex="0"></td>
       <td class="izmenjivo" data-polje="jedinica_mere" data-tip="jm" tabindex="0"></td>
       <td class="broj" data-polje="stanje"></td>
+      <td class="izmenjivo broj" data-polje="minimalno_stanje" data-tip="broj" tabindex="0"></td>
       <td class="broj" data-polje="prodajna_cena"></td>
       <td class="broj prigusen" data-polje="nabavna_cena_ponderisana"></td>
       <td class="sredina">
@@ -123,6 +133,9 @@
         <label>Prodajna cena (RSD)
           <input name="prodajna_cena" type="number" min="0" step="0.01" inputmode="decimal" value="0">
         </label>
+        <label>Minimalno stanje
+          <input name="minimalno_stanje" type="number" min="0" step="any" inputmode="decimal" value="0">
+        </label>
         <label>Kategorija
           <input name="kategorija" type="text" maxlength="100" autocomplete="off">
         </label>
@@ -142,6 +155,24 @@
         <button type="submit" id="dijalog-sacuvaj">Sačuvaj artikal</button>
       </footer>
     </form>
+  </dialog>
+
+  <!-- Popup sa spiskom (Na minimumu / U minusu). JS popunjava naslov, opis, zaglavlje i redove. -->
+  <dialog id="dijalog-lista" class="dijalog-lista" aria-labelledby="lista-naslov">
+    <header class="dijalog-zaglavlje">
+      <h2 id="lista-naslov"></h2>
+      <p id="lista-opis"></p>
+    </header>
+    <div class="lista-okvir">
+      <table class="tabela-lista">
+        <thead><tr id="lista-zaglavlje"></tr></thead>
+        <tbody id="lista-telo"></tbody>
+      </table>
+      <p id="lista-prazno" class="nema" hidden></p>
+    </div>
+    <footer class="dijalog-podnozje">
+      <button type="button" id="lista-zatvori">Zatvori</button>
+    </footer>
   </dialog>
 
   <datalist id="jedinice-mere">

@@ -181,9 +181,11 @@ function dodaj_artikal(red) {
     // Prazno = pravi se novi artikal; broj = povezuje se postojeći artikal sa tom našom šifrom
     const sifraLokalnaPolje = red.querySelector('[name="sifra_lokalna"]').value;
     const sifra_lokalna = sifraLokalnaPolje === "" ? null : Number(sifraLokalnaPolje);
+    const minimalno_stanje = Number(red.querySelector('[name="minimalno_stanje"]').value || 0);
 
     const sviPodaci = {
         sifra_lokalna,
+        minimalno_stanje,
         naziv,
         kategorija,
         bar_kod,
