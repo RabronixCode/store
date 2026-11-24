@@ -426,12 +426,26 @@ dugmeObrisiIzabrano.addEventListener('click', () => {
     if (izabranaSifra !== null) obrisiIzKorpe(izabranaSifra);
 });
 
-// Taster Delete briše izabrani red (osim dok se kuca u nekom polju).
+// Tasteri za izabrani red (osim dok se kuca u nekom polju):
+//   Delete  briše red
+//   + / -   povećava / smanjuje količinu za 1 (radi i na numeričkom delu tastature);
+//           kad količina padne na 0, red se briše
 document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Delete' || izabranaSifra === null) return;
+    if (izabranaSifra === null) return;
     if (event.target.matches('input, textarea')) return;
-    event.preventDefault();
-    obrisiIzKorpe(izabranaSifra);
+    if (event.ctrlKey || event.metaKey || event.altKey) return;   // npr. Ctrl + / Ctrl - (zum) ostaje pregledaču
+
+    const stavka = korpa.get(izabranaSifra);
+    if (event.key === 'Delete') {
+        event.preventDefault();
+        obrisiIzKorpe(izabranaSifra);
+    } else if (event.key === '+') {
+        event.preventDefault();
+        postaviKolicinu(izabranaSifra, stavka.kolicina + 1);
+    } else if (event.key === '-') {
+        event.preventDefault();
+        postaviKolicinu(izabranaSifra, stavka.kolicina - 1);
+    }
 });
 
 nacrtajKorpu();
