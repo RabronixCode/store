@@ -122,14 +122,14 @@
   -->
   <template id="stavka-korpe-sablon">
     <tr class="stavka-korpe" tabindex="0">
-      <td class="sifra" data-oznaka="Šifra" data-polje="sifra"></td>
-      <td class="naziv" data-polje="naziv"></td>
-      <td class="stanje desno" data-oznaka="Stanje"><span data-polje="stanje"></span> <span data-polje="jedinica_mere"></span></td>
-      <td class="cena desno" data-oznaka="Cena" data-polje="cena"></td>
+      <td class="sifra" data-oznaka="Šifra" data-polje="sifra-korpa"></td>
+      <td class="naziv" data-polje="naziv-korpa"></td>
+      <td class="stanje desno" data-oznaka="Stanje"><span data-polje="stanje-korpa"></span> <span data-polje="jedinica_mere-korpa"></span></td>
+      <td class="cena desno" data-oznaka="Cena" data-polje="cena-korpa"></td>
       <td class="kolicina sredina">
         <div class="kolicina-kontrola">
           <button type="button" class="manje" aria-label="Smanji količinu za 1">&minus;</button>
-          <input name="kolicina" type="number" min="0" step="any" value="1"
+          <input id="kolicina-input" class="kolicina" name="kolicina" type="number" min="0" step="any" value="1"
                  inputmode="decimal" required aria-label="Količina">
           <button type="button" class="vise" aria-label="Povećaj količinu za 1">+</button>
         </div>

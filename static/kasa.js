@@ -18,11 +18,17 @@ document.getElementById('odjava').addEventListener('click', async (event) => {
 // Server NE vraća sve artikle: vraća najviše `limit`, a lista na stranici
 // prikazuje 5 redova odjednom i skroluje ostatak (visina je u kasa.css).
 
+const korpa = new Map()
+
 const polje = document.getElementById('pretraga');
 const lista = document.getElementById('rezultati');
 const sablonRezultat = document.getElementById('rezultat-sablon');
 const sablonNema = document.getElementById('nema-rezultata-sablon');
 const poruka = document.getElementById('poruka');
+
+const sablonKorpa = document.getElementById('stavka-korpe-sablon');
+const korpaForma = document.getElementById('forma-kasa');
+const korpaOkvir = document.getElementById('korpa-okvir');
 
 const MAX_REZULTATA = 50;   // koliko najviše tražimo od servera
 const KASNJENJE_MS = 200;   // koliko se čeka posle poslednjeg slova pre slanja zahteva
@@ -34,6 +40,7 @@ let tajmer = null;          // tajmer za kašnjenje (debounce)
 let kontroler = null;       // AbortController poslednjeg zahteva
 let cekaEnter = false;      // Enter je pritisnut dok lista nije bila osvežena
 let uToku = false;          // zahtev je poslat, a odgovor još nije stigao
+
 
 
 function formatCena(broj) {
@@ -135,7 +142,7 @@ function postaviAktivan(i) {
 function izaberi(i) {
     const artikal = rezultati[i];
     if (!artikal) return;
-
+    console.log(artikal.sifra, "ARTIKLAAA")
     dodajUKorpu(artikal);
 
     polje.value = '';
@@ -150,7 +157,34 @@ function dodajUKorpu(artikal) {
     //  - inače napravi red iz šablona #stavka-korpe-sablon, sakrij #prazna-korpa,
     //    omogući dugme #kupi i preračunaj #ukupno
     // Privremeno, da vidiš da izbor radi (obriši kad napraviš korpu):
-    poruka.textContent = `Izabrano: ${artikal.sifra} ${artikal.naziv}`;
+    korpaOkvir.replaceChildren();
+    document.getElementById('kupi').disabled = false;
+    if (korpa.has(artikal.sifra)) {
+         korpa.get(artikal.sifra).kolicina += 1;
+    }else{
+        korpa.set(artikal.sifra, {"naziv": artikal.naziv, "stanje": artikal.stanje, "jedinica_mere": artikal.jedinica_mere, "cena": artikal.prodajna_cena, "kolicina": 1});
+    }
+    console.log(korpa);
+    if (korpa.size === 0) {
+        document.getElementById('prazna-korpa').hidden = false;
+    } else {
+        console.log(korpa.size);
+        document.getElementById('prazna-korpa').hidden = true;
+        korpaOkvir.hidden = false;
+        korpa.forEach((value, key) => {
+            const klon = sablonKorpa.content.cloneNode(true);
+            // textContent (ne innerHTML): naziv iz baze se prikazuje kao običan tekst
+            klon.querySelector('[data-polje="sifra-korpa"]').textContent = key;
+            klon.querySelector('[data-polje="naziv-korpa"]').textContent = value['naziv'];
+            klon.querySelector('[data-polje="stanje-korpa"]').textContent = value['stanje'];
+            klon.querySelector('[data-polje="jedinica_mere-korpa"]').textContent = value['jedinica_mere'];
+            klon.querySelector('[data-polje="cena-korpa"]').textContent = value['cena'];
+            klon.querySelector('[name="kolicina"]').value = value['kolicina'];
+
+            korpaOkvir.appendChild(klon);
+        });
+        
+    }
 }
 
 
@@ -209,6 +243,34 @@ lista.addEventListener('mousedown', (event) => event.preventDefault());
 lista.addEventListener('click', (event) => {
     const red = event.target.closest('.rezultat');
     if (red) izaberi(Number(red.dataset.indeks));
+});
+
+korpaOkvir.addEventListener('click', (event) => {
+    const red = event.target.closest('.stavka-korpe');
+    if (!red) return;
+    const sifra = Number(red.querySelector('[data-polje="sifra-korpa"]').textContent);
+    const stavka = korpa.get(sifra);
+    const kolicinaInput = red.querySelector('input.kolicina');
+    
+    if (event.target.closest('.vise')) {
+        stavka.kolicina += 1;
+        kolicinaInput.value = stavka.kolicina;
+    } else if (event.target.closest('.manje')) {
+        stavka.kolicina -= 1;
+        kolicinaInput.value = stavka.kolicina;
+    } else if (!event.target.closest('input')) {
+        // TODO
+    }
+});
+
+korpaOkvir.addEventListener("input", (event) => {
+    const red = event.target.closest('.stavka-korpe');
+    console.log(red)
+    if (!red) return;
+    //console.log(red.querySelector('[data-polje=sifra-korpa]').textContent, "SIFRA")
+    console.log(korpa.size)
+    sifra = Number(red.querySelector('[data-polje="sifra-korpa"]').textContent);
+    console.log(korpa.get(sifra)['kolicina'])
 });
 
 // Tab ili klik van polja zatvara listu.
