@@ -20,9 +20,11 @@ from db import konektuj_se
 from dobavljaci import sacuvaj_dobavljaca
 from korisnici import proveri_korisnika
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
-from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu, prikazi_artikle
+from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu, prikazi_artikle, azuriraj_stanje
 from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
+from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
+from racun_pdf import izdaj_racun
 
 
 class Dobavljac(BaseModel):
@@ -52,6 +54,13 @@ class Artikal(BaseModel):
 class Korisnik(BaseModel):
     username: str
     password: str
+
+class StavkaKorpe(BaseModel):
+    sifra: int
+    kolicina: float
+
+class Kupovina(BaseModel):
+    stavke: list[StavkaKorpe]
 
 
 app = FastAPI()
@@ -176,6 +185,12 @@ async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str, korisnik = Dep
 @app.get('/artikli')
 async def pretrazi_artikle(request: Request, korisnik = Depends(trenutni_korisnik)):
     return vrati_artikle(request.query_params['q'], request.query_params['limit'])
+
+@app.post('/racuni')
+async def kreiraj_racun(kupovina: Kupovina, korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'kasir':
+        raise ForbiddenAccess()
+    return unesi_racun(kupovina)
 
 @app.post('/login')
 async def proveri_login(korisnik: Korisnik, response: Response):
@@ -383,6 +398,56 @@ def vrati_artikle(text, limit):
         raise
     finally:
         konekcija.close()
+
+def unesi_racun(kupovina: Kupovina):
+    # Cena i nabavna cena se uzimaju iz baze, ne sa stranice (da se ne bi mogle podmetnuti)
+    if len(kupovina.stavke) == 0:
+        return JSONResponse(status_code=400, content="Korpa je prazna.")
+    for s in kupovina.stavke:
+        if s.kolicina <= 0:
+            return JSONResponse(status_code=400, content=f"Količina za šifru {s.sifra} mora biti veća od 0.")
+
+    try:
+        konekcija = konektuj_se()
+        korisnik = "kasir"   # TODO: kasnije uzeti iz sesije
+        racun_id, datum_vreme = sacuvaj_racun(konekcija, korisnik)
+
+        stavke_racuna = []
+        for s in kupovina.stavke:
+            artikal = vrati_artikal_za_racun(konekcija, s.sifra)
+            if not artikal:
+                konekcija.rollback()
+                return JSONResponse(status_code=404, content=f"Artikal sa šifrom {s.sifra} ne postoji.")
+            sifra, naziv, jedinica_mere, prodajna_cena, nabavna_cena = artikal
+            sacuvaj_stavka_racuna(konekcija, racun_id, sifra, naziv, jedinica_mere, s.kolicina, prodajna_cena, nabavna_cena)
+            azuriraj_stanje(konekcija, -s.kolicina, sifra)   # prodato se skida sa stanja
+            stavke_racuna.append({
+                "sifra": sifra,
+                "naziv": naziv,
+                "jedinica_mere": jedinica_mere,
+                "kolicina": s.kolicina,
+                "cena_po_komadu": prodajna_cena,
+            })
+
+        konekcija.commit()
+    except Exception as e:
+        konekcija.rollback()
+        print(type(e).__name__, e)
+        traceback.print_exc()
+        raise
+    finally:
+        konekcija.close()
+
+    # Račun je već sačuvan u bazi; ako PDF ne uspe, to ne poništava prodaju
+    try:
+        putanja = izdaj_racun(racun_id, datum_vreme, korisnik, stavke_racuna)
+        pdf = putanja.name
+    except Exception as e:
+        print(type(e).__name__, e)
+        traceback.print_exc()
+        pdf = None
+
+    return {"racun_id": racun_id, "pdf": pdf}
 
 # TEKST
 

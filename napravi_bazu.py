@@ -6,18 +6,14 @@ veza.execute("PRAGMA foreign_keys = ON")
 veza.executescript("""
 
 DROP TABLE IF EXISTS stavka_racuna;
-DROP TABLE IF EXISTS dobavljac_artikal;
 DROP TABLE IF EXISTS stavka_ulaza;
-DROP TABLE IF EXISTS artikal;
-
-
-DROP TABLE IF EXISTS ulaz;
-DROP TABLE IF EXISTS dobavljac;
+DROP TABLE IF EXISTS dobavljac_artikal;
 DROP TABLE IF EXISTS racun;
-
-DROP TABLE IF EXISTS korisnik;
+DROP TABLE IF EXISTS ulaz;
 DROP TABLE IF EXISTS sesija;
-
+DROP TABLE IF EXISTS artikal;
+DROP TABLE IF EXISTS dobavljac;
+DROP TABLE IF EXISTS korisnik;
 
 
 CREATE TABLE korisnik (

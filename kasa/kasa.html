@@ -17,54 +17,47 @@
       #pretraga               polje za pretragu
       #rezultati              lista predloga (ul), sakrivena dok ne treba
       #rezultat-sablon        šablon jednog predloga
-                              (data-polje: sifra, naziv, stanje, jedinica_mere, cena)
       #nema-rezultata-sablon  šablon reda "Nema rezultata"
       #korpa-okvir            okvir tabele korpe, sakriven (hidden) dok je korpa prazna
       #korpa                  tbody u koji idu redovi korpe
       #stavka-korpe-sablon    šablon jednog reda korpe (tr)
-                              (data-polje: sifra, naziv, stanje, jedinica_mere, cena, ukupno;
-                               u redu su još: .manje, .vise i input[name="kolicina"])
       #prazna-korpa           tekst koji se vidi dok je korpa prazna
+      #obrisi-izabrano        briše izabrani red (disabled dok nijedan red nije izabran)
+      #broj-stavki            broj stavki u korpi
       #ukupno                 konačna cena (zbir cena puta količina)
       #kupi                   dugme KUPI (disabled dok je korpa prazna)
       #poruka                 uspeh ili greška
       #odjava                 dugme "Odjavi se"
 
     Stanja koja CSS očekuje od JS-a (klase i atributi):
-      tr.stavka-korpe[aria-current="true"]   izabran red (bira se klikom, briše se tasterom Delete)
+      tr.stavka-korpe[aria-selected="true"]  izabran red (bira se klikom, briše se tasterom Delete)
       .stanje.malo                           stanje je 0 ili manje (crveno)
   -->
   <main class="kasa">
-    <nav>
-      <a href="/pocetna.html">POCETNA</a>
-      <a href="/kasa/kasa.html" aria-current="page">Kasa</a>
-    </nav>
+    <header class="kasa-zaglavlje">
+      <nav>
+        <a href="/pocetna.html">POCETNA</a>
+        <a href="/kasa/kasa.html" aria-current="page">Kasa</a>
+      </nav>
+      <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
+    </header>
 
     <h1>Kasa</h1>
 
-    <!--
-      Pretraga je VAN forme, da Enter u njoj ne pošalje račun.
-      JavaScript: pri fokusu prikaže prvih 50 artikala sortiranih po šifri, a lista
-      pokazuje 5 redova odjednom (ostali se dobijaju skrolovanjem). Pri kucanju filtrira
-      po šifri ili nazivu. Enter ili klik na predlog dodaje artikal u korpu.
-      Za pristupačnost JS prebacuje: aria-expanded na polju (true/false),
-      aria-selected="true" na izabranom predlogu i aria-activedescendant na polju.
-    -->
+    <!-- Pretraga je VAN forme, da Enter u njoj ne pošalje račun. -->
     <div class="pretraga">
       <label for="pretraga">Šifra ili naziv artikla</label>
       <input id="pretraga" type="search" role="combobox"
              aria-controls="rezultati" aria-expanded="false" aria-autocomplete="list"
-             autocomplete="off" placeholder="Počni da kucaš šifru ili naziv">
+             autocomplete="off" placeholder="Počni da kucaš šifru ili naziv…">
       <ul id="rezultati" class="rezultati" role="listbox" aria-label="Predlozi artikala" hidden></ul>
     </div>
 
-    <!--
-      Korpa je u formi, a dugme KUPI je submit.
-      Pažnja: Enter u polju za količinu takođe šalje formu (podrazumevano ponašanje pregledača),
-      što bi moglo da kupi slučajno. Zato u JS-u za polja količine spreči Enter (preventDefault).
-    -->
-    <form id="forma-kasa">
-      <h2>Korpa</h2>
+    <form id="forma-kasa" novalidate>
+      <div class="korpa-naslov">
+        <h2>Korpa <span id="broj-stavki" class="broj-stavki">0</span></h2>
+        <button type="button" id="obrisi-izabrano" class="opasno" disabled>Obriši izabrano</button>
+      </div>
 
       <p id="prazna-korpa" class="prazno">Korpa je prazna. Pronađi artikal pretragom iznad.</p>
 
@@ -76,14 +69,16 @@
               <th scope="col" class="sifra">Šifra</th>
               <th scope="col">Naziv</th>
               <th scope="col" class="desno">Stanje</th>
+              <th scope="col" class="sredina">JM</th>
               <th scope="col" class="desno">Cena</th>
-              <th scope="col" class="sredina">Količina</th>
               <th scope="col" class="desno">Ukupno</th>
+              <th scope="col" class="sredina">Količina</th>
+              <th scope="col"><span class="samo-citac">Obriši</span></th>
             </tr>
           </thead>
           <tbody id="korpa"></tbody>
         </table>
-        <p class="pomoc">Klikni red da ga izabereš, pa pritisni Delete da ga obrišeš.</p>
+        <p class="pomoc">Klikni red da ga izabereš, pa pritisni Delete ili „Obriši izabrano“. Količina 0 briše artikal.</p>
       </div>
 
       <div class="zbir">
@@ -96,9 +91,6 @@
     </form>
 
     <p id="poruka" role="status"></p>
-
-    <!-- Isto dugme kao na početnoj. Klik obrađuje JS. -->
-    <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
   </main>
 
   <!-- Šablon jednog predloga u listi. JS postavlja i id (npr. "rezultat-123") zbog aria-activedescendant. -->
@@ -117,24 +109,31 @@
 
   <!--
     Šablon jednog reda korpe. Ceo red se bira klikom (tabindex="0" da bi se mogao izabrati
-    i tastaturom). Količina se menja dugmadima - i + (za 1) ili upisom broja u polje.
-    data-oznaka se koristi samo na uskom ekranu, gde red postaje kartica.
+    i tastaturom). data-oznaka se koristi samo na uskom ekranu, gde red postaje kartica.
   -->
   <template id="stavka-korpe-sablon">
-    <tr class="stavka-korpe" tabindex="0">
-      <td class="sifra" data-oznaka="Šifra" data-polje="sifra-korpa"></td>
-      <td class="naziv" data-polje="naziv-korpa"></td>
-      <td class="stanje desno" data-oznaka="Stanje"><span data-polje="stanje-korpa"></span> <span data-polje="jedinica_mere-korpa"></span></td>
-      <td class="cena desno" data-oznaka="Cena" data-polje="cena-korpa"></td>
+    <tr class="stavka-korpe" tabindex="0" aria-selected="false">
+      <td class="sifra" data-oznaka="Šifra" data-polje="sifra"></td>
+      <td class="naziv" data-polje="naziv"></td>
+      <td class="stanje desno" data-oznaka="Stanje" data-polje="stanje"></td>
+      <td class="jm sredina" data-oznaka="JM" data-polje="jedinica_mere"></td>
+      <td class="cena desno" data-oznaka="Cena" data-polje="cena"></td>
+      <td class="ukupno desno" data-oznaka="Ukupno"><output data-polje="ukupno"></output></td>
       <td class="kolicina sredina">
         <div class="kolicina-kontrola">
           <button type="button" class="manje" aria-label="Smanji količinu za 1">&minus;</button>
-          <input id="kolicina-input" class="kolicina" name="kolicina" type="number" min="0" step="any" value="1"
-                 inputmode="decimal" required aria-label="Količina">
+          <input class="kolicina" name="kolicina" type="number" min="0" step="any"
+                 inputmode="decimal" aria-label="Količina">
           <button type="button" class="vise" aria-label="Povećaj količinu za 1">+</button>
         </div>
       </td>
-      <td class="ukupno desno" data-oznaka="Ukupno"><output data-polje="ukupno"></output></td>
+      <td class="akcija">
+        <button type="button" class="obrisi" aria-label="Obriši artikal iz korpe" title="Obriši">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-1 12H7L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"/>
+          </svg>
+        </button>
+      </td>
     </tr>
   </template>
 

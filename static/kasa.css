@@ -5,9 +5,20 @@
   --visina-reda: 3rem;
   --vidljivih-redova: 5;
   --izabrano: #eaf0fe;
+  --prelaz: #f4f7fe;
 }
 
-main.kasa { max-width: 960px; }
+main.kasa { max-width: 1200px; }
+
+.kasa-zaglavlje {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 8px;
+}
+.kasa-zaglavlje nav { margin: 0; }
+.kasa-zaglavlje #odjava { padding: 8px 14px; }
 
 /* Tekst koji vide samo čitači ekrana */
 .samo-citac {
@@ -24,14 +35,24 @@ main.kasa { max-width: 960px; }
 .pretraga {
   position: relative;       /* lista se pozicionira u odnosu na ovo */
   display: grid;
-  gap: 4px;
-  margin: 0 0 16px;
+  gap: 6px;
+  width: 75%;               /* od levog kraja do otprilike 3/4 širine */
+  margin: 0 0 24px;
 }
-.pretraga label { font-size: 0.9rem; color: var(--prigusen); }
+.pretraga label { font-size: 0.95rem; font-weight: 600; color: var(--prigusen); }
 
 #pretraga {
-  font-size: 1.1rem;        /* ostaje iznad 16px zbog telefona */
-  padding: 14px 12px;
+  font-size: 1.35rem;
+  padding: 16px 18px;
+  border: 2px solid var(--linija);
+  border-radius: 10px;
+  background: var(--kartica);
+  box-shadow: 0 2px 6px rgba(20, 24, 35, 0.06);
+}
+#pretraga:focus {
+  outline: none;
+  border-color: var(--akcenat);
+  box-shadow: 0 0 0 4px rgba(36, 87, 214, 0.15);
 }
 
 /* Lista predloga: sakrivena atributom hidden, a ovde se display namerno ne podešava. */
@@ -86,7 +107,8 @@ main.kasa { max-width: 960px; }
 .rezultat .cena { min-width: 5rem; }
 
 /* Stanje 0 ili manje: JS dodaje klasu "malo" na .stanje */
-.stanje.malo { color: var(--greska); font-weight: 600; }
+.stanje.malo,
+.rezultat .stanje.malo { color: var(--greska); font-weight: 600; }
 
 .nema-rezultata {
   display: flex;
@@ -98,32 +120,80 @@ main.kasa { max-width: 960px; }
 
 /* ---------- Korpa ---------- */
 
-#forma-kasa h2 { margin: 0; }
+#forma-kasa { padding: 20px; gap: 16px; }
 
-.prazno { margin: 0; color: var(--prigusen); }
+.korpa-naslov {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.korpa-naslov h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.3rem;
+}
+.broj-stavki {
+  min-width: 1.8rem;
+  padding: 0 8px;
+  font-size: 0.85rem;
+  line-height: 1.6rem;
+  text-align: center;
+  color: #fff;
+  background: var(--akcenat);
+  border-radius: 999px;
+}
+#obrisi-izabrano { padding: 8px 14px; }
+#obrisi-izabrano:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.prazno {
+  margin: 0;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--prigusen);
+  border: 2px dashed var(--linija);
+  border-radius: 8px;
+}
 
 /* .korpa-okvir nema display, da atribut hidden radi */
 .korpa-okvir { overflow-x: auto; }
 
-/* Tabela je već u kartici forme, pa gasimo njen sopstveni okvir iz style.css */
 .korpa-tabela {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.05rem;
 }
-.korpa-tabela th,
-.korpa-tabela td { vertical-align: middle; }
+.korpa-tabela th {
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--prigusen);
+  border-bottom: 2px solid var(--linija);
+  white-space: nowrap;
+}
+.korpa-tabela td {
+  padding: 10px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--linija);
+}
 .korpa-tabela th.sifra,
 .korpa-tabela td.sifra { width: 5rem; }
+.korpa-tabela th.desno { text-align: right; }
+.korpa-tabela th.sredina { text-align: center; }
 
 .desno { text-align: right; }
 .sredina { text-align: center; }
 
-.stavka-korpe { cursor: pointer; }
-.stavka-korpe:hover { background: #f4f7fe; }
-.stavka-korpe[aria-current="true"] {
+.stavka-korpe { cursor: pointer; transition: background 0.1s; }
+.stavka-korpe:hover { background: var(--prelaz); }
+.stavka-korpe[aria-selected="true"] {
   background: var(--izabrano);
-  box-shadow: inset 3px 0 0 var(--akcenat);
+  box-shadow: inset 4px 0 0 var(--akcenat);
 }
 .stavka-korpe:focus-visible { outline: 2px solid var(--akcenat); outline-offset: -2px; }
 
@@ -131,54 +201,91 @@ main.kasa { max-width: 960px; }
 .stavka-korpe .cena,
 .stavka-korpe .stanje,
 .stavka-korpe .ukupno { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stavka-korpe .sifra { color: var(--prigusen); }
 .stavka-korpe .naziv { font-weight: 600; overflow-wrap: anywhere; }
-.stavka-korpe .ukupno { font-weight: 600; }
+.stavka-korpe .jm { color: var(--prigusen); }
+.stavka-korpe .ukupno { font-weight: 700; }
 
-.pomoc { margin: 8px 0 0; font-size: 0.8rem; color: var(--prigusen); }
+.pomoc { margin: 10px 0 0; font-size: 0.85rem; color: var(--prigusen); }
 
-/* Količina: [ - ] [ broj ] [ + ] */
-.kolicina-kontrola { display: inline-flex; align-items: stretch; }
-.kolicina-kontrola button {
-  width: 2.5rem;
-  padding: 0;
-  font-size: 1.25rem;
-  line-height: 1;
-  color: var(--tekst);
-  background: var(--kartica);
+/* Količina: [ − ] [ broj ] [ + ] kao jedna "pilula" */
+.kolicina-kontrola {
+  display: inline-flex;
+  align-items: stretch;
   border: 1px solid var(--linija);
+  border-radius: 999px;
+  background: var(--kartica);
+  overflow: hidden;
+}
+.kolicina-kontrola:focus-within {
+  border-color: var(--akcenat);
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+}
+.kolicina-kontrola button {
+  width: 2.6rem;
+  padding: 0;
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--akcenat);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 .kolicina-kontrola button:hover { background: var(--izabrano); }
-.kolicina-kontrola .manje { border-radius: 6px 0 0 6px; }
-.kolicina-kontrola .vise { border-radius: 0 6px 6px 0; }
+.kolicina-kontrola button:active { background: #d6e1fd; }
+.kolicina-kontrola .manje:hover { color: var(--greska); background: #fdecea; }
 .kolicina-kontrola input {
   width: 4.5rem;
-  padding: 10px 4px;
+  padding: 8px 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
   text-align: center;
+  border: 0;
+  border-left: 1px solid var(--linija);
+  border-right: 1px solid var(--linija);
   border-radius: 0;
-  border-left: 0;
-  border-right: 0;
   font-variant-numeric: tabular-nums;
   -moz-appearance: textfield;   /* sklanja ugrađene strelice, imamo svoje dugmiće */
+  appearance: textfield;
 }
+.kolicina-kontrola input:focus { outline: none; background: #fafbff; }
 .kolicina-kontrola input::-webkit-outer-spin-button,
 .kolicina-kontrola input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
+/* Dugme za brisanje skroz desno u redu */
+.korpa-tabela td.akcija { width: 3rem; text-align: right; }
+.obrisi {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  color: var(--prigusen);
+  background: transparent;
+  border-radius: 6px;
+}
+.obrisi:hover { color: var(--greska); background: #fdecea; }
+
 .zbir {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding-top: 4px;
-  font-size: 1.25rem;
+  padding: 16px 4px 0;
+  border-top: 2px solid var(--tekst);
+  font-size: 1.4rem;
   font-weight: 700;
 }
-.zbir .iznos { font-variant-numeric: tabular-nums; }
+.zbir .iznos { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
 
-/* ---------- Uski ekran: red korpe postaje kartica ---------- */
+/* ---------- Uski ekran: pretraga puna širina, red korpe postaje kartica ---------- */
 
 @media (max-width: 719px) {
+  .pretraga { width: 100%; }
+
   .korpa-tabela thead {              /* zaglavlje ostaje za čitače, ne vidi se */
     position: absolute;
     width: 1px;
@@ -204,7 +311,8 @@ main.kasa { max-width: 960px; }
     text-align: left;
     width: auto;
   }
-  .stavka-korpe td.naziv { order: -1; flex: 1 0 100%; }
+  .stavka-korpe td.naziv { order: -2; flex: 1 0 calc(100% - 3rem); }
+  .stavka-korpe td.akcija { order: -1; width: auto; }
   .stavka-korpe td[data-oznaka]::before {
     content: attr(data-oznaka) ": ";
     font-size: 0.8rem;
@@ -212,17 +320,19 @@ main.kasa { max-width: 960px; }
     color: var(--prigusen);
   }
   .stavka-korpe td.kolicina { text-align: left; }
-  .stavka-korpe td.ukupno { margin-left: auto; font-size: 1.05rem; }
+  .stavka-korpe td.ukupno { font-size: 1.05rem; }
 }
 
 /* ---------- Dugme KUPI ---------- */
 
 #kupi {
-  font-size: 1.25rem;
-  letter-spacing: 0.05em;
-  padding: 16px;
+  font-size: 1.35rem;
+  letter-spacing: 0.08em;
+  padding: 18px;
   background: var(--uspeh);
+  border-radius: 8px;
 }
+#kupi:not(:disabled):hover { filter: brightness(1.08); }
 #kupi:disabled {
   opacity: 0.45;
   cursor: not-allowed;
