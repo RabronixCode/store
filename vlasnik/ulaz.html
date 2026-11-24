@@ -12,6 +12,7 @@
       <a href="/pocetna.html">POCETNA</a>
       <a href="../vlasnik/dobavljaci.html" aria-current="page">Dobavljači</a>
       <a href="../vlasnik/ulaz.html">Ulaz robe</a>
+      <a href="../vlasnik/artikli.html">Artikli</a>
     </nav>
 
     <h1>Novi ulaz robe</h1>
@@ -119,6 +120,15 @@
         <div><dt>Nabavna cena</dt><dd data-polje="nabavna_cena"></dd></div>
         <div><dt>PDV (%)</dt><dd data-polje="pdv"></dd></div>
       </dl>
+
+      <!--
+        Ako artikal kod nas VEĆ postoji (npr. dodat na stranici Artikli, a ovaj dobavljač
+        ga donosi prvi put), upiše se naša šifra: artikal se samo poveže sa dobavljačem,
+        ne pravi se duplikat. Tada ostala polja ispod ne moraju da se popunjavaju.
+      -->
+      <label>Već postoji kod nas? Upiši našu šifru artikla (inače ostavi prazno)
+        <input name="sifra_lokalna" type="number" min="1" step="1" inputmode="numeric" autocomplete="off">
+      </label>
 
       <!-- Šta moramo da dopunimo. required i maxlength su samo udobnost, server proverava ponovo. -->
       <label>Naziv artikla

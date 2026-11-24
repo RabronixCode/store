@@ -1,0 +1,322 @@
+/* Stranica Artikli. Dopuna za style.css, koristi iste promenljive (boje). */
+
+:root {
+  --izabrano: #eaf0fe;
+  --prelaz: #f6f8fd;
+  --zaglavlje: #f3f5f9;
+  --novo: #e7f6ec;
+}
+
+main.artikli { max-width: 1400px; }
+
+.samo-citac {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Zaglavlje stranice ---------- */
+
+.artikli-zaglavlje {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 24px;
+  margin: 8px 0 12px;
+}
+.artikli-zaglavlje h1 { margin: 0; font-size: 1.75rem; }
+.podnaslov { margin: 2px 0 0; color: var(--prigusen); font-size: 0.95rem; }
+
+.akcije { display: flex; gap: 8px; }
+.akcije button { padding: 10px 18px; }
+#dodaj-artikal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(36, 87, 214, 0.25);
+}
+#dodaj-artikal span { font-size: 1.3rem; line-height: 1; }
+#dodaj-artikal:hover { filter: brightness(1.08); }
+
+#poruka { margin: 0 0 12px; min-height: 1.5em; }
+
+/* ---------- Tabela ---------- */
+
+.tabela-okvir {
+  background: var(--kartica);
+  border: 1px solid var(--linija);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(20, 24, 35, 0.06);
+  overflow: auto;
+  max-height: calc(100vh - 220px);   /* zaglavlje ostaje vidljivo dok se skroluje */
+  min-height: 240px;
+}
+
+.tabela-artikli {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+}
+
+/* Lepljivo zaglavlje (oba reda) */
+.tabela-artikli thead th,
+.tabela-artikli thead td {
+  position: sticky;
+  z-index: 2;
+  background: var(--zaglavlje);
+}
+.tabela-artikli tr.naslovi th { top: 0; }
+.tabela-artikli tr.filteri td {
+  top: 41px;                          /* visina prvog reda zaglavlja */
+  padding: 6px 6px 10px;
+  border-bottom: 1px solid var(--linija);
+}
+
+.tabela-artikli th {
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Dugme za sortiranje izgleda kao naslov kolone */
+.sortiraj {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 41px;
+  padding: 0 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--prigusen);
+  background: transparent;
+  border-radius: 0;
+}
+.sortiraj:hover { color: var(--tekst); background: rgba(36, 87, 214, 0.06); }
+.sortiraj:focus-visible { outline: 2px solid var(--akcenat); outline-offset: -2px; }
+
+/* Strelica: siva ↕ kad nije sortirano, plava ↑ / ↓ kad jeste */
+.sortiraj::after {
+  content: "↕";
+  font-size: 0.85rem;
+  opacity: 0.35;
+}
+th[aria-sort="ascending"] .sortiraj,
+th[aria-sort="descending"] .sortiraj { color: var(--akcenat); }
+th[aria-sort="ascending"] .sortiraj::after { content: "↑"; opacity: 1; }
+th[aria-sort="descending"] .sortiraj::after { content: "↓"; opacity: 1; }
+
+th.broj .sortiraj { justify-content: flex-end; }
+th.sredina .sortiraj { justify-content: center; }
+
+/* Polja za filter */
+.filteri input,
+.filteri select {
+  width: 100%;
+  min-width: 4.5rem;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  background: var(--kartica);
+  border: 1px solid var(--linija);
+  border-radius: 6px;
+}
+.filteri input::placeholder { color: #a3abba; }
+.filteri input:focus,
+.filteri select:focus {
+  outline: none;
+  border-color: var(--akcenat);
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+}
+.filteri .aktivan-filter {
+  border-color: var(--akcenat);
+  background: var(--izabrano);
+}
+
+/* Telo tabele */
+.tabela-artikli tbody td {
+  padding: 10px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid #eceff4;
+}
+.tabela-artikli tbody tr:last-child td { border-bottom: 0; }
+.tabela-artikli tbody tr:hover td { background: var(--prelaz); }
+
+.broj { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sredina { text-align: center; }
+.mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 0.88rem; }
+.prigusen { color: var(--prigusen); }
+
+td.sifra { color: var(--prigusen); font-weight: 600; width: 4.5rem; }
+td.naziv { font-weight: 600; min-width: 14rem; }
+td[data-polje="jedinica_mere"] { width: 5rem; }
+td.prazno { color: #b4bac6; }
+
+.minus { color: var(--greska); font-weight: 600; }
+
+/* Neaktivan artikal: ceo red bled */
+tr.neaktivan td:not(:last-child) { color: #9aa2b1; }
+tr.neaktivan td.naziv { text-decoration: line-through; text-decoration-color: #c3c8d2; }
+
+/* Izmenjive ćelije: na prelaz mišem se vidi da mogu da se kliknu */
+td.izmenjivo {
+  position: relative;
+  cursor: text;
+  border-radius: 6px;
+}
+td.izmenjivo:hover {
+  background: var(--izabrano) !important;
+  box-shadow: inset 0 0 0 1px #c9d6fb;
+}
+td.izmenjivo:hover::after {
+  content: "✎";
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: var(--akcenat);
+  opacity: 0.7;
+}
+td.izmenjivo:focus-visible { outline: 2px solid var(--akcenat); outline-offset: -2px; }
+td.menja-se { padding: 4px 6px !important; }
+td.menja-se:hover::after { content: none; }
+td.cuva-se { opacity: 0.6; }
+
+.izmena-polje {
+  width: 100%;
+  min-width: 6rem;
+  padding: 6px 8px;
+  font-size: 0.95rem;
+  font-weight: inherit;
+  border: 2px solid var(--akcenat);
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+  outline: none;
+}
+
+/* Upravo sačuvan red kratko zatreperi zeleno; novi artikal ostaje istaknut */
+@keyframes sacuvano {
+  from { background: #c8ecd4; }
+  to { background: transparent; }
+}
+tr.sacuvano td { animation: sacuvano 1.2s ease-out; }
+tr.novo td { background: var(--novo); }
+
+/* Prekidač (checkbox kao "switch") za aktivan */
+.prekidac { display: inline-flex; cursor: pointer; }
+.prekidac input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 2.5rem;
+  height: 1.4rem;
+  margin: 0;
+  padding: 0;
+  background: #cfd5df;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.prekidac input::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(1.4rem - 6px);
+  height: calc(1.4rem - 6px);
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+.prekidac input:checked { background: var(--uspeh); }
+.prekidac input:checked::before { transform: translateX(1.1rem); }
+.prekidac input:focus-visible { outline: 2px solid var(--akcenat); outline-offset: 2px; }
+
+.nema {
+  margin: 0;
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--prigusen);
+}
+
+.pomoc { margin: 10px 0 0; font-size: 0.85rem; color: var(--prigusen); }
+kbd {
+  padding: 1px 6px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  background: var(--kartica);
+  border: 1px solid var(--linija);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Popup za novi artikal ---------- */
+
+#dijalog-artikal {
+  width: min(560px, 94vw);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(20, 24, 35, 0.3);
+}
+#dijalog-artikal[open] { animation: iskoci 0.15s ease-out; }
+@keyframes iskoci {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.forma-artikal {
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--kartica);
+}
+.forma-artikal .dijalog-zaglavlje { padding: 20px 20px 4px; }
+.forma-artikal .dijalog-zaglavlje h2 { font-size: 1.3rem; }
+
+.polja {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  padding: 16px 20px;
+}
+.polja .puno { grid-column: 1 / -1; }
+.polja label { font-weight: 600; font-size: 0.85rem; }
+.polja input:focus {
+  outline: none;
+  border-color: var(--akcenat);
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+}
+
+label.cekiraj {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  color: var(--tekst);
+  cursor: pointer;
+}
+label.cekiraj input { width: 1.15rem; height: 1.15rem; margin: 0; accent-color: var(--uspeh); }
+
+.greska-tekst { margin: 0 20px; min-height: 1.2em; color: var(--greska); font-size: 0.9rem; }
+
+.forma-artikal .dijalog-podnozje {
+  gap: 8px;
+  padding: 12px 20px 20px;
+}
+.forma-artikal .dijalog-podnozje button { padding: 10px 18px; }
+#dijalog-sacuvaj:disabled { opacity: 0.6; cursor: wait; }
+
+@media (max-width: 560px) {
+  .polja { grid-template-columns: 1fr; }
+}

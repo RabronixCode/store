@@ -3,7 +3,7 @@ import traceback
 from fastapi import Cookie, Depends, FastAPI, Query, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from typing import Annotated
 import sqlite3
 from datetime import date, datetime, timedelta
@@ -21,6 +21,7 @@ from dobavljaci import sacuvaj_dobavljaca
 from korisnici import proveri_korisnika
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
 from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu, prikazi_artikle, azuriraj_stanje
+from artikli import svi_artikli, jedan_artikal, izmeni_artikal, dodaj_jedan_artikal, artikal_postoji
 from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
@@ -50,6 +51,28 @@ class Artikal(BaseModel):
     dobavljac_id: int
     pdv: float
     sifra_dobavljac: int
+    # Ako je popunjeno: artikal kod nas VEĆ postoji (npr. dodat na stranici Artikli),
+    # pa se samo povezuje sa dobavljačem, umesto da se pravi novi (duplikat).
+    sifra_lokalna: int | None = None
+
+TekstObavezan = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
+TekstNeobavezan = Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)]
+
+class NoviArtikal(BaseModel):
+    naziv: TekstObavezan
+    kategorija: TekstNeobavezan = ""
+    bar_kod: TekstNeobavezan = ""
+    prodajna_cena: Annotated[float, Field(ge=0)] = 0
+    jedinica_mere: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)]
+    aktivan: bool = True
+
+class IzmenaArtikla(BaseModel):
+    # Šalje se samo polje koje se menja; ostala ostaju kakva jesu.
+    naziv: TekstObavezan | None = None
+    kategorija: TekstNeobavezan | None = None
+    bar_kod: TekstNeobavezan | None = None
+    jedinica_mere: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)] | None = None
+    aktivan: bool | None = None
 
 class Korisnik(BaseModel):
     username: str
@@ -129,6 +152,13 @@ async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
     else:
         print("OVO NIJE VLASNIK")
 
+@app.get("/vlasnik/artikli.html")
+async def stranica_artikli(korisnik = Depends(trenutni_korisnik)):
+    if korisnik == 'vlasnik':
+        return FileResponse("vlasnik/artikli.html", headers={"Cache-Control": "no-store"})
+    else:
+        raise ForbiddenAccess()
+
 @app.get("/pocetna.html")
 async def stranica_pocetna(korisnik = Depends(trenutni_korisnik)):
     print("USAO U ULAZ")
@@ -185,6 +215,26 @@ async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str, korisnik = Dep
 @app.get('/artikli')
 async def pretrazi_artikle(request: Request, korisnik = Depends(trenutni_korisnik)):
     return vrati_artikle(request.query_params['q'], request.query_params['limit'])
+
+# Stranica Artikli (samo vlasnik)
+
+@app.get('/artikli/svi')
+async def lista_svih_artikala(korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'vlasnik':
+        raise ForbiddenAccess()
+    return vrati_sve_artikle()
+
+@app.post('/artikli')
+async def kreiraj_jedan_artikal(artikal: NoviArtikal, korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'vlasnik':
+        raise ForbiddenAccess()
+    return unesi_jedan_artikal(artikal)
+
+@app.patch('/artikli/{sifra}')
+async def promeni_artikal(sifra: int, izmena: IzmenaArtikla, korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'vlasnik':
+        raise ForbiddenAccess()
+    return sacuvaj_izmenu_artikla(sifra, izmena)
 
 @app.post('/racuni')
 async def kreiraj_racun(kupovina: Kupovina, korisnik = Depends(trenutni_korisnik)):
@@ -321,9 +371,20 @@ def unesi_artikle(artikli: list[Artikal]):
     try:
         konekcija = konektuj_se()
         for a in artikli:
-            sifra = sacuvaj_artikal(konekcija, a)
+            if a.sifra_lokalna is not None:
+                # Artikal već postoji kod nas: samo ga povezujemo sa šifrom dobavljača
+                if not artikal_postoji(konekcija, a.sifra_lokalna):
+                    konekcija.rollback()
+                    raise DuplicateInputError(f"Artikal sa našom šifrom {a.sifra_lokalna} ne postoji!")
+                sifra = a.sifra_lokalna
+            else:
+                sifra = sacuvaj_artikal(konekcija, a)
             sacuvaj_dobavljac_artikal(konekcija, sifra, a.sifra_dobavljac, a.dobavljac_id, a.naziv, a.nabavna_cena, a.pdv)
         konekcija.commit()
+    except sqlite3.IntegrityError as e:
+        konekcija.rollback()
+        print(type(e).__name__, e)
+        raise DuplicateInputError("Taj artikal je već povezan sa ovim dobavljačem (pod drugom šifrom dobavljača)!")
     except sqlite3.Error as e:
         print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
     except Exception as e:
@@ -399,6 +460,59 @@ def vrati_artikle(text, limit):
     finally:
         konekcija.close()
 
+def vrati_sve_artikle():
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+        return svi_artikli(konekcija)
+    finally:
+        konekcija.close()
+
+def unesi_jedan_artikal(a: NoviArtikal):
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+        sifra = dodaj_jedan_artikal(
+            konekcija, a.naziv, a.kategorija or None, a.bar_kod or None,
+            a.prodajna_cena, a.jedinica_mere, 1 if a.aktivan else 0
+        )
+        konekcija.commit()
+        return jedan_artikal(konekcija, sifra)
+    except Exception as e:
+        konekcija.rollback()
+        print(type(e).__name__, e)
+        traceback.print_exc()
+        raise
+    finally:
+        konekcija.close()
+
+def sacuvaj_izmenu_artikla(sifra, izmena: IzmenaArtikla):
+    izmene = izmena.model_dump(exclude_unset=True)
+    # Kolone koje ne smeju biti prazne: null znači "nije poslato", ne "obriši"
+    izmene = {k: v for k, v in izmene.items() if not (v is None and k in ("naziv", "jedinica_mere", "aktivan"))}
+    if "aktivan" in izmene:
+        izmene["aktivan"] = 1 if izmene["aktivan"] else 0
+    for k in ("kategorija", "bar_kod"):
+        if k in izmene and not izmene[k]:
+            izmene[k] = None   # prazno polje se čuva kao NULL
+    if not izmene:
+        return JSONResponse(status_code=400, content="Nema izmena.")
+
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+        if izmeni_artikal(konekcija, sifra, izmene) == 0:
+            return JSONResponse(status_code=404, content=f"Artikal sa šifrom {sifra} ne postoji.")
+        konekcija.commit()
+        return jedan_artikal(konekcija, sifra)
+    except Exception as e:
+        konekcija.rollback()
+        print(type(e).__name__, e)
+        traceback.print_exc()
+        raise
+    finally:
+        konekcija.close()
+
 def unesi_racun(kupovina: Kupovina):
     # Cena i nabavna cena se uzimaju iz baze, ne sa stranice (da se ne bi mogle podmetnuti)
     if len(kupovina.stavke) == 0:
@@ -418,7 +532,11 @@ def unesi_racun(kupovina: Kupovina):
             if not artikal:
                 konekcija.rollback()
                 return JSONResponse(status_code=404, content=f"Artikal sa šifrom {s.sifra} ne postoji.")
-            sifra, naziv, jedinica_mere, prodajna_cena, nabavna_cena = artikal
+            sifra, naziv, jedinica_mere, prodajna_cena, nabavna_cena, aktivan = artikal
+            if not aktivan:
+                # Npr. vlasnik ga je isključio dok je već bio u korpi
+                konekcija.rollback()
+                return JSONResponse(status_code=409, content=f"Artikal „{naziv}“ (šifra {sifra}) više nije aktivan. Izbaci ga iz korpe.")
             sacuvaj_stavka_racuna(konekcija, racun_id, sifra, naziv, jedinica_mere, s.kolicina, prodajna_cena, nabavna_cena)
             azuriraj_stanje(konekcija, -s.kolicina, sifra)   # prodato se skida sa stanja
             stavke_racuna.append({

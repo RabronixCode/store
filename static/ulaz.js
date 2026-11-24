@@ -114,6 +114,7 @@ async function dodaj_ulaz() {
     if (missingData.length > 0) {
         cnt = missingData.length;
         const podatak = await napraviListuArtikala(missingData, cnt);
+        if (podatak === "greska") return;   // poruka o grešci je već ispisana, unos ostaje
         if (podatak !== 0) {
             form.reset();
             document.getElementById("poruka").textContent = "Ponistili ste ceo unos!";
@@ -177,8 +178,12 @@ function dodaj_artikal(red) {
     dobavljac_id = document.getElementById('dobavljac').value;
     pdv = red.querySelector('[data-polje="pdv"]').value;
     sifra_dobavljac = red.querySelector('[data-polje="sifra_dobavljac"]').value;
+    // Prazno = pravi se novi artikal; broj = povezuje se postojeći artikal sa tom našom šifrom
+    const sifraLokalnaPolje = red.querySelector('[name="sifra_lokalna"]').value;
+    const sifra_lokalna = sifraLokalnaPolje === "" ? null : Number(sifraLokalnaPolje);
 
     const sviPodaci = {
+        sifra_lokalna,
         naziv,
         kategorija,
         bar_kod,
@@ -217,13 +222,19 @@ novi_artikal_lista.addEventListener("click", async (event) => {
                 });
 
                 const result = await response.json();
+                if (!response.ok) {
+                    // npr. nepostojeća "naša šifra": ulaz se NE nastavlja
+                    throw new Error(typeof result === "string" ? result : "Artikli nisu sačuvani, ulaz nije unet.");
+                }
                 alert(result, "IZ ARTIKALA");
 
             } catch (error) {
                 if (error instanceof Error) {
                     document.getElementById("poruka").textContent = error.message;
                 }
-            
+                dijalog.close();
+                zavrsiDijalog("greska");
+                return;
             }
             dijalog.close();
             zavrsiDijalog(cnt);

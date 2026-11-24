@@ -8,7 +8,7 @@ def sacuvaj_racun(konekcija, korisnik):
 
 def vrati_artikal_za_racun(konekcija, sifra):
     veza = konekcija.cursor()
-    upit = "SELECT sifra, naziv, jedinica_mere, prodajna_cena, nabavna_cena_ponderisana FROM artikal WHERE sifra = ?"
+    upit = "SELECT sifra, naziv, jedinica_mere, prodajna_cena, nabavna_cena_ponderisana, aktivan FROM artikal WHERE sifra = ?"
     return veza.execute(upit, (sifra,)).fetchone()
 
 def sacuvaj_stavka_racuna(konekcija, racun_id, sifra, naziv, jedinica_mere, kolicina, cena_po_komadu, nabavna_cena):

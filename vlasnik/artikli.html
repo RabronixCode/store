@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artikli</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/artikli.css">
+</head>
+<body>
+  <!--
+    Stranica za vlasnika: spisak svih artikala.
+    Servira je ruta /vlasnik/artikli.html u main.py (samo za vlasnika).
+    Stil: static/artikli.css, skripta: static/artikli.js.
+
+    Šta se menja direktno u tabeli (klik na ćeliju): naziv, kategorija, bar kod,
+    jedinica mere i aktivan (checkbox). Stanje i cene se ne menjaju ovde.
+  -->
+  <main class="artikli">
+    <nav>
+      <a href="/pocetna.html">POCETNA</a>
+      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
+      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
+      <a href="/vlasnik/artikli.html" aria-current="page">Artikli</a>
+    </nav>
+
+    <header class="artikli-zaglavlje">
+      <div>
+        <h1>Artikli</h1>
+        <p class="podnaslov" id="brojac">Učitavanje…</p>
+      </div>
+      <div class="akcije">
+        <button type="button" id="ponisti-filtere" class="sekundarno" hidden>Poništi filtere</button>
+        <button type="button" id="dodaj-artikal">
+          <span aria-hidden="true">+</span> Dodaj artikal
+        </button>
+      </div>
+    </header>
+
+    <p id="poruka" role="status"></p>
+
+    <div class="tabela-okvir">
+      <table class="tabela-artikli">
+        <caption class="samo-citac">Svi artikli. Klik na zaglavlje sortira, polja ispod filtriraju.</caption>
+        <thead>
+          <!-- Red 1: naziv kolone; klik sortira (rastuće → opadajuće → bez sortiranja) -->
+          <tr class="naslovi">
+            <th scope="col" data-kolona="sifra" class="broj" aria-sort="ascending"><button type="button" class="sortiraj">Šifra</button></th>
+            <th scope="col" data-kolona="naziv"><button type="button" class="sortiraj">Naziv</button></th>
+            <th scope="col" data-kolona="kategorija"><button type="button" class="sortiraj">Kategorija</button></th>
+            <th scope="col" data-kolona="bar_kod"><button type="button" class="sortiraj">Bar kod</button></th>
+            <th scope="col" data-kolona="jedinica_mere"><button type="button" class="sortiraj">JM</button></th>
+            <th scope="col" data-kolona="stanje" class="broj"><button type="button" class="sortiraj">Stanje</button></th>
+            <th scope="col" data-kolona="prodajna_cena" class="broj"><button type="button" class="sortiraj">Prodajna cena</button></th>
+            <th scope="col" data-kolona="nabavna_cena_ponderisana" class="broj"><button type="button" class="sortiraj">Nabavna cena</button></th>
+            <th scope="col" data-kolona="aktivan" class="sredina"><button type="button" class="sortiraj">Aktivan</button></th>
+          </tr>
+          <!-- Red 2: filter za svaku kolonu. Brojevi prihvataju i >, <, >=, <=, = (npr. ">10"). -->
+          <tr class="filteri">
+            <td><input type="search" data-filter="sifra" placeholder="npr. 12" aria-label="Filter šifra"></td>
+            <td><input type="search" data-filter="naziv" placeholder="Traži…" aria-label="Filter naziv"></td>
+            <td><input type="search" data-filter="kategorija" placeholder="Traži…" aria-label="Filter kategorija"></td>
+            <td><input type="search" data-filter="bar_kod" placeholder="Traži…" aria-label="Filter bar kod"></td>
+            <td><input type="search" data-filter="jedinica_mere" placeholder="Traži…" aria-label="Filter jedinica mere"></td>
+            <td><input type="search" data-filter="stanje" placeholder="npr. <=0" aria-label="Filter stanje"></td>
+            <td><input type="search" data-filter="prodajna_cena" placeholder="npr. >100" aria-label="Filter prodajna cena"></td>
+            <td><input type="search" data-filter="nabavna_cena_ponderisana" placeholder="npr. >100" aria-label="Filter nabavna cena"></td>
+            <td>
+              <select data-filter="aktivan" aria-label="Filter aktivan">
+                <option value="">Svi</option>
+                <option value="1">Aktivni</option>
+                <option value="0">Neaktivni</option>
+              </select>
+            </td>
+          </tr>
+        </thead>
+        <tbody id="artikli-telo"></tbody>
+      </table>
+      <p id="nema-artikala" class="nema" hidden>Nijedan artikal ne odgovara filterima.</p>
+    </div>
+
+    <p class="pomoc">
+      Klikni na naziv, kategoriju, bar kod ili jedinicu mere da ih izmeniš.
+      <kbd>Enter</kbd> ili klik van polja čuva, <kbd>Esc</kbd> odustaje.
+    </p>
+  </main>
+
+  <!-- Šablon jednog reda. data-polje = kolona; .izmenjivo = može da se klikne i menja. -->
+  <template id="red-sablon">
+    <tr>
+      <td class="broj sifra" data-polje="sifra"></td>
+      <td class="izmenjivo naziv" data-polje="naziv" data-tip="tekst" tabindex="0"></td>
+      <td class="izmenjivo" data-polje="kategorija" data-tip="tekst" tabindex="0"></td>
+      <td class="izmenjivo mono" data-polje="bar_kod" data-tip="tekst" tabindex="0"></td>
+      <td class="izmenjivo" data-polje="jedinica_mere" data-tip="jm" tabindex="0"></td>
+      <td class="broj" data-polje="stanje"></td>
+      <td class="broj" data-polje="prodajna_cena"></td>
+      <td class="broj prigusen" data-polje="nabavna_cena_ponderisana"></td>
+      <td class="sredina">
+        <label class="prekidac">
+          <input type="checkbox" data-polje="aktivan">
+          <span class="samo-citac">Aktivan</span>
+        </label>
+      </td>
+    </tr>
+  </template>
+
+  <!-- Popup za novi artikal -->
+  <dialog id="dijalog-artikal" aria-labelledby="dijalog-naslov">
+    <form id="forma-artikal" method="dialog" class="forma-artikal">
+      <header class="dijalog-zaglavlje">
+        <h2 id="dijalog-naslov">Novi artikal</h2>
+        <p>Stanje i nabavna cena kreću od 0. Menjaju se tek kroz ulaz robe.</p>
+      </header>
+
+      <div class="polja">
+        <label class="puno">Naziv *
+          <input name="naziv" type="text" required maxlength="255" autocomplete="off">
+        </label>
+        <label>Jedinica mere *
+          <input name="jedinica_mere" type="text" required maxlength="10" list="jedinice-mere" autocomplete="off" value="kom">
+        </label>
+        <label>Prodajna cena (RSD)
+          <input name="prodajna_cena" type="number" min="0" step="0.01" inputmode="decimal" value="0">
+        </label>
+        <label>Kategorija
+          <input name="kategorija" type="text" maxlength="100" autocomplete="off">
+        </label>
+        <label>Bar kod
+          <input name="bar_kod" type="text" maxlength="50" inputmode="numeric" autocomplete="off">
+        </label>
+        <label class="cekiraj puno">
+          <input name="aktivan" type="checkbox" checked>
+          Aktivan (može da se prodaje)
+        </label>
+      </div>
+
+      <p id="dijalog-greska" class="greska-tekst" role="alert"></p>
+
+      <footer class="dijalog-podnozje">
+        <button type="button" id="dijalog-odustani" class="sekundarno">Odustani</button>
+        <button type="submit" id="dijalog-sacuvaj">Sačuvaj artikal</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <datalist id="jedinice-mere">
+    <option value="kom"></option>
+    <option value="kg"></option>
+    <option value="g"></option>
+    <option value="l"></option>
+    <option value="m"></option>
+    <option value="pak"></option>
+  </datalist>
+
+  <script src="/artikli.js"></script>
+</body>
+</html>
