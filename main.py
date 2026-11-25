@@ -17,7 +17,7 @@ from Errors.ForbiddenAccess import ForbiddenAccess
 from Errors.NotLoggedIn import NotLoggedIn
 
 from db import konektuj_se
-from dobavljaci import sacuvaj_dobavljaca
+from dobavljaci import sacuvaj_dobavljaca, pregled_dobavljaca, jedan_dobavljac, naziv_zauzet, promeni_naziv_dobavljaca, artikli_dobavljaca
 from korisnici import proveri_korisnika
 from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
 from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu, prikazi_artikle, azuriraj_stanje
@@ -155,6 +155,13 @@ async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
     else:
         print("OVO NIJE VLASNIK")
 
+@app.get("/vlasnik/dobavljac.html")
+async def stranica_dobavljac(korisnik = Depends(trenutni_korisnik)):
+    if korisnik == 'vlasnik':
+        return FileResponse("vlasnik/dobavljac.html", headers={"Cache-Control": "no-store"})
+    else:
+        raise ForbiddenAccess()
+
 @app.get("/vlasnik/artikli.html")
 async def stranica_artikli(korisnik = Depends(trenutni_korisnik)):
     if korisnik == 'vlasnik':
@@ -194,6 +201,29 @@ async def kreiraj_dobavljaca(dobavljac: Dobavljac, korisnik = Depends(trenutni_k
     proveri_duplikat(dobavljac)
     unesi_dobavljaca(dobavljac)
     return "Dobavljac sacuvan!"
+
+# Stranica Dobavljači (samo vlasnik)
+
+@app.get("/dobavljaci/pregled")
+async def pregled_svih_dobavljaca(korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'vlasnik':
+        raise ForbiddenAccess()
+    return citaj_iz_baze(pregled_dobavljaca)
+
+@app.patch("/dobavljaci/{dobavljac_id}")
+async def promeni_dobavljaca(dobavljac_id: int, dobavljac: Dobavljac, korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'vlasnik':
+        raise ForbiddenAccess()
+    return sacuvaj_naziv_dobavljaca(dobavljac_id, dobavljac.naziv)
+
+@app.get("/dobavljaci/{dobavljac_id}/artikli")
+async def artikli_jednog_dobavljaca(dobavljac_id: int, korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'vlasnik':
+        raise ForbiddenAccess()
+    dobavljac = citaj_iz_baze(jedan_dobavljac, dobavljac_id)
+    if not dobavljac:
+        return JSONResponse(status_code=404, content="Taj dobavljač ne postoji.")
+    return {"dobavljac": dobavljac, "artikli": citaj_iz_baze(artikli_dobavljaca, dobavljac_id)}
 
 @app.post("/ulazi")
 async def kreiraj_ulaz(ulaz: Ulaz, korisnik = Depends(trenutni_korisnik)):
@@ -459,6 +489,31 @@ def vrati_artikle(text, limit):
         print(artikli)
         return artikli
     except:
+        raise
+    finally:
+        konekcija.close()
+
+def citaj_iz_baze(funkcija, *argumenti):
+    """Otvori konekciju, pozovi funkciju koja samo čita, zatvori konekciju."""
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+        return funkcija(konekcija, *argumenti)
+    finally:
+        konekcija.close()
+
+def sacuvaj_naziv_dobavljaca(dobavljac_id, naziv):
+    try:
+        konekcija = konektuj_se()
+        konekcija.row_factory = sqlite3.Row
+        if naziv_zauzet(konekcija, naziv, dobavljac_id):
+            raise DuplicateInputError(f"Dobavljač „{naziv}“ već postoji!")
+        if promeni_naziv_dobavljaca(konekcija, dobavljac_id, naziv) == 0:
+            return JSONResponse(status_code=404, content="Taj dobavljač ne postoji.")
+        konekcija.commit()
+        return jedan_dobavljac(konekcija, dobavljac_id)
+    except Exception:
+        konekcija.rollback()
         raise
     finally:
         konekcija.close()

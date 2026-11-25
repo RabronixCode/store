@@ -5,30 +5,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dobavljači</title>
   <link rel="stylesheet" href="/style.css">
+  <!-- artikli.css: zajednički izgled tabela (sortiranje, filteri, izmena u ćeliji) -->
+  <link rel="stylesheet" href="/artikli.css">
+  <link rel="stylesheet" href="/dobavljaci.css">
 </head>
 <body>
-  <main>
+  <!--
+    Spisak svih dobavljača. Klik na naziv vodi na /vlasnik/dobavljac.html?id=<id>
+    (artikli tog dobavljača). Olovka pored naziva menja naziv u samoj tabeli.
+  -->
+  <main class="dobavljaci">
     <nav>
       <a href="/pocetna.html">POCETNA</a>
-      <a href="../vlasnik/dobavljaci.html" aria-current="page">Dobavljači</a>
-      <a href="../vlasnik/ulaz.html">Ulaz robe</a>
-      <a href="../vlasnik/artikli.html">Artikli</a>
+      <a href="/vlasnik/dobavljaci.html" aria-current="page">Dobavljači</a>
+      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
+      <a href="/vlasnik/artikli.html">Artikli</a>
     </nav>
 
-    <h1>Novi dobavljač</h1>
+    <header class="artikli-zaglavlje">
+      <div>
+        <h1>Dobavljači</h1>
+        <p class="podnaslov" id="brojac">Učitavanje…</p>
+      </div>
 
-    <!-- required i maxlength su samo udobnost za korisnika. Server uvek proverava ponovo. -->
-    <form id="forma-dobavljac">
-      <label>Naziv dobavljača
-        <input id="naziv" name="naziv" type="text" required maxlength="100" autocomplete="off">
-      </label>
-      <button type="submit">Sačuvaj</button>
-    </form>
+      <!-- Novi dobavljač: jedno polje i dugme, odmah u zaglavlju -->
+      <form id="forma-dobavljac" class="novi-dobavljac">
+        <label class="samo-citac" for="naziv">Naziv novog dobavljača</label>
+        <input id="naziv" name="naziv" type="text" required maxlength="100" autocomplete="off"
+               placeholder="Naziv novog dobavljača">
+        <button type="submit"><span aria-hidden="true">+</span> Dodaj dobavljača</button>
+      </form>
+    </header>
 
-    <!-- Ovde će kod iz JavaScript fajla ispisivati uspeh ili grešku -->
     <p id="poruka" role="status"></p>
+
+    <div class="pretraga-dobavljaca">
+      <input id="pretraga" type="search" placeholder="Traži dobavljača po nazivu…" aria-label="Traži dobavljača">
+    </div>
+
+    <div class="tabela-okvir">
+      <table class="tabela-artikli tabela-dobavljaci">
+        <caption class="samo-citac">Svi dobavljači. Klik na naziv otvara artikle dobavljača.</caption>
+        <thead>
+          <tr class="naslovi">
+            <th scope="col" data-kolona="naziv" aria-sort="ascending"><button type="button" class="sortiraj">Naziv</button></th>
+            <th scope="col" data-kolona="broj_artikala" class="broj"><button type="button" class="sortiraj">Artikala</button></th>
+            <th scope="col" data-kolona="broj_ulaza" class="broj"><button type="button" class="sortiraj">Ulaza robe</button></th>
+            <th scope="col" data-kolona="poslednji_ulaz" class="broj"><button type="button" class="sortiraj">Poslednji ulaz</button></th>
+            <th scope="col"><span class="samo-citac">Akcije</span></th>
+          </tr>
+        </thead>
+        <tbody id="dobavljaci-telo"></tbody>
+      </table>
+      <p id="nema-dobavljaca" class="nema" hidden></p>
+    </div>
+
+    <p class="pomoc">
+      Klikni na dobavljača da vidiš sve njegove artikle i nabavne cene.
+      Olovka (✎) menja naziv: <kbd>Enter</kbd> ili klik van polja čuva, <kbd>Esc</kbd> odustaje.
+    </p>
   </main>
 
-  <script src="../dobavljaci.js"></script>
+  <template id="dobavljac-sablon">
+    <tr class="red-dobavljac">
+      <td class="naziv-celija">
+        <a class="dobavljac-veza" data-polje="naziv"></a>
+      </td>
+      <td class="broj" data-polje="broj_artikala"></td>
+      <td class="broj" data-polje="broj_ulaza"></td>
+      <td class="broj prigusen" data-polje="poslednji_ulaz"></td>
+      <td class="akcija-celija">
+        <button type="button" class="ikona izmeni" aria-label="Izmeni naziv" title="Izmeni naziv">✎</button>
+        <span class="strelica" aria-hidden="true">›</span>
+      </td>
+    </tr>
+  </template>
+
+  <script src="/dobavljaci.js"></script>
 </body>
 </html>

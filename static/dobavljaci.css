@@ -1,0 +1,142 @@
+/* Stranice Dobavljači i Dobavljač. Dopuna za style.css i artikli.css (zajedničke tabele). */
+
+main.dobavljaci { max-width: 1000px; }
+main.dobavljac { max-width: 1400px; }
+
+/* ---------- Novi dobavljač (u zaglavlju) ---------- */
+
+form.novi-dobavljac {
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+form.novi-dobavljac input { width: 16rem; }
+form.novi-dobavljac input:focus {
+  outline: none;
+  border-color: var(--akcenat);
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+}
+form.novi-dobavljac button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(36, 87, 214, 0.25);
+}
+form.novi-dobavljac button span { font-size: 1.2rem; line-height: 1; }
+
+/* ---------- Pretraga ---------- */
+
+.pretraga-dobavljaca { margin: 0 0 12px; }
+.pretraga-dobavljaca input {
+  width: min(420px, 100%);
+  padding: 10px 14px;
+  background: var(--kartica);
+}
+.pretraga-dobavljaca.uska { margin: 0; }
+.pretraga-dobavljaca input:focus {
+  outline: none;
+  border-color: var(--akcenat);
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+}
+
+/* ---------- Spisak dobavljača ---------- */
+
+.tabela-dobavljaci tbody tr.red-dobavljac { cursor: pointer; }
+.tabela-dobavljaci tbody tr.red-dobavljac:hover td { background: var(--izabrano); }
+
+.dobavljac-veza {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--tekst);
+  text-decoration: none;
+}
+.red-dobavljac:hover .dobavljac-veza { color: var(--akcenat); }
+.dobavljac-veza:focus-visible { outline: 2px solid var(--akcenat); outline-offset: 2px; border-radius: 4px; }
+
+.akcija-celija {
+  width: 5.5rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.ikona {
+  display: inline-grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  font-size: 1rem;
+  color: var(--prigusen);
+  background: transparent;
+  border-radius: 6px;
+}
+.ikona:hover { color: var(--akcenat); background: #dfe7fd; }
+.strelica {
+  display: inline-block;
+  width: 1.5rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #b4bac6;
+  vertical-align: middle;
+  text-align: center;
+  transition: transform 0.15s, color 0.15s;
+}
+.red-dobavljac:hover .strelica { color: var(--akcenat); transform: translateX(3px); }
+tr.menja-se .strelica { visibility: hidden; }
+
+/* ---------- Jedan dobavljač ---------- */
+
+.nazad {
+  display: inline-block;
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  color: var(--akcenat);
+  text-decoration: none;
+}
+.nazad:hover { text-decoration: underline; }
+
+.nadnaslov {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--prigusen);
+}
+
+.kartice {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 4px 0 12px;
+}
+.kartica-broj {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--kartica);
+  border: 1px solid var(--linija);
+  border-radius: 12px;
+}
+.kartica-broj .oznaka { font-size: 0.8rem; color: var(--prigusen); }
+.kartica-broj strong { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+
+/* Nabavna cena je najvažnija na ovoj stranici: blago istaknuta kolona */
+.tabela-dobavljac th.istaknuto { background: #e8eefc; }
+.tabela-dobavljac td.istaknuto { background: #f5f8ff; }
+.tabela-dobavljac th.istaknuto .sortiraj { color: var(--akcenat); }
+
+.pozitivno { color: var(--uspeh); font-weight: 600; }
+
+.ulaz-celija { line-height: 1.25; }
+.ulaz-celija small { display: block; font-size: 0.75rem; color: #9aa2b1; }
+
+/* Mnogo kolona: malo zbijenije, da cela tabela stane na običan ekran */
+.tabela-dobavljac { font-size: 0.92rem; }
+.tabela-dobavljac tbody td { padding: 9px 9px; }
+.tabela-dobavljac .sortiraj { padding: 0 9px; letter-spacing: 0.03em; }
+.tabela-dobavljac td.naziv { min-width: 9rem; }
+.tabela-dobavljac td.ulaz-celija { white-space: nowrap; }

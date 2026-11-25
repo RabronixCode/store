@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dobavljač</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/artikli.css">
+  <link rel="stylesheet" href="/dobavljaci.css">
+</head>
+<body>
+  <!--
+    Artikli jednog dobavljača: /vlasnik/dobavljac.html?id=<dobavljac_id>
+    Podatke daje GET /dobavljaci/<id>/artikli.
+    Nabavna cena = cena iz POSLEDNJEG ulaza robe od ovog dobavljača
+    (ako artikal još nije stigao kroz ulaz: cena upisana kad je artikal povezan sa dobavljačem).
+  -->
+  <main class="dobavljac">
+    <nav>
+      <a href="/pocetna.html">POCETNA</a>
+      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
+      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
+      <a href="/vlasnik/artikli.html">Artikli</a>
+    </nav>
+
+    <a class="nazad" href="/vlasnik/dobavljaci.html">← Svi dobavljači</a>
+
+    <header class="artikli-zaglavlje">
+      <div>
+        <p class="nadnaslov">Dobavljač</p>
+        <h1 id="naziv-dobavljaca">Učitavanje…</h1>
+      </div>
+      <div class="pretraga-dobavljaca uska">
+        <input id="pretraga" type="search" placeholder="Traži po nazivu ili šifri…" aria-label="Traži artikal">
+      </div>
+    </header>
+
+    <!-- Kratak pregled -->
+    <section class="kartice" aria-label="Pregled">
+      <div class="kartica-broj">
+        <span class="oznaka">Artikala</span>
+        <strong id="k-artikala">–</strong>
+      </div>
+      <div class="kartica-broj">
+        <span class="oznaka">Aktivnih</span>
+        <strong id="k-aktivnih">–</strong>
+      </div>
+      <div class="kartica-broj">
+        <span class="oznaka" title="Zbir: stanje × nabavna cena sa PDV, samo za artikle sa stanjem većim od 0">Vrednost zaliha (nabavno, sa PDV)</span>
+        <strong id="k-vrednost">–</strong>
+      </div>
+    </section>
+
+    <p id="poruka" role="status"></p>
+
+    <div class="tabela-okvir">
+      <table class="tabela-artikli tabela-dobavljac">
+        <caption class="samo-citac">Artikli dobavljača. Klik na zaglavlje sortira.</caption>
+        <thead>
+          <tr class="naslovi">
+            <th scope="col" data-kolona="sifra" class="broj" aria-sort="ascending"><button type="button" class="sortiraj">Šifra</button></th>
+            <th scope="col" data-kolona="naziv"><button type="button" class="sortiraj">Naziv</button></th>
+            <th scope="col" data-kolona="sifra_dobavljac"><button type="button" class="sortiraj" title="Šifra pod kojom ovaj dobavljač vodi artikal">Šifra dob.</button></th>
+            <th scope="col" data-kolona="jedinica_mere"><button type="button" class="sortiraj">JM</button></th>
+            <th scope="col" data-kolona="nabavna_cena" class="broj istaknuto"><button type="button" class="sortiraj" title="Iz poslednjeg ulaza robe od ovog dobavljača">Nabavna bez PDV</button></th>
+            <th scope="col" data-kolona="pdv" class="broj"><button type="button" class="sortiraj">PDV</button></th>
+            <th scope="col" data-kolona="nabavna_cena_pdv" class="broj istaknuto"><button type="button" class="sortiraj">Nabavna sa PDV</button></th>
+            <th scope="col" data-kolona="prodajna_cena" class="broj"><button type="button" class="sortiraj">Prodajna</button></th>
+            <th scope="col" data-kolona="marza" class="broj"><button type="button" class="sortiraj" title="(prodajna − nabavna sa PDV) / nabavna sa PDV × 100">Marža</button></th>
+            <th scope="col" data-kolona="stanje" class="broj"><button type="button" class="sortiraj">Stanje</button></th>
+            <th scope="col" data-kolona="ukupno_nabavljeno" class="broj"><button type="button" class="sortiraj" title="Ukupna količina primljena od ovog dobavljača kroz sve ulaze">Nabavljeno</button></th>
+            <th scope="col" data-kolona="poslednji_ulaz" class="broj"><button type="button" class="sortiraj">Poslednji ulaz</button></th>
+          </tr>
+        </thead>
+        <tbody id="artikli-telo"></tbody>
+      </table>
+      <p id="nema-artikala" class="nema" hidden></p>
+    </div>
+
+    <p class="pomoc">
+      Nabavna cena je iz poslednjeg ulaza robe od ovog dobavljača. Ako artikal još nije stigao
+      kroz ulaz, prikazuje se cena upisana kad je artikal povezan sa dobavljačem (označeno sa *).
+    </p>
+  </main>
+
+  <template id="red-sablon">
+    <tr>
+      <td class="broj sifra" data-polje="sifra"></td>
+      <td class="naziv" data-polje="naziv"></td>
+      <td class="mono prigusen" data-polje="sifra_dobavljac"></td>
+      <td class="prigusen" data-polje="jedinica_mere"></td>
+      <td class="broj istaknuto jako" data-polje="nabavna_cena"></td>
+      <td class="broj prigusen" data-polje="pdv"></td>
+      <td class="broj istaknuto" data-polje="nabavna_cena_pdv"></td>
+      <td class="broj" data-polje="prodajna_cena"></td>
+      <td class="broj" data-polje="marza"></td>
+      <td class="broj" data-polje="stanje"></td>
+      <td class="broj prigusen" data-polje="ukupno_nabavljeno"></td>
+      <td class="broj prigusen ulaz-celija">
+        <span data-polje="poslednji_ulaz"></span>
+        <small data-polje="poslednji_racun"></small>
+      </td>
+    </tr>
+  </template>
+
+  <script src="/dobavljac.js"></script>
+</body>
+</html>
