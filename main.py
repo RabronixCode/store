@@ -1,9 +1,10 @@
 import traceback
 
 from fastapi import Cookie, Depends, FastAPI, Query, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 from typing import Annotated
 import sqlite3
 from datetime import date, datetime, timedelta
@@ -15,13 +16,15 @@ from Errors.DuplicateInputError import DuplicateInputError
 from Errors.BadCredentials import BadCredentials
 from Errors.ForbiddenAccess import ForbiddenAccess
 from Errors.NotLoggedIn import NotLoggedIn
+from Errors.BadInput import BadInput
 
 from db import konektuj_se
 from dobavljaci import sacuvaj_dobavljaca, pregled_dobavljaca, jedan_dobavljac, naziv_zauzet, promeni_naziv_dobavljaca, artikli_dobavljaca
 from korisnici import proveri_korisnika
-from ulazi import sacuvaj_ulaz, proveri_postojanje, sacuvaj_stavka_ulaza
-from artikli import sacuvaj_artikal, sacuvaj_dobavljac_artikal, azuriraj_ponderisanu_cenu, prikazi_artikle, azuriraj_stanje
-from artikli import svi_artikli, jedan_artikal, izmeni_artikal, dodaj_jedan_artikal, artikal_postoji
+from ulazi import (pretrazi_artikle_za_ulaz, veza_sa_dobavljacem, zauzeti_dokumenti, sacuvaj_ulaz,
+                   lista_ulaza, jedan_ulaz, izmeni_zaglavlje, izmeni_stavku)
+from artikli import prikazi_artikle, azuriraj_stanje
+from artikli import svi_artikli, jedan_artikal, izmeni_artikal, dodaj_jedan_artikal
 from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
@@ -30,31 +33,6 @@ from racun_pdf import izdaj_racun
 
 class Dobavljac(BaseModel):
     naziv: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-
-class Ulaz(BaseModel):
-    dobavljac_id: int
-    racun_broj: str
-    racun_poziv_na_broj: str
-    datum_vreme: date | None = None
-    stavke: list
-
-class Stavka(BaseModel):
-    stavke: list
-
-class Artikal(BaseModel):
-    naziv: str
-    kategorija: str
-    bar_kod: str
-    prodajna_cena: float
-    jedinica_mere: str
-    nabavna_cena: float
-    dobavljac_id: int
-    pdv: float
-    sifra_dobavljac: int
-    minimalno_stanje: Annotated[float, Field(ge=0)] = 0
-    # Ako je popunjeno: artikal kod nas VEĆ postoji (npr. dodat na stranici Artikli),
-    # pa se samo povezuje sa dobavljačem, umesto da se pravi novi (duplikat).
-    sifra_lokalna: int | None = None
 
 TekstObavezan = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 TekstNeobavezan = Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)]
@@ -76,6 +54,136 @@ class IzmenaArtikla(BaseModel):
     jedinica_mere: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)] | None = None
     minimalno_stanje: Annotated[float, Field(ge=0)] | None = None
     aktivan: bool | None = None
+
+# ---------- Ulaz robe ----------
+
+NAJRANIJI_DATUM = date(2000, 1, 1)
+KratakTekst = Annotated[str, StringConstraints(max_length=100)]
+Kolicina = Annotated[float, Field(gt=0, le=1_000_000, allow_inf_nan=False)]
+Cena = Annotated[float, Field(ge=0, le=100_000_000, allow_inf_nan=False)]
+Pdv = Annotated[float, Field(ge=0, le=100, allow_inf_nan=False)]
+
+
+def _tekst_ili_none(v):
+    """'  ' -> None, ' 123 ' -> '123'. Brojevi se prihvataju kao tekst."""
+    if v is None:
+        return None
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        v = str(v)
+    if isinstance(v, str):
+        return v.strip() or None
+    return v
+
+
+class DokumentUlaza(BaseModel):
+    """Zaglavlje ulaza: pravila važe i za novi ulaz i za izmenu postojećeg."""
+    racun_broj: KratakTekst | None = None
+    racun_poziv_na_broj: KratakTekst | None = None
+    ulaz_datum: date | None = None            # datum računa
+    otpremnica_broj: KratakTekst | None = None
+    otpremnica_datum: date | None = None
+    valuta_datum: date | None = None          # rok plaćanja
+
+    @field_validator("racun_broj", "racun_poziv_na_broj", "otpremnica_broj", mode="before")
+    @classmethod
+    def _prazan_tekst(cls, v):
+        return _tekst_ili_none(v)
+
+    @field_validator("ulaz_datum", "otpremnica_datum", "valuta_datum", mode="before")
+    @classmethod
+    def _prazan_datum(cls, v):
+        return None if v == "" else v
+
+    @model_validator(mode="after")
+    def _pravila_dokumenta(self):
+        if not (self.racun_broj or self.otpremnica_broj):
+            raise ValueError("Unesi broj računa ili broj otpremnice (bar jedno).")
+        if not (self.ulaz_datum or self.otpremnica_datum):
+            raise ValueError("Unesi datum računa ili datum otpremnice (bar jedan).")
+        if self.racun_poziv_na_broj and not self.racun_broj:
+            raise ValueError("Poziv na broj se odnosi na račun: unesi i broj računa.")
+        danas = date.today()
+        for ime, d in (("Datum računa", self.ulaz_datum), ("Datum otpremnice", self.otpremnica_datum)):
+            if d and d > danas:
+                raise ValueError(f"{ime} ne može biti u budućnosti.")
+            if d and d < NAJRANIJI_DATUM:
+                raise ValueError(f"{ime} je pre 2000. godine. Proveri unos.")
+        if self.valuta_datum:
+            najraniji = min(d for d in (self.ulaz_datum, self.otpremnica_datum) if d)
+            if self.valuta_datum < najraniji:
+                raise ValueError("Valuta (rok plaćanja) ne može biti pre datuma računa/otpremnice.")
+        return self
+
+
+class StavkaUlaza(BaseModel):
+    # Tačno jedno od ova dva: postojeći artikal (naša šifra) ILI podaci za novi artikal
+    sifra_artikal: Annotated[int, Field(gt=0)] | None = None
+    novi_artikal: NoviArtikal | None = None
+    sifra_dobavljac: Annotated[str, StringConstraints(max_length=50)] | None = None
+    kolicina: Kolicina
+    nabavna_cena: Cena
+    pdv: Pdv = 20
+    # Prodajna cena (sa PDV). Postojeći artikal: None = ne menja se. Nov artikal: None = 0.
+    prodajna_cena: Cena | None = None
+
+    @field_validator("sifra_dobavljac", mode="before")
+    @classmethod
+    def _prazna_sifra(cls, v):
+        return _tekst_ili_none(v)
+
+    @field_validator("prodajna_cena", mode="before")
+    @classmethod
+    def _prazna_prodajna(cls, v):
+        return None if isinstance(v, str) and not v.strip() else v
+
+    @model_validator(mode="after")
+    def _artikal(self):
+        if (self.sifra_artikal is None) == (self.novi_artikal is None):
+            raise ValueError("izaberi postojeći artikal ili unesi podatke za novi artikal.")
+        return self
+
+
+class NoviUlaz(DokumentUlaza):
+    dobavljac_id: Annotated[int, Field(gt=0)]
+    stavke: Annotated[list[StavkaUlaza], Field(min_length=1, max_length=500)]
+
+    @model_validator(mode="after")
+    def _bez_duplikata(self):
+        vidjeno = set()
+        for i, st in enumerate(self.stavke, start=1):
+            if st.sifra_artikal is not None:
+                if st.sifra_artikal in vidjeno:
+                    raise ValueError(f"Artikal {st.sifra_artikal} je unet više puta (stavka {i}). Spoji ih u jednu stavku.")
+                vidjeno.add(st.sifra_artikal)
+        sifre = [st.sifra_dobavljac for st in self.stavke if st.sifra_dobavljac]
+        if len(sifre) != len(set(sifre)):
+            raise ValueError("Ista šifra dobavljača je upisana u više stavki.")
+        return self
+
+
+class IzmenaStavke(BaseModel):
+    stavka_id: Annotated[int, Field(gt=0)]
+    sifra_dobavljac: Annotated[str, StringConstraints(max_length=50)] | None = None
+    kolicina: Kolicina
+    nabavna_cena: Cena
+    pdv: Pdv
+
+    @field_validator("sifra_dobavljac", mode="before")
+    @classmethod
+    def _prazna_sifra(cls, v):
+        return _tekst_ili_none(v)
+
+
+class IzmenaUlaza(DokumentUlaza):
+    stavke: Annotated[list[IzmenaStavke], Field(max_length=500)] = []
+
+    @model_validator(mode="after")
+    def _bez_duplikata(self):
+        ids = [st.stavka_id for st in self.stavke]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Ista stavka je poslata dva puta.")
+        return self
+
 
 class Korisnik(BaseModel):
     username: str
@@ -137,23 +245,26 @@ def trenutni_korisnik(trenutna_sesija: str | None = Cookie(default=None)):
 
 
 
+def samo_vlasnik(korisnik = Depends(trenutni_korisnik)):
+    """Zavisnost za rute koje sme da koristi samo vlasnik (kasir dobija 403 / preusmerenje)."""
+    if korisnik != 'vlasnik':
+        raise ForbiddenAccess()
+    return korisnik
+
+
 # PREUSMERAVANJE
 
 @app.get("/vlasnik/dobavljaci.html")
-async def stranica_dobavljaci(korisnik = Depends(trenutni_korisnik)):
-    print("USAO U DOBAVLJACE")
-    if korisnik == 'vlasnik':
-        return FileResponse("vlasnik/dobavljaci.html", headers={"Cache-Control": "no-store"})
-    else:
-        print("OVO NIJE VLASNIK")
+async def stranica_dobavljaci(korisnik = Depends(samo_vlasnik)):
+    return FileResponse("vlasnik/dobavljaci.html", headers={"Cache-Control": "no-store"})
 
 @app.get("/vlasnik/ulaz.html")
-async def stranica_ulazi(korisnik = Depends(trenutni_korisnik)):
-    print("USAO U ULAZ")
-    if korisnik == 'vlasnik':
-        return FileResponse("vlasnik/ulaz.html", headers={"Cache-Control": "no-store"})
-    else:
-        print("OVO NIJE VLASNIK")
+async def stranica_ulaz(korisnik = Depends(samo_vlasnik)):
+    return FileResponse("vlasnik/ulaz.html", headers={"Cache-Control": "no-store"})
+
+@app.get("/vlasnik/ulazi.html")
+async def stranica_svi_ulazi(korisnik = Depends(samo_vlasnik)):
+    return FileResponse("vlasnik/ulazi.html", headers={"Cache-Control": "no-store"})
 
 @app.get("/vlasnik/dobavljac.html")
 async def stranica_dobavljac(korisnik = Depends(trenutni_korisnik)):
@@ -189,15 +300,12 @@ async def stranica_kasa(korisnik = Depends(trenutni_korisnik)):
 # RUTE
 
 @app.get("/dobavljaci")
-async def lista_dobavljaca(korisnik = Depends(trenutni_korisnik)):
-    konekcija = konektuj_se()
-    konekcija.row_factory = sqlite3.Row
-    veza = konekcija.cursor()
-    dobavljaci = veza.execute("SELECT * FROM dobavljac").fetchall()
-    return dobavljaci
+async def lista_dobavljaca(korisnik = Depends(samo_vlasnik)):
+    return citaj_iz_baze(lambda k: [dict(r) for r in k.execute(
+        "SELECT dobavljac_id, naziv FROM dobavljac ORDER BY naziv COLLATE NOCASE").fetchall()])
 
 @app.post("/dobavljaci")
-async def kreiraj_dobavljaca(dobavljac: Dobavljac, korisnik = Depends(trenutni_korisnik)):
+async def kreiraj_dobavljaca(dobavljac: Dobavljac, korisnik = Depends(samo_vlasnik)):
     proveri_duplikat(dobavljac)
     unesi_dobavljaca(dobavljac)
     return "Dobavljac sacuvan!"
@@ -225,25 +333,52 @@ async def artikli_jednog_dobavljaca(dobavljac_id: int, korisnik = Depends(trenut
         return JSONResponse(status_code=404, content="Taj dobavljač ne postoji.")
     return {"dobavljac": dobavljac, "artikli": citaj_iz_baze(artikli_dobavljaca, dobavljac_id)}
 
+# Ulaz robe (samo vlasnik). Rute sa stalnim imenom idu PRE /ulazi/{ulaz_id}.
+
+@app.get("/ulazi/artikli")
+async def artikli_za_ulaz(q: Annotated[str, Query(max_length=100)] = "",
+                          limit: Annotated[int, Query(ge=1, le=50)] = 50,
+                          korisnik = Depends(samo_vlasnik)):
+    return citaj_iz_baze(pretrazi_artikle_za_ulaz, q, limit)
+
+@app.get("/ulazi/veza")
+async def veza_artikla_i_dobavljaca(dobavljac_id: Annotated[int, Query(gt=0)],
+                                    sifra_artikal: Annotated[int | None, Query(gt=0)] = None,
+                                    sifra_dobavljac: Annotated[str | None, Query(max_length=50)] = None,
+                                    korisnik = Depends(samo_vlasnik)):
+    if sifra_artikal is None and not (sifra_dobavljac or "").strip():
+        raise BadInput("Zadaj našu šifru artikla ili šifru dobavljača.")
+    return citaj_iz_baze(veza_sa_dobavljacem, dobavljac_id, sifra_artikal, (sifra_dobavljac or "").strip() or None)
+
+@app.get("/ulazi/provera-dokumenta")
+async def provera_dokumenta(dobavljac_id: Annotated[int, Query(gt=0)],
+                            racun_broj: Annotated[str, Query(max_length=100)] = "",
+                            otpremnica_broj: Annotated[str, Query(max_length=100)] = "",
+                            osim_ulaz_id: Annotated[int | None, Query(gt=0)] = None,
+                            korisnik = Depends(samo_vlasnik)):
+    poruke = citaj_iz_baze(zauzeti_dokumenti, dobavljac_id,
+                           racun_broj.strip() or None, otpremnica_broj.strip() or None, osim_ulaz_id)
+    return {"poruke": poruke}
+
 @app.post("/ulazi")
-async def kreiraj_ulaz(ulaz: Ulaz, korisnik = Depends(trenutni_korisnik)):
-    unesi_ulaz(ulaz)
-    return "Ulaz uspesno unet!"
+async def kreiraj_ulaz(ulaz: NoviUlaz, korisnik = Depends(samo_vlasnik)):
+    ulaz_id = pisi_u_bazu(sacuvaj_ulaz, ulaz)
+    return {"ulaz_id": ulaz_id}
 
-@app.post("/provera-stavki")
-async def proveri_stavke(stavke: Stavka, korisnik = Depends(trenutni_korisnik)):
-    stavke_fale = ne_postoji(stavke.stavke)
-    return stavke_fale
+@app.get("/ulazi")
+async def svi_ulazi(korisnik = Depends(samo_vlasnik)):
+    return citaj_iz_baze(lista_ulaza)
 
-@app.post('/novi-artikli')
-async def kreiraj_artikal(artikli: list[Artikal], korisnik = Depends(trenutni_korisnik)):
-    print(artikli)
-    unesi_artikle(artikli)
-    return "Novi artikli uspesno uneti!"
+@app.get("/ulazi/{ulaz_id}")
+async def jedan_ulaz_detalji(ulaz_id: int, korisnik = Depends(samo_vlasnik)):
+    ulaz = citaj_iz_baze(jedan_ulaz, ulaz_id)
+    if not ulaz:
+        raise BadInput("Taj ulaz ne postoji.", 404)
+    return ulaz
 
-@app.get('/provera-broj-racuna')
-async def proveri_broj_racuna(dobavljac_id: str, racun_broj: str, korisnik = Depends(trenutni_korisnik)):
-    return broj_racuna_postoji(dobavljac_id, racun_broj)
+@app.put("/ulazi/{ulaz_id}")
+async def izmeni_ulaz(ulaz_id: int, izmena: IzmenaUlaza, korisnik = Depends(samo_vlasnik)):
+    return pisi_u_bazu(sacuvaj_izmene_ulaza, ulaz_id, izmena)
 
 @app.get('/artikli')
 async def pretrazi_artikle(request: Request, korisnik = Depends(trenutni_korisnik)):
@@ -301,6 +436,81 @@ async def odjavi_se(request: Request, response: Response):
 #     proveri_autentikaciju(request)
 
 # EXCEPTION-i
+
+@app.exception_handler(BadInput)
+def obradjivac_losog_unosa(request, e: BadInput):
+    return JSONResponse(status_code=e.status, content=e.message)
+
+# Greške provere podataka (pydantic) pretvaramo u jednu čitljivu rečenicu na srpskom,
+# npr. "Stavka 2, količina: mora biti veće od 0."
+NAZIVI_POLJA = {
+    "dobavljac_id": "dobavljač", "racun_broj": "broj računa", "racun_poziv_na_broj": "poziv na broj",
+    "ulaz_datum": "datum računa", "otpremnica_broj": "broj otpremnice", "otpremnica_datum": "datum otpremnice",
+    "valuta_datum": "valuta", "stavke": "stavke", "sifra_artikal": "artikal", "sifra_dobavljac": "šifra dobavljača",
+    "kolicina": "količina", "nabavna_cena": "nabavna cena", "pdv": "PDV", "novi_artikal": "novi artikal",
+    "naziv": "naziv", "jedinica_mere": "jedinica mere", "prodajna_cena": "prodajna cena",
+    "minimalno_stanje": "minimalno stanje", "kategorija": "kategorija", "bar_kod": "bar kod", "q": "pretraga",
+}
+
+def _broj(x):
+    try:
+        x = float(x)
+        return str(int(x)) if x.is_integer() else str(x)
+    except (TypeError, ValueError):
+        return str(x)
+
+def _opis_greske(g):
+    tip, ctx = g.get("type", ""), g.get("ctx") or {}
+    if tip == "value_error":
+        return str(g.get("msg", "")).removeprefix("Value error, ")
+    if g.get("input", "") is None:
+        return "je obavezno"
+    poruke = {
+        "missing": "je obavezno",
+        "greater_than": f"mora biti veće od {_broj(ctx.get('gt'))}",
+        "greater_than_equal": f"ne sme biti manje od {_broj(ctx.get('ge'))}",
+        "less_than_equal": f"ne sme biti veće od {_broj(ctx.get('le'))}",
+        "string_too_long": f"je predugačko (najviše {ctx.get('max_length')} znakova)",
+        "string_too_short": "ne sme biti prazno",
+        "too_short": "mora imati bar jednu stavku",
+        "too_long": "ima previše stavki",
+        "finite_number": "mora biti broj",
+    }
+    if tip in poruke:
+        return poruke[tip]
+    if "date" in tip:
+        return "nije ispravan datum"
+    if "int" in tip or "float" in tip or "number" in tip:
+        return "mora biti broj"
+    if "json" in tip:
+        return "zahtev nije ispravan"
+    return "nije ispravno"
+
+def _mesto_greske(loc):
+    delovi, i = [], 0
+    loc = [x for x in loc if x not in ("body", "query", "path")]
+    while i < len(loc):
+        x = loc[i]
+        if x == "stavke" and i + 1 < len(loc) and isinstance(loc[i + 1], int):
+            delovi.append(f"Stavka {loc[i + 1] + 1}")
+            i += 2
+            continue
+        if isinstance(x, str) and x in NAZIVI_POLJA:
+            delovi.append(NAZIVI_POLJA[x])
+        i += 1
+    return ", ".join(delovi)
+
+@app.exception_handler(RequestValidationError)
+def obradjivac_provere(request, e: RequestValidationError):
+    g = e.errors()[0] if e.errors() else {}
+    mesto, opis = _mesto_greske(g.get("loc", ())), _opis_greske(g)
+    if g.get("type") == "value_error":
+        # Naše poruke su već cele rečenice; ispred dodajemo samo "Stavka N:" ako se odnose na stavku
+        stavka = mesto.split(",")[0] if mesto.startswith("Stavka ") else ""
+        poruka = f"{stavka}: {opis}" if stavka else opis
+    else:
+        poruka = f"{mesto[:1].upper() + mesto[1:]}: {opis}." if mesto else f"Neispravan unos: {opis}."
+    return JSONResponse(status_code=422, content=poruka)
 
 @app.exception_handler(NotAdultError)
 def obradjivac_godina(request, e: NotAdultError):
@@ -360,94 +570,6 @@ def unesi_dobavljaca(d: Dobavljac):
     finally:
         konekcija.close()
 
-def unesi_ulaz(u: Ulaz):
-    try:
-        konekcija = konektuj_se()
-        ulaz_id = sacuvaj_ulaz(konekcija, u.dobavljac_id, u.racun_broj, u.racun_poziv_na_broj, u.datum_vreme)
-        for stavka in u.stavke:
-            sifra_artikal = proveri_postojanje(konekcija, stavka['sifra'], stavka['dobavljac_id'])
-            sacuvaj_stavka_ulaza(konekcija, ulaz_id, u.dobavljac_id, stavka, sifra_artikal[0])
-            azuriraj_ponderisanu_cenu(konekcija, sifra_artikal[0], stavka['kolicina'], stavka['nabavna_cena'])
-        konekcija.commit()
-    except sqlite3.IntegrityError as e:
-        err_code = e.sqlite_errorcode
-        if err_code == sqlite3.SQLITE_CONSTRAINT_UNIQUE:
-            konekcija.rollback()
-            raise DuplicateInputError()
-    except Exception as e:
-        print(type(e).__name__, e)          # tip + poruka
-        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
-        raise  
-    finally:
-        konekcija.close()
-
-
-def ne_postoji(stavke):
-    try:
-        konekcija = konektuj_se()
-        stavke_fale = []
-        for stavka in stavke:
-            provera = proveri_postojanje(konekcija, stavka['sifra'], stavka['dobavljac_id'])
-            if not provera:
-                stavke_fale.append(stavka)
-        return stavke_fale
-    except sqlite3.Error as e:
-        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
-    except Exception as e:
-        print(type(e).__name__, e)          # tip + poruka
-        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
-        raise  
-    finally:
-        konekcija.close()
-
-def unesi_artikle(artikli: list[Artikal]):
-    try:
-        konekcija = konektuj_se()
-        for a in artikli:
-            if a.sifra_lokalna is not None:
-                # Artikal već postoji kod nas: samo ga povezujemo sa šifrom dobavljača
-                if not artikal_postoji(konekcija, a.sifra_lokalna):
-                    konekcija.rollback()
-                    raise DuplicateInputError(f"Artikal sa našom šifrom {a.sifra_lokalna} ne postoji!")
-                sifra = a.sifra_lokalna
-            else:
-                sifra = sacuvaj_artikal(konekcija, a)
-            sacuvaj_dobavljac_artikal(konekcija, sifra, a.sifra_dobavljac, a.dobavljac_id, a.naziv, a.nabavna_cena, a.pdv)
-        konekcija.commit()
-    except sqlite3.IntegrityError as e:
-        konekcija.rollback()
-        print(type(e).__name__, e)
-        raise DuplicateInputError("Taj artikal je već povezan sa ovim dobavljačem (pod drugom šifrom dobavljača)!")
-    except sqlite3.Error as e:
-        print(type(e).__name__, e.sqlite_errorcode, e.sqlite_errorname)
-    except Exception as e:
-        print(type(e).__name__, e)          # tip + poruka
-        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
-        raise
-    finally:
-        konekcija.close()
-    
-def broj_racuna_postoji(dobavljac_id, broj_racuna):
-    try:
-        konekcija = konektuj_se()
-        konekcija.row_factory = sqlite3.Row
-        veza = konekcija.cursor()
-        upit = "SELECT * FROM ulaz WHERE dobavljac_id = ? AND racun_broj = ?"
-        vrednosti = (dobavljac_id, broj_racuna)
-        rezultat = veza.execute(upit, vrednosti).fetchall()
-        print(rezultat, "REZULTAT")
-        if len(rezultat) > 0:
-            raise DuplicateInputError("Racun/otpremnica sa tim brojem vec postoji!")
-        else:
-            return False
-    except Exception as e:
-        print(type(e).__name__, e)          # tip + poruka
-        traceback.print_exc()               # ceo trag, sa linijom gde je pukla
-        raise
-    finally:
-        konekcija.close()
-
-
 def korisnik_postoji(k):
     try:
         konekcija = konektuj_se()
@@ -501,6 +623,30 @@ def citaj_iz_baze(funkcija, *argumenti):
         return funkcija(konekcija, *argumenti)
     finally:
         konekcija.close()
+
+def pisi_u_bazu(funkcija, *argumenti):
+    """Otvori konekciju, pozovi funkciju koja menja bazu, commit; ako bilo šta pukne, rollback (ništa se ne upiše)."""
+    konekcija = konektuj_se()
+    konekcija.row_factory = sqlite3.Row
+    try:
+        rezultat = funkcija(konekcija, *argumenti)
+        konekcija.commit()
+        return rezultat
+    except sqlite3.IntegrityError as e:
+        konekcija.rollback()
+        print(type(e).__name__, e)
+        raise BadInput("Podaci su u sukobu sa postojećim (npr. isti broj računa ili šifra). Osveži stranicu i pokušaj ponovo.", 409)
+    except Exception:
+        konekcija.rollback()
+        raise
+    finally:
+        konekcija.close()
+
+def sacuvaj_izmene_ulaza(konekcija, ulaz_id, izmena: IzmenaUlaza):
+    dobavljac_id = izmeni_zaglavlje(konekcija, ulaz_id, izmena)
+    for stavka in izmena.stavke:
+        izmeni_stavku(konekcija, ulaz_id, dobavljac_id, stavka)
+    return jedan_ulaz(konekcija, ulaz_id)
 
 def sacuvaj_naziv_dobavljaca(dobavljac_id, naziv):
     try:

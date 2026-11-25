@@ -4,7 +4,7 @@
 // Server: GET /dobavljaci/<id>/artikli -> { dobavljac: { dobavljac_id, naziv },
 //           artikli: [{ sifra, naziv, sifra_dobavljac, jedinica_mere, stanje, prodajna_cena,
 //                       aktivan, nabavna_cena, pdv, nabavna_cena_pdv, poslednji_ulaz,
-//                       poslednji_racun, ukupno_nabavljeno, broj_ulaza }] }
+//                       poslednji_dokument, ukupno_nabavljeno, broj_ulaza }] }
 
 const telo = document.getElementById('artikli-telo');
 const sablon = document.getElementById('red-sablon');
@@ -109,7 +109,7 @@ function nacrtaj() {
 
         polje('ukupno_nabavljeno').textContent = `${formatKolicina(a.ukupno_nabavljeno)} ${a.jedinica_mere || ''}`.trim();
         polje('poslednji_ulaz').textContent = formatDatum(a.poslednji_ulaz);
-        polje('poslednji_racun').textContent = a.poslednji_racun ? `račun ${a.poslednji_racun}` : '';
+        polje('poslednji_racun').textContent = a.poslednji_dokument || '';
         return red;
     }));
 

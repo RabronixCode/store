@@ -56,7 +56,7 @@ CREATE TABLE artikal (
 CREATE TABLE dobavljac_artikal (
     dobavljac_id INTEGER NOT NULL,
     sifra_artikal INTEGER NOT NULL,
-    sifra_dobavljac TEXT NOT NULL,
+    sifra_dobavljac TEXT,                -- šifra kod dobavljača (može biti nepoznata)
     naziv TEXT,
     nabavna_cena_bez_pdv REAL NOT NULL DEFAULT 0.0000 CHECK (nabavna_cena_bez_pdv >= 0),
     pdv REAL NOT NULL DEFAULT 20.00 CHECK (pdv >= 0),
@@ -69,11 +69,18 @@ CREATE TABLE dobavljac_artikal (
 CREATE TABLE ulaz (
     ulaz_id INTEGER PRIMARY KEY AUTOINCREMENT,
     dobavljac_id INTEGER NOT NULL,
-    racun_broj TEXT NOT NULL,
+    racun_broj TEXT,                     -- broj računa (ili otpremnice, bar jedno)
     racun_poziv_na_broj TEXT,
-    datum_vreme TEXT NOT NULL DEFAULT (date('now', 'localtime')),
+    ulaz_datum TEXT,                     -- datum računa
+    otpremnica_broj TEXT,
+    otpremnica_datum TEXT,
+    valuta_datum TEXT,                   -- rok plaćanja
+    datum_vreme TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),   -- kad je unet u program
     CONSTRAINT fk_ulaz_dobavljac FOREIGN KEY (dobavljac_id) REFERENCES dobavljac(dobavljac_id),
-    CONSTRAINT uq_ulaz_racun UNIQUE (dobavljac_id, racun_broj)
+    CONSTRAINT uq_ulaz_racun UNIQUE (dobavljac_id, racun_broj),
+    CONSTRAINT uq_ulaz_otpremnica UNIQUE (dobavljac_id, otpremnica_broj),
+    CONSTRAINT ck_ulaz_dokument CHECK (racun_broj IS NOT NULL OR otpremnica_broj IS NOT NULL),
+    CONSTRAINT ck_ulaz_datum CHECK (ulaz_datum IS NOT NULL OR otpremnica_datum IS NOT NULL)
 );
 
 CREATE TABLE stavka_ulaza (

@@ -5,161 +5,247 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ulaz robe</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/ulaz.css">
 </head>
 <body>
-  <main>
+  <!--
+    Novi ulaz robe (samo vlasnik; ruta /vlasnik/ulaz.html u main.py proverava rolu).
+    Sve se šalje JEDNIM zahtevom POST /ulazi: zaglavlje, stavke i novi artikli.
+    Ako bilo šta ne prođe, server ne upisuje ništa.
+  -->
+  <main class="ulaz-strana">
     <nav>
       <a href="/pocetna.html">POCETNA</a>
-      <a href="../vlasnik/dobavljaci.html" aria-current="page">Dobavljači</a>
-      <a href="../vlasnik/ulaz.html">Ulaz robe</a>
-      <a href="../vlasnik/artikli.html">Artikli</a>
+      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
+      <a href="/vlasnik/ulaz.html" aria-current="page">Ulaz robe</a>
+      <a href="/vlasnik/artikli.html">Artikli</a>
     </nav>
 
-    <h1>Novi ulaz robe</h1>
+    <header class="strana-zaglavlje">
+      <div>
+        <h1>Novi ulaz robe</h1>
+        <p class="podnaslov">Unesi podatke sa računa ili otpremnice, pa artikle koji su stigli.</p>
+      </div>
+      <a class="dugme sekundarno-veza" href="/vlasnik/ulazi.html">Svi ulazi →</a>
+    </header>
 
-    <!-- required, min i step su samo udobnost za korisnika. Server uvek proverava ponovo. -->
-    <form id="forma-ulaz">
-      <label>Dobavljač
-        <!-- Opcije dodaje JavaScript iz spiska dobavljača sa servera -->
-        <select id="dobavljac" name="dobavljac_id" required>
-          <option value="">Izaberi dobavljača</option>
-        </select>
-      </label>
-
-      <label>Broj računa
-        <input id="racun_broj" name="racun_broj" type="text" required maxlength="100" autocomplete="off">
-      </label>
-
-      <label>Poziv na broj (nije obavezan)
-        <input id="racun_poziv_na_broj" name="racun_poziv_na_broj" type="text" maxlength="100" autocomplete="off">
-      </label>
-
-      <label>Datum računa (ako ostane prazno, upisuje se trenutni)
-        <input id="datum_vreme" name="datum_vreme" type="date">
-      </label>
-
-      <fieldset>
-        <legend>Stavke</legend>
-
-        <!-- Spisak stavki: početna stavka. Nove pravi JavaScript kopiranjem šablona ispod. -->
-        <div id="stavke">
-          <div class="stavka">
-            <label>Šifra artikla
-              <input name="sifra" type="number" min="1" step="1" inputmode="numeric" required>
-            </label>
-            <label>Količina
-              <input name="kolicina" type="number" min="0.001" step="0.001" inputmode="decimal" required>
-            </label>
-            <label>Nabavna cena (bez PDV)
-              <input name="nabavna_cena" type="number" min="0" step="0.01" inputmode="decimal" required>
-            </label>
-            <label>PDV (%)
-              <input name="pdv" type="number" min="0" step="0.01" inputmode="decimal" value="20" required>
-            </label>
-            <button type="button" class="opasno ukloni-stavku" aria-label="Ukloni stavku">Ukloni</button>
-          </div>
+    <form id="forma-ulaz" novalidate>
+      <!-- ---------- Dokument ---------- -->
+      <section class="sekcija" aria-labelledby="naslov-dokument">
+        <div class="sekcija-naslov">
+          <h2 id="naslov-dokument">Dokument</h2>
+          <p class="napomena">
+            <span class="obavezno">*</span> Obavezno: dobavljač, <strong>broj računa ili broj otpremnice</strong>
+            i <strong>datum računa ili datum otpremnice</strong>.
+          </p>
         </div>
 
-        <button type="button" id="dodaj-stavku" class="sekundarno">Dodaj stavku</button>
-      </fieldset>
+        <div class="polja-dokument">
+          <label class="polje dobavljac-polje">
+            <span class="oznaka">Dobavljač <span class="obavezno">*</span></span>
+            <select id="dobavljac" name="dobavljac_id" required>
+              <option value="">Učitavanje…</option>
+            </select>
+            <small class="greska-polja" data-za="dobavljac_id"></small>
+          </label>
 
-      <button type="submit">Sačuvaj ulaz</button>
+          <!-- Levo: osnovni podaci računa; desno: otpremnica -->
+          <fieldset class="grupa grupa-racun">
+            <legend>Račun</legend>
+            <label class="polje">
+              <span class="oznaka">Broj računa</span>
+              <input name="racun_broj" type="text" maxlength="100" autocomplete="off" placeholder="npr. 2026-0154">
+              <small class="greska-polja" data-za="racun_broj"></small>
+            </label>
+            <label class="polje">
+              <span class="oznaka">Poziv na broj</span>
+              <input name="racun_poziv_na_broj" type="text" maxlength="100" autocomplete="off" placeholder="nije obavezno">
+              <small class="greska-polja" data-za="racun_poziv_na_broj"></small>
+            </label>
+            <label class="polje">
+              <span class="oznaka">Datum računa</span>
+              <input name="ulaz_datum" type="date" min="2000-01-01">
+              <small class="greska-polja" data-za="ulaz_datum"></small>
+            </label>
+            <label class="polje">
+              <span class="oznaka">Datum valute (rok plaćanja)</span>
+              <input name="valuta_datum" type="date" min="2000-01-01">
+              <small class="greska-polja" data-za="valuta_datum"></small>
+            </label>
+          </fieldset>
+
+          <fieldset class="grupa grupa-otpremnica">
+            <legend>Otpremnica</legend>
+            <label class="polje">
+              <span class="oznaka">Datum otpremnice</span>
+              <input name="otpremnica_datum" type="date" min="2000-01-01">
+              <small class="greska-polja" data-za="otpremnica_datum"></small>
+            </label>
+            <label class="polje">
+              <span class="oznaka">Broj otpremnice</span>
+              <input name="otpremnica_broj" type="text" maxlength="100" autocomplete="off" placeholder="npr. OTP-88">
+              <small class="greska-polja" data-za="otpremnica_broj"></small>
+            </label>
+          </fieldset>
+        </div>
+      </section>
+
+      <!-- ---------- Stavke ---------- -->
+      <section class="sekcija" aria-labelledby="naslov-stavke">
+        <div class="sekcija-naslov">
+          <h2 id="naslov-stavke">Stavke</h2>
+          <ul class="uputstvo-stavke">
+            <li><strong>Postojeći artikal:</strong> kucaj njegovu <strong>šifru ili naziv</strong> i izaberi ga sa spiska.
+              Ostala polja se popune sama (šifra kod dobavljača, poslednja nabavna cena, PDV, prodajna cena).</li>
+            <li><strong>Nov artikal:</strong> u isto polje upiši <strong>naziv novog artikla</strong>.
+              Ostale podatke (JM, bar kod…) unosiš u prozoru koji se otvori pri čuvanju.</li>
+            <li><strong>Marža</strong> se računa sama: na nabavnu cenu iz ovog ulaza i na prosečnu nabavnu cenu
+              koju će artikal imati posle ovog ulaza (obe sa PDV, jer prodajna cena sadrži PDV).</li>
+          </ul>
+        </div>
+
+        <div class="stavke-tabela" role="table" aria-label="Stavke ulaza">
+          <div class="stavke-zaglavlje" role="row">
+            <span role="columnheader" title="Pretraga postojećeg artikla po šifri ili nazivu, ili naziv novog artikla">Artikal: šifra / naziv ili naziv novog <span class="obavezno">*</span></span>
+            <span role="columnheader" title="Šifra pod kojom DOBAVLJAČ vodi ovaj artikal (sa njegovog računa)">Šifra kod dobavljača</span>
+            <span role="columnheader" title="Količina koja je stigla ovim ulazom">Količina <span class="obavezno">*</span></span>
+            <span role="columnheader">Nabavna cena bez PDV <span class="obavezno">*</span></span>
+            <span role="columnheader">PDV % <span class="obavezno">*</span></span>
+            <span role="columnheader" title="Prodajna cena sa PDV. Za postojeći artikal je upisana trenutna; promena važi od čuvanja ulaza.">Prodajna cena</span>
+            <span role="columnheader" title="Marža na nabavnu cenu iz ovog ulaza i na prosečnu nabavnu cenu posle ulaza (sa PDV)">Marža</span>
+            <span role="columnheader" class="desno">Iznos bez PDV</span>
+            <span role="columnheader"><span class="samo-citac">Ukloni</span></span>
+          </div>
+          <div id="stavke"></div>
+        </div>
+
+        <button type="button" id="dodaj-stavku" class="sekundarno dodaj-stavku">+ Dodaj stavku</button>
+      </section>
+
+      <!-- ---------- Zbir i čuvanje ---------- -->
+      <section class="zbir-ulaza" aria-label="Zbir ulaza">
+        <div><span>Ukupno bez PDV</span><strong id="zbir-bez">0,00</strong></div>
+        <div><span>PDV</span><strong id="zbir-pdv">0,00</strong></div>
+        <div class="glavni"><span>Ukupno sa PDV</span><strong id="zbir-sa">0,00 RSD</strong></div>
+      </section>
+
+      <p id="poruka" role="status" aria-live="polite"></p>
+
+      <div class="dugmad-forme">
+        <button type="button" id="ponisti" class="sekundarno">Poništi unos</button>
+        <button type="submit" id="sacuvaj">Sačuvaj ulaz</button>
+      </div>
     </form>
-
-    <p id="poruka" role="status"></p>
   </main>
 
-  <!-- Šablon za novu stavku: JavaScript ga kopira (template.content.cloneNode(true)) -->
+  <!-- Jedna stavka. JS kopira šablon; polja se prepoznaju po name / klasi. -->
   <template id="stavka-sablon">
-    <div class="stavka">
-      <label>Šifra artikla
-        <input name="sifra" type="number" min="1" step="1" inputmode="numeric" required>
-      </label>
-      <label>Količina
-        <input name="kolicina" type="number" min="0.001" step="0.001" inputmode="decimal" required>
-      </label>
-      <label>Nabavna cena (bez PDV)
-        <input name="nabavna_cena" type="number" min="0" step="0.01" inputmode="decimal" required>
-      </label>
-      <label>PDV (%)
-        <input name="pdv" type="number" min="0" step="0.01" inputmode="decimal" value="20" required>
-      </label>
-      <button type="button" class="opasno ukloni-stavku" aria-label="Ukloni stavku">Ukloni</button>
+    <div class="stavka" role="row">
+      <div class="polje-artikal" role="cell">
+        <input class="artikal-pretraga" type="search" role="combobox" aria-expanded="false"
+               aria-autocomplete="list" autocomplete="off" maxlength="255"
+               placeholder="Traži šifru / naziv ili upiši naziv novog"
+               aria-label="Artikal: pretraga po šifri ili nazivu, ili naziv novog artikla">
+        <ul class="rezultati" role="listbox" hidden></ul>
+        <small class="artikal-info"></small>
+      </div>
+      <div role="cell">
+        <input name="sifra_dobavljac" type="text" maxlength="50" autocomplete="off"
+               placeholder="sa računa" aria-label="Šifra kod dobavljača">
+      </div>
+      <div role="cell" class="sa-jedinicom">
+        <input name="kolicina" type="number" min="0" step="any" inputmode="decimal" aria-label="Količina">
+        <span class="jm" aria-hidden="true"></span>
+      </div>
+      <div role="cell">
+        <input name="nabavna_cena" type="number" min="0" step="any" inputmode="decimal" aria-label="Nabavna cena bez PDV">
+      </div>
+      <div role="cell">
+        <input name="pdv" type="number" min="0" max="100" step="any" inputmode="decimal" value="20" aria-label="PDV u procentima">
+      </div>
+      <div role="cell">
+        <input name="prodajna_cena" type="number" min="0" step="any" inputmode="decimal" aria-label="Prodajna cena sa PDV">
+      </div>
+      <div role="cell" class="marza" aria-live="polite">
+        <span class="marza-red" title="Marža na nabavnu cenu iz ovog ulaza (sa PDV)"><small>ulaz</small> <output class="marza-ulaz">—</output></span>
+        <span class="marza-red" title="Marža na prosečnu (ponderisanu) nabavnu cenu posle ovog ulaza (sa PDV)"><small>prosek</small> <output class="marza-prosek">—</output></span>
+      </div>
+      <div role="cell" class="iznos desno"><output class="iznos-stavke">—</output></div>
+      <div role="cell">
+        <button type="button" class="ukloni-stavku" aria-label="Ukloni stavku" title="Ukloni stavku">×</button>
+      </div>
+      <small class="greska-stavke" role="alert"></small>
     </div>
   </template>
 
-  <!--
-    Iskačući prozor za artikle koji ne postoje u bazi.
-    JavaScript: dijalog.showModal() otvara, dijalog.close() zatvara.
-    Za svaku nepoznatu stavku JS kopira šablon ispod u #novi-artikli-lista.
-  -->
+  <template id="rezultat-sablon">
+    <li class="rezultat" role="option" aria-selected="false">
+      <span class="sifra" data-polje="sifra"></span>
+      <span class="naziv" data-polje="naziv"></span>
+      <span class="stanje" data-polje="stanje"></span>
+    </li>
+  </template>
+
+  <!-- Popup: neobavezni podaci koji nedostaju -->
+  <dialog id="dijalog-dopuna" aria-labelledby="dopuna-naslov">
+    <div class="dijalog-telo">
+      <h2 id="dopuna-naslov">Nedostaju neki podaci</h2>
+      <p>Ovi podaci nisu obavezni, ali ih nema. Da li želiš da ih dopuniš pre čuvanja?</p>
+      <ul id="lista-dopuna" class="lista-dopuna"></ul>
+    </div>
+    <footer class="dijalog-podnozje">
+      <button type="button" id="dopuna-nastavi" class="sekundarno">Sačuvaj bez njih</button>
+      <button type="button" id="dopuna-dopuni">Dopuniću</button>
+    </footer>
+  </dialog>
+
+  <!-- Popup: artikli koji ne postoje kod nas -->
   <dialog id="novi-artikli-dijalog" aria-labelledby="novi-artikli-naslov">
     <header class="dijalog-zaglavlje">
       <h2 id="novi-artikli-naslov">Artikli koji ne postoje</h2>
       <p>
-        Ovi artikli sa fakture nisu pronađeni. Popuni podatke i klikni
-        „Dodaj artikal“ za svaki. Preostalo: <strong id="novi-artikli-preostalo">0</strong>
+        Ove artikle nismo našli. Popuni podatke i klikni „Dodaj artikal“ za svaki.
+        Preostalo: <strong id="novi-artikli-preostalo">0</strong>
       </p>
     </header>
 
     <div id="novi-artikli-lista"></div>
 
     <footer class="dijalog-podnozje">
-      <button type="button" id="novi-artikli-odustani" class="opasno">Odustani od unosa ulaza</button>
+      <button type="button" id="novi-artikli-odustani" class="opasno">Odustani od čuvanja ulaza</button>
     </footer>
   </dialog>
 
-  <!-- Šablon jedne forme za novi artikal. Tekstove u data-polje popunjava JavaScript. -->
   <template id="novi-artikal-sablon">
-  <!-- Šta već znamo sa fakture (samo za prikaz, ne menja se) -->
-    
-    <form class="novi-artikal">
+    <form class="novi-artikal" novalidate>
       <dl class="sazetak">
-        <div><dt>Šifra dobavljača</dt><dd data-polje="sifra_dobavljac"></dd></div>
+        <div><dt>Stavka</dt><dd data-polje="stavka"></dd></div>
+        <div><dt>Šifra kod dobavljača</dt><dd data-polje="sifra_dobavljac"></dd></div>
         <div><dt>Količina</dt><dd data-polje="kolicina"></dd></div>
-        <div><dt>Nabavna cena</dt><dd data-polje="nabavna_cena"></dd></div>
-        <div><dt>PDV (%)</dt><dd data-polje="pdv"></dd></div>
+        <div><dt>Nabavna cena / PDV</dt><dd data-polje="cena"></dd></div>
       </dl>
 
-      <!--
-        Ako artikal kod nas VEĆ postoji (npr. dodat na stranici Artikli, a ovaj dobavljač
-        ga donosi prvi put), upiše se naša šifra: artikal se samo poveže sa dobavljačem,
-        ne pravi se duplikat. Tada ostala polja ispod ne moraju da se popunjavaju.
-      -->
-      <label>Već postoji kod nas? Upiši našu šifru artikla (inače ostavi prazno)
-        <input name="sifra_lokalna" type="number" min="1" step="1" inputmode="numeric" autocomplete="off">
-      </label>
-
-      <!-- Šta moramo da dopunimo. required i maxlength su samo udobnost, server proverava ponovo. -->
-      <label>Naziv artikla
+      <label>Naziv artikla <span class="obavezno">*</span>
         <input name="naziv" type="text" required maxlength="255" autocomplete="off">
       </label>
-
-      <label>Jedinica mere
-        <input name="jedinica_mere" type="text" required maxlength="10" list="jedinice-mere" autocomplete="off">
+      <label>Jedinica mere <span class="obavezno">*</span>
+        <input name="jedinica_mere" type="text" required maxlength="10" list="jedinice-mere" autocomplete="off" value="kom">
       </label>
-
       <label>Bar kod (nije obavezan)
         <input name="bar_kod" type="text" maxlength="50" inputmode="numeric" autocomplete="off">
       </label>
-
       <label>Kategorija (nije obavezna)
         <input name="kategorija" type="text" maxlength="100" autocomplete="off" value="Nema">
       </label>
-
-      <label>Prodajna cena (može i kasnije)
-        <input name="prodajna_cena" type="number" min="0" step="0.01" inputmode="decimal" value="0">
-      </label>
-
       <label>Minimalno stanje (kad stanje padne na ovo, artikal treba naručiti)
         <input name="minimalno_stanje" type="number" min="0" step="any" inputmode="decimal" value="0">
       </label>
+      <small class="greska-novog" role="alert"></small>
 
       <button type="submit" class="dodaj">Dodaj artikal</button>
     </form>
   </template>
 
-  <!-- Predlozi za jedinicu mere (korisnik može da upiše i svoju) -->
   <datalist id="jedinice-mere">
     <option value="kom"></option>
     <option value="kg"></option>
@@ -169,6 +255,6 @@
     <option value="pak"></option>
   </datalist>
 
-  <script src="../ulaz.js"></script>
+  <script src="/ulaz.js"></script>
 </body>
 </html>

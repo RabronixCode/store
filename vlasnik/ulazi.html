@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Svi ulazi</title>
+  <link rel="stylesheet" href="/style.css">
+  <!-- artikli.css: zajednički izgled tabela (sortiranje); ulaz.css: popupi i polja -->
+  <link rel="stylesheet" href="/artikli.css">
+  <link rel="stylesheet" href="/ulaz.css">
+</head>
+<body>
+  <!--
+    Svi ulazi robe (samo vlasnik). Klik na red otvara popup sa artiklima ulaza,
+    gde se mogu menjati podaci dokumenta i stavke (PUT /ulazi/<id>).
+  -->
+  <main class="ulazi-strana">
+    <nav>
+      <a href="/pocetna.html">POCETNA</a>
+      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
+      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
+      <a href="/vlasnik/artikli.html">Artikli</a>
+    </nav>
+
+    <header class="strana-zaglavlje">
+      <div>
+        <h1>Svi ulazi</h1>
+        <p class="podnaslov" id="brojac">Učitavanje…</p>
+      </div>
+      <a class="dugme" href="/vlasnik/ulaz.html">+ Novi ulaz</a>
+    </header>
+
+    <div class="filteri-ulaza">
+      <input id="pretraga" type="search" placeholder="Traži: broj računa, otpremnice, poziv na broj, dobavljač, #ulaza…"
+             aria-label="Pretraga ulaza">
+      <select id="filter-dobavljac" aria-label="Dobavljač">
+        <option value="">Svi dobavljači</option>
+      </select>
+    </div>
+
+    <section class="kartice-ulaza" aria-label="Zbir prikazanih ulaza">
+      <div><span>Prikazano ulaza</span><strong id="k-broj">–</strong></div>
+      <div><span>Ukupno bez PDV</span><strong id="k-bez">–</strong></div>
+      <div><span>Ukupno sa PDV</span><strong id="k-sa">–</strong></div>
+    </section>
+
+    <p id="poruka" role="status"></p>
+
+    <div class="tabela-okvir">
+      <table class="tabela-artikli tabela-ulazi">
+        <caption class="samo-citac">Svi ulazi. Klik na zaglavlje sortira, klik na red otvara ulaz.</caption>
+        <thead>
+          <tr class="naslovi">
+            <th scope="col" data-kolona="ulaz_id" class="broj" aria-sort="descending"><button type="button" class="sortiraj">#</button></th>
+            <th scope="col" data-kolona="dobavljac"><button type="button" class="sortiraj">Dobavljač</button></th>
+            <th scope="col" data-kolona="racun_broj"><button type="button" class="sortiraj">Račun</button></th>
+            <th scope="col" data-kolona="ulaz_datum"><button type="button" class="sortiraj">Datum računa</button></th>
+            <th scope="col" data-kolona="otpremnica_broj"><button type="button" class="sortiraj">Otpremnica</button></th>
+            <th scope="col" data-kolona="otpremnica_datum"><button type="button" class="sortiraj">Datum otpr.</button></th>
+            <th scope="col" data-kolona="valuta_datum"><button type="button" class="sortiraj">Valuta</button></th>
+            <th scope="col" data-kolona="broj_stavki" class="broj"><button type="button" class="sortiraj">Stavki</button></th>
+            <th scope="col" data-kolona="ukupno_bez_pdv" class="broj"><button type="button" class="sortiraj">Bez PDV</button></th>
+            <th scope="col" data-kolona="ukupno_sa_pdv" class="broj"><button type="button" class="sortiraj">Sa PDV</button></th>
+            <th scope="col" data-kolona="datum_vreme"><button type="button" class="sortiraj" title="Kad je ulaz unet u program">Uneto</button></th>
+          </tr>
+        </thead>
+        <tbody id="ulazi-telo"></tbody>
+      </table>
+      <p id="nema-ulaza" class="nema" hidden></p>
+    </div>
+  </main>
+
+  <template id="ulaz-sablon">
+    <tr class="red-ulaz" tabindex="0">
+      <td class="broj prigusen" data-polje="ulaz_id"></td>
+      <td class="jako" data-polje="dobavljac"></td>
+      <td><span data-polje="racun_broj"></span><small class="ispod" data-polje="racun_poziv_na_broj"></small></td>
+      <td data-polje="ulaz_datum"></td>
+      <td data-polje="otpremnica_broj"></td>
+      <td data-polje="otpremnica_datum"></td>
+      <td data-polje="valuta_datum"></td>
+      <td class="broj" data-polje="broj_stavki"></td>
+      <td class="broj" data-polje="ukupno_bez_pdv"></td>
+      <td class="broj jako" data-polje="ukupno_sa_pdv"></td>
+      <td class="prigusen" data-polje="datum_vreme"></td>
+    </tr>
+  </template>
+
+  <!-- Popup: jedan ulaz (pregled i izmena) -->
+  <dialog id="dijalog-ulaz" aria-labelledby="ulaz-naslov">
+    <form id="forma-izmena" novalidate>
+      <header class="ulaz-dijalog-zaglavlje">
+        <div>
+          <h2 id="ulaz-naslov">Ulaz</h2>
+          <p class="podnaslov" id="ulaz-podnaslov"></p>
+        </div>
+        <button type="button" class="zatvori-x" id="zatvori-x" aria-label="Zatvori">×</button>
+      </header>
+
+      <div class="ulaz-dijalog-telo">
+        <div class="polja-izmene">
+          <label class="polje"><span class="oznaka">Broj računa</span>
+            <input name="racun_broj" type="text" maxlength="100" autocomplete="off"></label>
+          <label class="polje"><span class="oznaka">Poziv na broj</span>
+            <input name="racun_poziv_na_broj" type="text" maxlength="100" autocomplete="off"></label>
+          <label class="polje"><span class="oznaka">Datum računa</span>
+            <input name="ulaz_datum" type="date" min="2000-01-01"></label>
+          <label class="polje"><span class="oznaka">Broj otpremnice</span>
+            <input name="otpremnica_broj" type="text" maxlength="100" autocomplete="off"></label>
+          <label class="polje"><span class="oznaka">Datum otpremnice</span>
+            <input name="otpremnica_datum" type="date" min="2000-01-01"></label>
+          <label class="polje"><span class="oznaka">Valuta (rok plaćanja)</span>
+            <input name="valuta_datum" type="date" min="2000-01-01"></label>
+        </div>
+        <p class="napomena">Obavezno: broj računa ili otpremnice i datum računa ili otpremnice. Dobavljač se ne menja.</p>
+
+        <div class="lista-okvir-ulaz">
+          <table class="tabela-stavki">
+            <thead>
+              <tr>
+                <th class="broj">Šifra</th>
+                <th>Naziv</th>
+                <th>JM</th>
+                <th>Šifra kod dob.</th>
+                <th class="broj">Količina</th>
+                <th class="broj">Nabavna bez PDV</th>
+                <th class="broj">PDV %</th>
+                <th class="broj">Iznos bez PDV</th>
+                <th class="broj">Iznos sa PDV</th>
+              </tr>
+            </thead>
+            <tbody id="stavke-telo"></tbody>
+            <tfoot>
+              <tr>
+                <th colspan="7" class="desno">Ukupno</th>
+                <td class="broj jako" id="ukupno-bez">0,00</td>
+                <td class="broj jako" id="ukupno-sa">0,00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p class="napomena upozorenje-tekst">
+          Promena količine ili nabavne cene menja i stanje artikla, njegovu prosečnu nabavnu cenu
+          i poslednju cenu kod dobavljača.
+        </p>
+      </div>
+
+      <footer class="dijalog-podnozje ulaz-dijalog-podnozje">
+        <p id="poruka-izmena" role="status"></p>
+        <button type="button" id="zatvori" class="sekundarno">Zatvori</button>
+        <button type="submit" id="sacuvaj-izmene" disabled>Sačuvaj izmene</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <template id="stavka-izmena-sablon">
+    <tr>
+      <td class="broj prigusen" data-polje="sifra"></td>
+      <td class="jako" data-polje="naziv"></td>
+      <td class="prigusen" data-polje="jedinica_mere"></td>
+      <td><input name="sifra_dobavljac" type="text" maxlength="50" aria-label="Šifra kod dobavljača"></td>
+      <td><input name="kolicina" type="number" min="0" step="any" inputmode="decimal" class="broj" aria-label="Količina"></td>
+      <td><input name="nabavna_cena" type="number" min="0" step="any" inputmode="decimal" class="broj" aria-label="Nabavna cena bez PDV"></td>
+      <td><input name="pdv" type="number" min="0" max="100" step="any" inputmode="decimal" class="broj" aria-label="PDV"></td>
+      <td class="broj" data-polje="iznos_bez"></td>
+      <td class="broj" data-polje="iznos_sa"></td>
+    </tr>
+  </template>
+
+  <script src="/ulazi.js"></script>
+</body>
+</html>

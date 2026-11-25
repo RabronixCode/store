@@ -17,7 +17,7 @@ def pregled_dobavljaca(konekcija):
                d.naziv,
                (SELECT COUNT(*) FROM dobavljac_artikal da WHERE da.dobavljac_id = d.dobavljac_id) AS broj_artikala,
                (SELECT COUNT(*) FROM ulaz u WHERE u.dobavljac_id = d.dobavljac_id) AS broj_ulaza,
-               (SELECT u.datum_vreme FROM ulaz u WHERE u.dobavljac_id = d.dobavljac_id
+               (SELECT COALESCE(u.ulaz_datum, u.otpremnica_datum) FROM ulaz u WHERE u.dobavljac_id = d.dobavljac_id
                  ORDER BY u.ulaz_id DESC LIMIT 1) AS poslednji_ulaz
         FROM dobavljac d
         ORDER BY d.naziv COLLATE NOCASE
@@ -51,7 +51,9 @@ def artikli_dobavljaca(konekcija, dobavljac_id):
     upit = """
         WITH stavke AS (
             SELECT s.sifra_lokalna, s.ulaz_id, s.nabavna_cena, s.pdv, s.kolicina,
-                   u.datum_vreme, u.racun_broj,
+                   COALESCE(u.ulaz_datum, u.otpremnica_datum) AS datum_dokumenta,
+                   CASE WHEN u.racun_broj IS NOT NULL THEN 'račun ' || u.racun_broj
+                        ELSE 'otpremnica ' || u.otpremnica_broj END AS dokument,
                    ROW_NUMBER() OVER (PARTITION BY s.sifra_lokalna ORDER BY s.ulaz_id DESC, s.stavka_id DESC) AS rb
             FROM stavka_ulaza s
             JOIN ulaz u ON u.ulaz_id = s.ulaz_id
@@ -71,8 +73,8 @@ def artikli_dobavljaca(konekcija, dobavljac_id):
                a.aktivan,
                COALESCE(p.nabavna_cena, da.nabavna_cena_bez_pdv) AS nabavna_cena,
                COALESCE(p.pdv, da.pdv) AS pdv,
-               p.datum_vreme AS poslednji_ulaz,
-               p.racun_broj AS poslednji_racun,
+               p.datum_dokumenta AS poslednji_ulaz,
+               p.dokument AS poslednji_dokument,
                COALESCE(z.ukupno_nabavljeno, 0) AS ukupno_nabavljeno,
                COALESCE(z.broj_ulaza, 0) AS broj_ulaza
         FROM dobavljac_artikal da
