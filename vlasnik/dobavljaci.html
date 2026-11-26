@@ -5,21 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dobavljači</title>
   <link rel="stylesheet" href="/style.css">
-  <!-- artikli.css: zajednički izgled tabela (sortiranje, filteri, izmena u ćeliji) -->
+  <!-- artikli.css: zajednički izgled tabela (sortiranje, filteri) -->
   <link rel="stylesheet" href="/artikli.css">
   <link rel="stylesheet" href="/dobavljaci.css">
+  <link rel="stylesheet" href="/dobavljac-detalji.css">
 </head>
 <body>
   <!--
-    Spisak svih dobavljača. Klik na naziv vodi na /vlasnik/dobavljac.html?id=<id>
-    (artikli tog dobavljača). Olovka pored naziva menja naziv u samoj tabeli.
+    Spisak svih dobavljača. Klik na red vodi na /vlasnik/dobavljac.html?id=<id>
+    (podaci, kontakti, računi, radne jedinice i artikli). Olovka otvara izmenu svih podataka.
   -->
   <main class="dobavljaci">
-    <nav>
+    <nav class="glavni-meni">
       <a href="/pocetna.html">POCETNA</a>
       <a href="/vlasnik/dobavljaci.html" aria-current="page">Dobavljači</a>
       <a href="/vlasnik/ulaz.html">Ulaz robe</a>
       <a href="/vlasnik/artikli.html">Artikli</a>
+      <a class="nav-dugme" href="/vlasnik/ulazi.html">📋 Svi ulazi</a>
     </nav>
 
     <header class="artikli-zaglavlje">
@@ -27,31 +29,33 @@
         <h1>Dobavljači</h1>
         <p class="podnaslov" id="brojac">Učitavanje…</p>
       </div>
-
-      <!-- Novi dobavljač: jedno polje i dugme, odmah u zaglavlju -->
-      <form id="forma-dobavljac" class="novi-dobavljac">
-        <label class="samo-citac" for="naziv">Naziv novog dobavljača</label>
-        <input id="naziv" name="naziv" type="text" required maxlength="100" autocomplete="off"
-               placeholder="Naziv novog dobavljača">
-        <button type="submit"><span aria-hidden="true">+</span> Dodaj dobavljača</button>
-      </form>
+      <button type="button" id="novi-dobavljac" class="dugme-novi"><span aria-hidden="true">+</span> Novi dobavljač</button>
     </header>
 
     <p id="poruka" role="status"></p>
 
-    <div class="pretraga-dobavljaca">
-      <input id="pretraga" type="search" placeholder="Traži dobavljača po nazivu…" aria-label="Traži dobavljača">
+    <div class="filteri-dobavljaca">
+      <input id="pretraga" type="search" placeholder="Traži: naziv, PIB, mesto, telefon…" aria-label="Traži dobavljača">
+      <select id="filter-status" aria-label="Status">
+        <option value="">Svi</option>
+        <option value="1">Aktivni</option>
+        <option value="0">Neaktivni</option>
+      </select>
     </div>
 
     <div class="tabela-okvir">
       <table class="tabela-artikli tabela-dobavljaci">
-        <caption class="samo-citac">Svi dobavljači. Klik na naziv otvara artikle dobavljača.</caption>
+        <caption class="samo-citac">Svi dobavljači. Klik na red otvara dobavljača.</caption>
         <thead>
           <tr class="naslovi">
             <th scope="col" data-kolona="naziv" aria-sort="ascending"><button type="button" class="sortiraj">Naziv</button></th>
+            <th scope="col" data-kolona="pib"><button type="button" class="sortiraj">PIB</button></th>
+            <th scope="col" data-kolona="mesto"><button type="button" class="sortiraj">Mesto</button></th>
+            <th scope="col" data-kolona="telefon"><button type="button" class="sortiraj">Telefon</button></th>
             <th scope="col" data-kolona="broj_artikala" class="broj"><button type="button" class="sortiraj">Artikala</button></th>
-            <th scope="col" data-kolona="broj_ulaza" class="broj"><button type="button" class="sortiraj">Ulaza robe</button></th>
+            <th scope="col" data-kolona="broj_ulaza" class="broj"><button type="button" class="sortiraj">Ulaza</button></th>
             <th scope="col" data-kolona="poslednji_ulaz" class="broj"><button type="button" class="sortiraj">Poslednji ulaz</button></th>
+            <th scope="col" data-kolona="aktivan"><button type="button" class="sortiraj">Status</button></th>
             <th scope="col"><span class="samo-citac">Akcije</span></th>
           </tr>
         </thead>
@@ -60,27 +64,31 @@
       <p id="nema-dobavljaca" class="nema" hidden></p>
     </div>
 
-    <p class="pomoc">
-      Klikni na dobavljača da vidiš sve njegove artikle i nabavne cene.
-      Olovka (✎) menja naziv: <kbd>Enter</kbd> ili klik van polja čuva, <kbd>Esc</kbd> odustaje.
-    </p>
+    <p class="pomoc">Klikni na dobavljača da vidiš sve podatke, kontakte, tekuće račune, radne jedinice i artikle.
+      Olovka (✎) otvara izmenu podataka.</p>
   </main>
 
   <template id="dobavljac-sablon">
     <tr class="red-dobavljac">
       <td class="naziv-celija">
         <a class="dobavljac-veza" data-polje="naziv"></a>
+        <small class="dugi-naziv" data-polje="dugi_naziv"></small>
       </td>
+      <td class="mono" data-polje="pib"></td>
+      <td data-polje="mesto"></td>
+      <td class="prigusen nowrap" data-polje="telefon"></td>
       <td class="broj" data-polje="broj_artikala"></td>
       <td class="broj" data-polje="broj_ulaza"></td>
       <td class="broj prigusen" data-polje="poslednji_ulaz"></td>
+      <td><span class="znacka" data-polje="aktivan"></span></td>
       <td class="akcija-celija">
-        <button type="button" class="ikona izmeni" aria-label="Izmeni naziv" title="Izmeni naziv">✎</button>
+        <button type="button" class="ikona izmeni" aria-label="Izmeni podatke dobavljača" title="Izmeni podatke">✎</button>
         <span class="strelica" aria-hidden="true">›</span>
       </td>
     </tr>
   </template>
 
+  <script src="/dobavljac-forma.js"></script>
   <script src="/dobavljaci.js"></script>
 </body>
 </html>

@@ -1,0 +1,1150 @@
+# Izvor: sr.wikipedia.org, "Списак поштанских бројева у Србији" (stanje po JP Pošta Srbije), preuzeto 26.11.2026; prevedeno na latinicu.
+# Kolona opstina je onako kako piše u toj tabeli (može se razlikovati od naziva u opstine.csv).
+# Dodato ručno: opšti gradski brojevi koji se koriste u adresama, a u tabeli su samo brojevi pošta (npr. Niš 18101):
+#   17500 Vranje, 18000 Niš, 21000 Novi Sad, 23000 Zrenjanin, 25000 Sombor, 32000 Čačak.
+#   Beograd (opšti brojevi gradskih opština): 11010, 11030, 11050, 11060, 11070 Novi Beograd, 11080 Zemun, 11090, 11271 Surčin, 11306 Grocka.
+broj;mesto;opstina
+11000;Beograd;Beograd
+11010;Beograd;Voždovac
+11030;Beograd;Čukarica
+11050;Beograd;Zvezdara
+11060;Beograd;Palilula
+11070;Novi Beograd;Novi Beograd
+11080;Zemun;Zemun
+11090;Beograd;Rakovica
+11130;Kaluđerica;Grocka
+11194;Rušanj;Čukarica
+11223;Beli Potok;Voždovac
+11225;Zuce;Voždovac
+11226;Pinosava;Voždovac
+11232;Ripanj;Voždovac
+11233;Ralja;Sopot
+11235;Mali Požarevac;Sopot
+11251;Ostružnica;Čukarica
+11253;Sremčica;Čukarica
+11260;Umka;Čukarica
+11261;Mala Moštanica;Obrenovac
+11262;Velika Moštanica;Čukarica
+11271;Surčin;Surčin
+11300;Smederevo;Smederevo
+11306;Grocka;Grocka
+11310;Lipe;Smederevo
+11311;Radinac;Smederevo
+11312;Mihajlovac;Smederevo
+11313;Mala Krsna;Smederevo
+11314;Osipaonica;Smederevo
+11315;Saraorci;Smederevo
+11316;Golobok;Smederevska Palanka
+11317;Lozovik;Velika Plana
+11318;Miloševac;Velika Plana
+11319;Krnjevo;Velika Plana
+11320;Velika Plana;Velika Plana
+11321;Lugavčina;Smederevo
+11322;Skobalj;Smederevo
+11323;Veliko Orašje;Velika Plana
+11324;Staro Selo;Velika Plana
+11325;Markovac;Velika Plana
+11328;Vodanj;Smederevo
+11329;Vranovo;Smederevo
+11400;Mladenovac;Mladenovac
+11405;Međulužje;Mladenovac
+11406;Vlaška;Mladenovac
+11407;Selevac;Smederevska Palanka
+11408;Velika Krsna;Mladenovac
+11409;Kovačevac;Mladenovac
+11411;Ratari;Smederevska Palanka
+11412;Jagnjilo;Mladenovac
+11413;Pružatovac;Mladenovac
+11414;Velika Ivanča;Mladenovac
+11415;Koraćica;Mladenovac
+11420;Smederevska Palanka;Smederevska Palanka
+11423;Azanja;Smederevska Palanka
+11425;Kusadak;Smederevska Palanka
+11426;Meljak;Barajevo
+11427;Vranić;Barajevo
+11431;Kolari;Smederevo
+11432;Drugovac;Smederevo
+11433;Šepšin;Mladenovac
+11450;Sopot;Sopot
+11453;Rogača;Sopot
+11460;Barajevo;Barajevo
+11461;Beljina;Barajevo
+11462;Veliki Borak;Barajevo
+11500;Obrenovac;Obrenovac
+11504;Barič;Obrenovac
+11505;Zabrežje;Obrenovac
+11506;Draževac;Obrenovac
+11507;Stubline;Obrenovac
+11508;Grabovac;Obrenovac
+11509;Skela;Obrenovac
+11550;Lazarevac;Lazarevac
+11560;Vreoci;Lazarevac
+11561;Dudovica;Lazarevac
+11562;Junkovac;Lazarevac
+11563;Veliki Crljeni;Lazarevac
+11564;Stepojevac;Lazarevac
+11565;Baroševac;Lazarevac
+11566;Rudovci;Lazarevac
+11567;Mirosaljci;Lazarevac
+12000;Požarevac;Požarevac
+12206;Bradarac;Požarevac
+12207;Dubravica;Požarevac
+12208;Kostolac;Kostolac
+12209;Kličevac;Požarevac
+12220;Veliko Gradište;Veliko Gradište
+12221;Majilovac;Veliko Gradište
+12222;Braničevo;Golubac
+12223;Golubac;Golubac
+12224;Dobra;Golubac
+12226;Topolovnik;Veliko Gradište
+12227;Bare;Požarevac
+12240;Kučevo;Kučevo
+12242;Neresnica;Kučevo
+12253;Srednjevo;Veliko Gradište
+12254;Rabrovo;Kučevo
+12255;Duboka;Kučevo
+12256;Voluja;Kučevo
+12257;Turija;Kučevo
+12258;Klenje;Golubac
+12300;Petrovac;Petrovac na Mlavi
+12304;Ranovac;Petrovac
+12306;Veliko Laole;Petrovac na Mlavi
+12307;Burovac;Petrovac na Mlavi
+12308;Oreškovica;Petrovac
+12309;Šetonje;Petrovac
+12311;Malo Crniće;Malo Crniće
+12312;Smoljinac;Malo Crniće
+12313;Boževac;Malo Crniće
+12315;Rašanac;Petrovac na Mlavi
+12316;Krepoljin;Žagubica
+12317;Osanica;Žagubica
+12318;Vukovac;Žagubica
+12320;Žagubica;Žagubica
+12321;Laznica;Žagubica
+12370;Aleksandrovac;Žabari
+12372;Poljana;Požarevac
+12374;Žabari;Žabari
+12375;Porodin;Žabari
+14000;Valjevo;Valjevo
+14201;Brankovina;Valjevo
+14202;Rajković;Mionica
+14203;Dračić;Valjevo
+14204;Divčibare;Valjevo
+14205;Lelić;Valjevo
+14206;Poćuta;Valjevo
+14207;Pecka;Osečina
+14210;Ub;Ub
+14211;Radljevo;Ub
+14212;Brgule;Ub
+14213;Pambukovica;Ub
+14214;Banjani;Ub
+14221;Popučke;Valjevo
+14222;Divci;Valjevo
+14223;Slovac;Lajkovac
+14224;Lajkovac;Lajkovac
+14225;Bogovađa;Lajkovac
+14226;Jabučje;Lajkovac
+14240;Ljig;Ljig
+14242;Mionica;Mionica
+14243;Gornja Toplica;Mionica
+14244;Brežđe;Mionica
+14245;Slavkovica;Ljig
+14246;Belanovica;Ljig
+14251;Pričević;Valjevo
+14252;Kamenica;Valjevo
+14253;Osečina;Osečina
+14254;Komirić;Osečina
+14255;Stave;Valjevo
+15000;Šabac;Šabac
+15211;Mačvanski Pričinović;Šabac
+15212;Drenovac;Šabac
+15213;Orid;Šabac
+15214;Debrc;Vladimirci
+15215;Provo;Vladimirci
+15220;Koceljeva;Koceljeva
+15221;Svileuva;Koceljeva
+15222;Kamenica;Koceljeva
+15224;Cerovac;Šabac
+15225;Vladimirci;Vladimirci
+15226;Draginje;Koceljeva
+15227;Donje Crniljevo;Koceljeva
+15232;Varna;Šabac
+15233;Metlić;Šabac
+15234;Tekeriš;Loznica
+15235;Dobrić;Šabac
+15300;Loznica;Loznica
+15302;Korenita;Loznica
+15303;Tršić;Loznica
+15304;Petlovača;Šabac
+15305;Lipolist;Šabac
+15306;Prnjavor (Mačvanski);Šabac
+15307;Lešnica;Loznica
+15308;Jadranska Lešnica;Loznica
+15309;Brezjak;Loznica
+15310;Ribari;Šabac
+15311;Draginac;Loznica
+15312;Zavlaka;Krupanj
+15313;Bela Crkva;Krupanj
+15314;Krupanj;Krupanj
+15315;Zajača;Loznica
+15316;Banja Koviljača;Loznica
+15317;Donja Borina;Mali Zvornik
+15318;Mali Zvornik;Mali Zvornik
+15319;Uzovnica;Ljubovija
+15320;Ljubovija;Ljubovija
+15321;Radalj;Mali Zvornik
+15322;Velika Reka;Mali Zvornik
+15323;Donja Orovica;Ljubovija
+15324;Vrhpolje;Ljubovija
+15341;Lipnički Šor;Loznica
+15342;Rainovača;Ljubovija
+15350;Bogatić;Bogatić
+15352;Zminjak;Šabac
+15353;Majur;Šabac
+15354;Štitar;Šabac
+15355;Crna Bara;Bogatić
+15356;Glušci;Bogatić
+15357;Klenje;Bogatić
+15358;Badovinci;Bogatić
+15359;Dublje;Bogatić
+15362;Banovo Polje;Bogatić
+16000;Leskovac;Leskovac
+16201;Manojlovce;Leskovac
+16203;Vučje;Leskovac
+16204;Miroševce;Leskovac
+16205;Bojnik;Bojnik
+16206;Kosančić;Bojnik
+16210;Vlasotince;Vlasotince
+16211;Guberevac;Leskovac
+16212;Svođe;Vlasotince
+16213;Sastav Reka;Crna Trava
+16215;Crna Trava;Crna Trava
+16220;Grdelica;Leskovac
+16221;Velika Grabovnica;Leskovac
+16222;Predejane;Leskovac
+16230;Lebane;Lebane
+16231;Turekovac;Leskovac
+16232;Bošnjace;Lebane
+16233;Orane;Bojnik
+16240;Medveđa;Medveđa
+16246;Sijarinska Banja;Medveđa
+16247;Tulare;Medveđa
+16248;Lece;Medveđa
+16251;Pečenjevce;Leskovac
+16252;Razgojna;Leskovac
+16253;Brestovac;Leskovac
+16254;Bogojevce;Leskovac
+17500;Vranje;Vranje
+17501;Vranje;Vranje
+17507;Vlase;Vranje
+17508;Sveti Ilija;Vranje
+17510;Vladičin Han;Vladičin Han
+17511;Priboj Vranjski;Vladičin Han
+17512;Stubal;Vladičin Han
+17513;Lepenica;Vladičin Han
+17514;Džep;Vladičin Han
+17520;Bujanovac;Bujanovac
+17521;Ristovac;Vranje
+17522;Biljača;Bujanovac
+17523;Preševo;Preševo
+17524;Klenike;Bujanovac
+17525;Trgovište;Trgovište
+17526;Donji Stajevac;Trgovište
+17528;Veliki Trnovac;Bujanovac
+17529;Muhovac;Bujanovac
+17530;Surdulica;Surdulica
+17531;Jelašnica;Surdulica
+17535;Klisura;Surdulica
+17537;Božica;Opština Surdulica
+17538;Gornja Lisina;Bosilegrad
+17540;Bosilegrad;Opština Bosilegrad
+17541;Vranjska Banja;Vranje
+17543;Kriva Feja;Vranjska Banja
+17544;Donja Ljubata;Bosilegrad
+17545;Korbevac;Vranjska Banja
+17546;Bistar;Bosilegrad
+17555;Preševo-terminal;Preševo
+17561;Radovnica;Trgovište
+18000;Niš;Niš
+18101;Niš;Medijana
+18116;Brzi Brod;Medijana
+18201;Lalinac;Svrljig
+18202;Gornja Toponica;Crveni Krst
+18203;Sečanica;Crveni Krst
+18204;Gornji Matejevac;Pantelej
+18205;Niška Banja;Niška Banja
+18206;Jelašnica;Niška Banja
+18207;Malča;Pantelej
+18208;Guševac;Svrljig
+18209;Medoševac;Crveni Krst
+18210;Žitkovac;Aleksinac
+18211;Trupale;Crveni Krst
+18212;Tešica;Aleksinac
+18213;Trnjane;Aleksinac
+18214;Kulina;Aleksinac
+18215;Veliko Bonjince;Babušnica
+18216;Korman;Aleksinac
+18217;Ljuberađa;Babušnica
+18220;Aleksinac;Aleksinac
+18221;Vrćenovica;Aleksinac
+18223;Draževac;Aleksinac
+18224;Rutevac;Aleksinac
+18225;Katun;Aleksinac
+18226;Aleksinački Rudnik;Aleksinac
+18227;Subotinac;Aleksinac
+18229;Mozgovo;Aleksinac
+18230;Sokobanja;Sokobanja
+18232;Čitluk;Sokobanja
+18234;Jošanica;Sokobanja
+18236;Vrmdža;Sokobanja
+18237;Dugo Polje;Sokobanja
+18240;Gadžin Han;Gadžin Han
+18241;Gornji Barbeš;Gadžin Han
+18242;Donji Dušnik;Gadžin Han
+18244;Zaplanjska Toponica;Gadžin Han
+18245;Lički Hanovi;Gadžin Han
+18246;Ravna Dubrava;Gadžin Han
+18250;Novo Selo;Palilula
+18251;Mramor;Palilula
+18252;Merošina;Merošina
+18253;Jugbogdanovac;Merošina
+18254;Donje Međurovo;Palilula (Niš)
+18255;Pukovac;Doljevac
+18256;Lalinac;Palilula (Niš)
+18257;Balajnac;Merošina
+18258;Jovanovac;Merošina
+18300;Pirot;Opština Pirot
+18304;Crnoklište;Pirot
+18306;Visočka Ržana;Pirot
+18307;Krupac;Pirot
+18309;Gnjilan;Pirot
+18310;Bela Palanka;Bela Palanka
+18311;Sićevo;Grad Niš
+18312;Ostrovica;Niška Banja
+18313;Crvena Reka;Bela Palanka
+18314;Dolac;Bela Palanka
+18320;Dimitrovgrad;Dimitrovgrad
+18322;Sukovo;Pirot
+18323;Smilovci;Dimitrovgrad
+18324;Kamenica;Dimitrovgrad
+18325;Željuše;Dimitrovgrad
+18326;Poganovo;Dimitrovgrad
+18328;Poljska Ržana;Pirot
+18330;Babušnica;Babušnica
+18332;Strelac;Babušnica
+18333;Zvonce;Babušnica
+18355;Temska;Pirot
+18360;Svrljig;Svrljig
+18363;Varoš;Svrljig
+18365;Prekonoga;Svrljig
+18366;Niševac;Svrljig
+18368;Burdimo;Svrljig
+18400;Prokuplje;Prokuplje
+18403;Velika Plana;Prokuplje
+18404;Donja Rečica;Prokuplje
+18405;Džigolj;Prokuplje
+18406;Dubovo;Žitorađa
+18407;Žitni Potok;Prokuplje
+18408;Dobri Do;Kuršumlija
+18409;Kruševica;Prokuplje
+18410;Doljevac;Doljevac
+18411;Belotinac;Opština Doljevac
+18412;Žitorađa;Žitorađa
+18413;Pejkovac;Žitorađa
+18414;Donje Crnatovo;Žitorađa
+18415;Malošište;Doljevac
+18417;Čečina;Doljevac
+18420;Blace;Blace
+18421;Donja Trnava;Prokuplje
+18423;Mala Plana;Prokuplje
+18424;Beloljin;Prokuplje
+18425;Gornja Draguša;Blace
+18426;Barbatovac;Blace
+18430;Kuršumlija;Kuršumlija
+18432;Barlovo;Kuršumlija
+18433;Prolom Banja;Kuršumlija
+18435;Kuršumlijska Banja;Kuršumlija
+18436;Merćez;Kuršumlija
+18437;Lukovska Banja;Kuršumlija
+18438;Žuč;Kuršumlija
+18440;Rača;Kuršumlija
+18445;Merdare;Kuršumlija
+19000;Zaječar;Zaječar
+19204;Metovnica;Bor
+19205;Gradskovo;Zaječar
+19206;Veliki Izvor;Zaječar
+19208;Lubnica;Zaječar
+19209;Mali Jasenovac;Zaječar
+19210;Bor;Bor
+19213;Donja Bela Reka;Bor
+19214;Rgotina;Zaječar
+19215;Zlot;Bor
+19216;Brestovačka Banja;Bor
+19219;Krivelj;Bor
+19220;Donji Milanovac;Majdanpek
+19221;Slatina;Bor
+19222;Klokočevac;Majdanpek
+19223;Koprivnica;Zaječar
+19224;Salaš;Zaječar
+19225;Sikole;Negotin
+19226;Oštrelj;Bor
+19227;Zvezdan;Zaječar
+19228;Gamzigradska Banja;Zaječar
+19229;Borski Brestovac;Bor
+19232;Dubočane;Zaječar
+19233;Podgorac;Boljevac
+19235;Velika Jasikova;Zaječar
+19250;Majdanpek;Majdanpek
+19256;Jasikovo;Majdanpek
+19257;Rudna Glava;Majdanpek
+19300;Negotin;Negotin
+19303;Štubik;Negotin
+19304;Jabukovac;Negotin
+19305;Urovica;Negotin
+19306;Trnjane;Negotin
+19307;Plavna;Negotin
+19311;Nikoličevo;Zaječar
+19312;Vražogrnac;Zaječar
+19313;Brusnik;Zaječar
+19315;Braćevac;Negotin
+19316;Kobišnica;Negotin
+19318;Rogljevo;Negotin
+19320;Kladovo;Kladovo
+19321;Podvrška;Kladovo
+19322;Mihajlovac;Negotin
+19323;Brza Palanka;Kladovo
+19325;Tekija;Kladovo
+19326;Sip;Kladovo
+19327;Grabovica;Kladovo
+19328;Velesnica;Kladovo
+19329;Korbovo;Kladovo
+19330;Prahovo;Negotin
+19334;Radujevac;Negotin
+19340;Minićevo;Knjaževac
+19341;Grljan;Zaječar
+19342;Grlište;Zaječar
+19343;Lenovac;Zaječar
+19344;Vratarnica;Zaječar
+19345;Donje Zuniče;Knjaževac
+19347;Mali Izvor;Zaječar
+19350;Knjaževac;Knjaževac
+19352;Donja Kamenica;Knjaževac
+19353;Kalna;Knjaževac
+19362;Podvis;Knjaževac
+19366;Beli Potok;Knjaževac
+19367;Vasilj;Knjaževac
+19368;Vina;Knjaževac
+19369;Bučje;Knjaževac
+19370;Boljevac;Boljevac
+19371;Lukovo;Boljevac
+19372;Bogovina;Boljevac
+19373;Šarbanovac;Bor
+19375;Krivi Vir;Boljevac
+19376;Sumrakovac;Boljevac
+19377;Savinac;Boljevac
+19379;Šarbanovac-Timok;Bor
+21000;Novi Sad;Novi Sad
+21101;Novi Sad;Novi Sad
+21131;Petrovaradin;Petrovaradin
+21201;Rumenka;Novi Sad
+21202;Sremska Kamenica;Petrovaradin
+21203;Veternik;Novi Sad
+21205;Sremski Karlovci;Sremski Karlovci
+21207;Ledinci;Petrovaradin
+21209;Bukovac;Petrovaradin
+21211;Kisač;Novi Sad
+21212;Stepanovićevo;Novi Sad
+21213;Zmajevo;Vrbas
+21214;Sirig;Temerin
+21215;Turija;Srbobran
+21216;Nadalj;Srbobran
+21217;Bačko Gradište;Bečej
+21220;Bečej;Bečej
+21225;Radičević;Bečej
+21226;Bačko Petrovo Selo;Bečej
+21227;Mileševo;Bečej
+21230;Žabalj;Žabalj
+21233;Čenej;Novi Sad
+21234;Bački Jarak;Temerin
+21235;Temerin;Temerin
+21237;Gospođinci;Žabalj
+21238;Čurug;Žabalj
+21239;Đurđevo;Žabalj
+21240;Titel;Titel
+21241;Kać;Novi Sad
+21242;Budisava;Novi Sad
+21243;Kovilj;Novi Sad
+21244;Šajkaš;Titel
+21245;Mošorin;Titel
+21246;Vilovo;Titel
+21247;Gardinovci;Titel
+21248;Lok;Titel
+21299;Rakovac;Beočin
+21300;Beočin;Beočin
+21311;Čerević;Beočin
+21312;Banoštor;Beočin
+21313;Susek;Beočin
+21314;Neštin;Bačka Palanka
+21315;Lug;Beočin
+21400;Bačka Palanka;Bačka Palanka
+21410;Futog;Novi Sad
+21411;Begeč;Novi Sad
+21412;Gložan;Bački Petrovac
+21413;Čelarevo;Bačka Palanka
+21420;Bač;Bač
+21421;Karađorđevo;Bačka Palanka
+21422;Mladenovo;Bačka Palanka
+21423;Obrovac;Bačka Palanka
+21424;Tovariševo;Bačka Palanka
+21425;Selenča;Bač
+21426;Vajska;Bač
+21427;Bođani;Bač
+21428;Plavna;Bač
+21429;Bačko Novo Selo;Bač
+21431;Nova Gajdobra;Bačka Palanka
+21432;Gajdobra;Bačka Palanka
+21433;Silbaš;Bačka Palanka
+21434;Parage;Bačka Palanka
+21460;Vrbas;Vrbas
+21465;Bačko Dobro Polje;Vrbas
+21466;Kucura;Vrbas
+21467;Savino Selo;Vrbas
+21468;Despotovo;Bačka Palanka
+21469;Pivnice;Bačka Palanka
+21470;Bački Petrovac;Bački Petrovac
+21471;Ravno Selo;Vrbas
+21472;Kulpin;Bački Petrovac
+21473;Maglić;Bački Petrovac
+21480;Srbobran;Srbobran
+22000;Sremska Mitrovica;Sremska Mitrovica
+22201;Zasavica;Sremska Mitrovica
+22202;Mačvanska Mitrovica;Sremska Mitrovica
+22203;Noćaj;Sremska Mitrovica
+22204;Salaš Noćajski;Sremska Mitrovica
+22205;Ravnje;Sremska Mitrovica
+22207;Ležimir;Sremska Mitrovica
+22208;Manđelos;Sremska Mitrovica
+22211;Veliki Radinci;Sremska Mitrovica
+22212;Bešenovo;Sremska Mitrovica
+22213;Grgurevci;Sremska Mitrovica
+22217;Bosut;Sremska Mitrovica
+22221;Laćarak;Sremska Mitrovica
+22222;Martinci;Sremska Mitrovica
+22223;Kuzmin;Sremska Mitrovica
+22224;Kukujevci;Šid
+22225;Bačinci;Šid
+22230;Erdevik;Šid
+22231;Čalma;Sremska Mitrovica
+22232;Divoš;Sremska Mitrovica
+22239;Šid;Šid
+22241;Vašica;Šid
+22242;Berkasovo;Šid
+22243;Sot;Šid
+22244;Adaševci;Šid
+22245;Morović;Šid
+22246;Višnjićevo;Šid
+22247;Sremska Rača;Sremska Mitrovica
+22248;Jamena;Šid
+22250;Ilinci;Šid
+22251;Batrovci;Šid
+22253;Bingula;Šid
+22254;Bikić Do;Šid
+22255;Ljuba;Šid
+22256;Molovin;Šid
+22257;Privina Glava;Šid
+22258;Gibarac;Šid
+22300;Stara Pazova;Stara Pazova
+22303;Banovci-Dunav;Stara Pazova
+22304;Novi Banovci;Stara Pazova
+22305;Stari Banovci;Stara Pazova
+22306;Belegiš;Stara Pazova
+22307;Surduk;Stara Pazova
+22308;Golubinci;Stara Pazova
+22310;Šimanovci;Pećinci
+22313;Vojka;Stara Pazova
+22314;Krnješevci;Stara Pazova
+22320;Inđija;Inđija
+22321;Ljukovo;Inđija
+22322;Novi Karlovci;Inđija
+22323;Novi Slankamen;Inđija
+22324;Beška;Inđija
+22325;Krčedin;Inđija
+22326;Čortanovci;Inđija
+22327;Maradik;Inđija
+22328;Krušedol;Irig
+22329;Stari Slankamen;Inđija
+22330;Nova Pazova;Stara Pazova
+22400;Ruma;Ruma
+22404;Putinci;Ruma
+22405;Stejanovci;Ruma
+22406;Irig;Irig
+22408;Vrdnik;Irig
+22409;Jazak;Irig
+22410;Pećinci;Pećinci
+22411;Kraljevci;Ruma
+22412;Dobrinci;Ruma
+22413;Sremski Mihaljevci;Pećinci
+22414;Subotište;Pećinci
+22416;Ogar;Pećinci
+22417;Obrež;Pećinci
+22418;Ašanja;Pećinci
+22419;Kupinovo;Pećinci
+22420;Platičevo;Ruma
+22421;Buđanovci;Ruma
+22422;Nikinci;Ruma
+22423;Grabovci;Ruma
+22424;Klenak;Ruma
+22425;Šašinci;Sremska Mitrovica
+22426;Jarak;Sremska Mitrovica
+22427;Hrtkovci;Ruma
+22428;Popinci;Pećinci
+22429;Voganj;Ruma
+22440;Sibač;Pećinci
+22441;Deč;Pećinci
+22442;Prhovo;Pećinci
+22443;Karlovčić;Pećinci
+23000;Zrenjanin;Zrenjanin
+23101;Zrenjanin;Zrenjanin
+23201;Jankov Most;Zrenjanin
+23202;Mihajlovo;Zrenjanin
+23203;Ečka;Zrenjanin
+23204;Stajićevo;Zrenjanin
+23205;Belo Blato;Zrenjanin
+23206;Mužlja;Zrenjanin
+23207;Aradac;Zrenjanin
+23208;Elemir;Zrenjanin
+23209;Taraš;Zrenjanin
+23210;Žitište;Žitište
+23211;Klek;Zrenjanin
+23212;Ravni Topolovac;Žitište
+23213;Banatski Dvor;Žitište
+23214;Torda;Žitište
+23215;Čestereg;Žitište
+23216;Banatsko Karađorđevo;Žitište
+23217;Aleksandrovo;Nova Crnja
+23218;Nova Crnja;Nova Crnja
+23219;Vojvoda Stepa;Nova Crnja
+23220;Srpska Crnja;Nova Crnja
+23221;Radojevo;Nova Crnja
+23222;Toba;Nova Crnja
+23224;Lukino Selo;Zrenjanin
+23230;Jaša Tomić;Sečanj
+23231;Krajišnik;Sečanj
+23232;Torak;Žitište
+23233;Srpski Itebej;Žitište
+23234;Međa;Žitište
+23235;Hetin;Žitište
+23236;Novi Itebej;Žitište
+23240;Sečanj;Sečanj
+23241;Lazarevo;Zrenjanin
+23242;Banatski Despotovac;Zrenjanin
+23243;Botoš;Zrenjanin
+23244;Sutjeska;Sečanj
+23245;Neuzina;Sečanj
+23250;Jarkovac;Sečanj
+23251;Banatska Dubica;Sečanj
+23252;Boka;Sečanj
+23253;Konak;Sečanj
+23254;Šurjan;Sečanj
+23255;Zlatica;Zrenjanin
+23260;Perlez;Zrenjanin
+23261;Lukićevo;Zrenjanin
+23262;Tomaševac;Zrenjanin
+23263;Orlovat;Zrenjanin
+23264;Farkaždin;Zrenjanin
+23265;Knićanin;Zrenjanin
+23266;Čenta;Zrenjanin
+23269;Melenci-Rusanda;Zrenjanin
+23270;Melenci;Zrenjanin
+23271;Kumane;Novi Bečej
+23272;Novi Bečej;Novi Bečej
+23273;Novo Miloševo;Novi Bečej
+23274;Bočar;Novi Bečej
+23300;Kikinda;Kikinda
+23305;Mokrin;Kikinda
+23311;Nakovo;Kikinda
+23312;Banatsko Veliko Selo;Kikinda
+23313;Novi Kozarci;Kikinda
+23314;Rusko Selo;Kikinda
+23315;Banatska Topola;Kikinda
+23316;Bašaid;Kikinda
+23320;Čoka;Čoka
+23323;Iđoš;Kikinda
+23324;Sajan;Kikinda
+23325;Padej;Čoka
+23326;Ostojićevo;Čoka
+23327;Jazovo;Čoka
+23328;Crna Bara;Čoka
+23329;Vrbica;Čoka
+23330;Novi Kneževac;Novi Kneževac
+23331;Sanad;Čoka
+23332;Banatsko Aranđelovo;Novi Kneževac
+23333;Majdan;Novi Kneževac
+23334;Srpski Krstur;Novi Kneževac
+23335;Đala;Novi Kneževac
+24000;Subotica;Subotica
+24104;Kelebija;Subotica
+24205;Kelebija gran. prelaz;Subotica
+24206;Bikovo;Subotica
+24207;Orom;Kanjiža
+24210;Bajmok;Subotica
+24211;Mišićevo;Subotica
+24213;Đurđin;Subotica
+24214;Tavankut;Subotica
+24215;Ljutovo;Subotica
+24217;Mala Bosna;Subotica
+24220;Čantavir;Subotica
+24222;Višnjevac;Subotica
+24223;Novi Žednik;Subotica
+24224;Stari Žednik;Subotica
+24300;Bačka Topola;Bačka Topola
+24308;Karađorđevo;Bačka Topola
+24309;Mali Beograd;Bačka Topola
+24312;Gunaroš;Bačka Topola
+24313;Pobeda;Bačka Topola
+24321;Mali Iđoš;Mali Iđoš
+24322;Lovćenac;Mali Iđoš
+24323;Feketić;Mali Iđoš
+24330;Panonija;Bačka Topola
+24331;Bajša;Bačka Topola
+24334;Tomislavci;Bačka Topola
+24340;Stara Moravica;Bačka Topola
+24341;Krivaja;Bačka Topola
+24342;Pačir;Bačka Topola
+24343;Bački Sokolac;Bačka Topola
+24351;Novo Orahovo;Bačka Topola
+24352;Tornjoš;Senta
+24400;Senta;Senta
+24406;Gornji Breg;Senta
+24407;Kevi;Senta
+24408;Bogaraš;Senta
+24410;Horgoš;Kanjiža
+24411;Horgoš granični prelaz;Kanjiža
+24413;Palić;Subotica
+24414;Hajdukovo;Subotica
+24415;Bački Vinogradi;Subotica
+24416;Male Pijace;Kanjiža
+24417;Martonoš;Kanjiža
+24418;Šupljak;Subotica
+24420;Kanjiža;Kanjiža
+24425;Adorjan;Kanjiža
+24426;Trešnjevac;Kanjiža
+24427;Totovo Selo;Kanjiža
+24428;Velebit;Kanjiža
+24430;Ada;Ada
+24435;Mol;Ada
+24437;Utrine;Ada
+25000;Sombor;Sombor
+25101;Sombor;Sombor
+25210;Čonoplja;Sombor
+25211;Svetozar Miletić;Sombor
+25212;Aleksa Šantić;Sombor
+25220;Crvenka;Kula
+25221;Kljajićevo;Sombor
+25222;Telečka;Sombor
+25223;Sivac;Kula
+25224;Nova Crvenka;Kula
+25225;Kruščić;Kula
+25230;Kula;Kula
+25232;Lipar;Kula
+25233;Ruski Krstur;Kula
+25234;Lalić;Odžaci
+25240;Stapar;Sombor
+25242;Bački Brestovac;Odžaci
+25243;Doroslovo;Sombor
+25244;Srpski Miletić;Odžaci
+25245;Bogojevo;Odžaci
+25250;Odžaci;Odžaci
+25252;Bački Gračac;Odžaci
+25253;Ratkovo;Odžaci
+25254;Deronje;Odžaci
+25255;Karavukovo;Odžaci
+25260;Apatin;Apatin
+25262;Kupusina;Apatin
+25263;Prigrevica;Apatin
+25264;Sonta;Apatin
+25265;Svilojevo;Apatin
+25270;Bezdan;Sombor
+25272;Bački Monoštor;Sombor
+25274;Kolut;Sombor
+25275;Bački Breg;Sombor
+25280;Riđica;Sombor
+25282;Gakovo;Sombor
+25283;Rastina;Sombor
+25284;Stanišić;Sombor
+26000;Pančevo;Pančevo
+26201;Jabuka;Pančevo
+26202;Glogonj;Pančevo
+26203;Sefkerin;Opovo
+26204;Opovo;Opovo
+26205;Baranda;Opovo
+26206;Sakule;Opovo
+26207;Idvor;Kovačica
+26210;Kovačica;Kovačica
+26212;Kačarevo;Pančevo
+26213;Crepaja;Kovačica
+26214;Debeljača;Kovačica
+26215;Padina;Kovačica
+26216;Uzdin;Kovačica
+26220;Kovin;Kovin
+26222;Bavanište;Kovin
+26223;Gaj;Kovin
+26224;Dubovac;Kovin
+26225;Deliblato;Kovin
+26226;Mramorak;Kovin
+26227;Dolovo;Pančevo
+26228;Skorenovac;Kovin
+26229;Pločica;Kovin
+26230;Omoljica;Pančevo
+26232;Starčevo;Pančevo
+26233;Ivanovo;Pančevo
+26234;Banatski Brestovac;Pančevo
+26300;Vršac;Vršac
+26310;Alibunar;Alibunar
+26314;Banatsko Novo Selo;Pančevo
+26315;Vladimirovac;Alibunar
+26316;Devojački Bunar;Alibunar
+26320;Banatski Karlovac;Alibunar
+26322;Nikolinci;Alibunar
+26323;Crvena Crkva;Bela Crkva
+26324;Banatska Palanka;Bela Crkva
+26327;Banatska Subotica;Bela Crkva
+26328;Dupljaja;Bela Crkva
+26330;Uljma;Vršac
+26332;Vlajkovac;Vršac
+26333;Pavliš;Vršac
+26334;Veliko Središte;Vršac
+26335;Gudurica;Vršac
+26336;Kuštilj;Vršac
+26337;Vatin;Vršac
+26338;Vojvodinci;Vršac
+26340;Bela Crkva;Bela Crkva
+26343;Izbište;Vršac
+26344;Zagajica;Vršac
+26345;Straža;Vršac
+26346;Jasenovo;Bela Crkva
+26347;Grebenac;Bela Crkva
+26348;Vračev Gaj;Bela Crkva
+26349;Kusić;Bela Crkva
+26350;Samoš;Kovačica
+26351;Seleuš;Alibunar
+26352;Ilandža;Alibunar
+26353;Novi Kozjak;Alibunar
+26354;Dobrica;Alibunar
+26360;Plandište;Plandište
+26361;Lokve;Alibunar
+26362;Janošik;Alibunar
+26363;Jermenovci;Plandište
+26364;Margita;Plandište
+26365;Veliki Gaj;Plandište
+26366;Velika Greda;Plandište
+26367;Barice;Plandište
+26368;Kupinik;Plandište
+26370;Hajdučica;Plandište
+26371;Stari Lec;Plandište
+26373;Miletićevo;Plandište
+31000;Užice;Užice
+31203;Lunovo Selo;Užice
+31204;Karan;Užice
+31205;Sevojno;Užice
+31206;Ravni;Užice
+31207;Sirogojno;Čajetina
+31208;Rožanstvo;Čajetina
+31209;Ljubiš;Čajetina
+31210;Požega;Požega
+31213;Ježevica;Požega
+31214;Gornja Dobrinja;Požega
+31215;Jelen Do;Požega
+31230;Arilje;Arilje
+31234;Brekovo;Arilje
+31236;Divljaka;Arilje
+31237;Roge;Požega
+31241;Bioska;Užice
+31242;Kremna;Užice
+31243;Mokra Gora;Užice
+31244;Šljivovica;Čajetina
+31250;Bajina Bašta;Bajina Bašta
+31251;Mitrovac;Bajina Bašta
+31253;Zlodol;Bajina Bašta
+31254;Kostojevići;Bajina Bašta
+31255;Rogačica;Bajina Bašta
+31256;Perućac;Bajina Bašta
+31258;Bačevci;Bajina Bašta
+31260;Kosjerić;Kosjerić
+31262;Seča Reka;Kosjerić
+31263;Varda;Kosjerić
+31265;Ražana;Kosjerić
+31300;Prijepolje;Prijepolje
+31305;Brodarevo;Prijepolje
+31306;Jabuka;Prijepolje
+31307;Aljinovići;Prijepolje
+31308;Gostun;Prijepolje
+31310;Čajetina;Čajetina
+31311;Bela Zemlja;Užice
+31312;Mačkat;Čajetina
+31315;Zlatibor;Čajetina
+31317;Draglica;Nova Varoš
+31318;Kokin Brod;Nova Varoš
+31319;Jasenovo;Nova Varoš
+31320;Nova Varoš;Nova Varoš
+31322;Božetići;Nova Varoš
+31325;Bistrica;Nova Varoš
+31330;Priboj;Priboj
+31335;Sastavci;Priboj
+31337;Banja (kod Priboja);Priboj
+32000;Čačak;Čačak
+32101;Čačak;Čačak
+32205;Trbušani;Čačak
+32210;Mrčajevci;Čačak
+32212;Preljina;Čačak
+32213;Bresnica;Čačak
+32215;Gornja Trepča;Čačak
+32222;Ježevica;Čačak
+32223;Zablaće;Čačak
+32224;Mršinci;Čačak
+32230;Guča;Lučani
+32232;Goračići;Lučani
+32233;Viča;Lučani
+32234;Kaona;Lučani
+32235;Kotraža;Lučani
+32240;Lučani;Lučani
+32242;Ovčar Banja;Čačak
+32243;Markovica;Lučani
+32250;Ivanjica;Ivanjica
+32251;Bukovica;Ivanjica
+32252;Prilički Kiseljak;Ivanjica
+32253;Brezova;Ivanjica
+32254;Vionica;Ivanjica
+32255;Međurečje;Ivanjica
+32256;Bratljevo;Ivanjica
+32258;Kušići;Ivanjica
+32259;Bele Vode;Ivanjica
+32300;Gornji Milanovac;Gornji Milanovac
+32303;Brđani;Gornji Milanovac
+32304;Takovo;Gornji Milanovac
+32307;Brezna;Gornji Milanovac
+32308;Pranjani;Gornji Milanovac
+32312;Boljkovci;Gornji Milanovac
+32313;Rudnik;Gornji Milanovac
+32314;Ugrinovci;Gornji Milanovac
+32315;Vraćevšnica;Gornji Milanovac
+32316;Dragolj;Gornji Milanovac
+34000;Kragujevac;Stari Grad (Kragujevac)
+34202;Grošnica;Stanovo
+34203;Ilićevo;Pivara
+34204;Divostin;Stanovo
+34205;Bare;Knić
+34206;Gornja Sabanta;Pivara
+34207;Erdeč;Stanovo
+34208;Beloševac;Pivara
+34209;Maršić;Pivara
+34210;Rača Kragujevačka;Rača
+34211;Jovanovac;Aerodrom
+34212;Malo Krčmare;Rača
+34213;Sipić;Rača
+34216;Male Pčelice;Stanovo
+34217;Bukorovac;Pivara
+34219;Šljivovac;Aerodrom
+34220;Lapovo (Varoš);Lapovo
+34221;Lapovo;Lapovo
+34222;Milatovac;Batočina
+34224;Korman;Pivara
+34225;Resnik;Aerodrom
+34226;Badnjevac;Batočina
+34227;Batočina;Batočina
+34228;Brzan;Batočina
+34229;Žirovnica;Batočina
+34230;Gruža;Knić
+34231;Dragobraća;Stanovo
+34232;Guberevac;Knić
+34240;Knić;Knić
+34243;Toponica;Knić
+34244;Zabojnica;Knić
+34300;Aranđelovac;Aranđelovac
+34301;Bukovik;Aranđelovac
+34302;Ranilović;Aranđelovac
+34304;Banja;Aranđelovac
+34305;Darosava;Aranđelovac
+34306;Venčane;Aranđelovac
+34307;Stojnik;Aranđelovac
+34308;Orašac;Aranđelovac
+34309;Jelovik;Aranđelovac
+34310;Topola;Topola
+34312;Belosavci;Topola
+34313;Natalinci;Topola
+34314;Donja Šatornja;Topola
+34318;Jarmenovci;Topola
+34321;Desimirovac;Aerodrom
+34322;Čumić;Aerodrom
+34323;Stragari;Stragari
+34324;Gornja Trnava;Topola
+34325;Lužnice;Aerodrom
+35000;Jagodina;Jagodina
+35203;Siokovac;Jagodina
+35204;Bagrdan;Jagodina
+35205;Jovac;Ćuprija
+35206;Raševica;Paraćin
+35207;Potočac;Paraćin
+35208;Vojska;Svilajnac
+35209;Subotica (kod Svilajnca);Svilajnac
+35210;Svilajnac;Svilajnac
+35211;Sedlare;Svilajnac
+35212;Plažane;Despotovac
+35213;Despotovac;Despotovac
+35215;Stenjevac;Despotovac
+35217;Bobovo;Svilajnac
+35218;Duboka;Jagodina
+35219;Končarevo;Jagodina
+35220;Ribare;Jagodina
+35222;Glogovac;Jagodina
+35223;Veliki Popović;Despotovac
+35224;Medveđa;Despotovac
+35226;Kušiljevo;Svilajnac
+35227;Krušar;Ćuprija
+35228;Supska;Ćuprija
+35230;Ćuprija;Ćuprija
+35233;Senje;Ćuprija
+35234;Senjski Rudnik;Despotovac
+35236;Mijatovac;Ćuprija
+35237;Resavica;Despotovac
+35238;Bigrenica;Đuprija
+35241;Jasenovo;Despotovac
+35242;Kolare;Jagodina
+35246;Stubica;Paraćin
+35247;Plana;Paraćin
+35248;Trešnjevica;Paraćin
+35249;Busilovac;Paraćin
+35250;Paraćin;Paraćin
+35254;Popovac;Paraćin
+35255;Donja Mutnica;Paraćin
+35256;Sikirica;Paraćin
+35257;Drenovac;Paraćin
+35258;Donje Vidovo;Paraćin
+35259;Svojnovo;Paraćin
+35260;Rekovac;Rekovac
+35261;Glavinci;Jagodina
+35262;Dragoševac;Jagodina
+35263;Belušić;Rekovac
+35264;Prevešt;Rekovac
+35265;Dragovo;Rekovac
+35267;Oparić;Rekovac
+35268;Miloševo;Jagodina
+35270;Majur;Jagodina
+35272;Dragocvet;Jagodina
+35273;Bunar;Jagodina
+35274;Loćika;Rekovac
+36000;Kraljevo;Kraljevo
+36201;Mataruška Banja;Kraljevo
+36202;Samaila;Kraljevo
+36203;Adrani;Kraljevo
+36204;Lađevci;Kraljevo
+36205;Roćevići;Kraljevo
+36206;Vitanovac;Kraljevo
+36207;Vitkovac;Kraljevo
+36208;Sirča;Kraljevo
+36210;Vrnjačka Banja;Vrnjačka Banja
+36212;Ratina;Kraljevo
+36214;Vrba;Kraljevo
+36215;Podunavci;Vrnjačka Banja
+36216;Novo Selo;Vrnjačka Banja
+36217;Vrnjci;Vrnjačka Banja
+36220;Čukojevac;Kraljevo
+36221;Žiča;Kraljevo
+36222;Rudno;Kraljevo
+36300;Novi Pazar;Novi Pazar
+36305;Deževa;Novi Pazar
+36306;Lukare;Novi Pazar
+36307;Delimeđe;Tutin
+36309;Ribariće;Tutin
+36310;Sjenica;Sjenica
+36311;Štavalj;Sjenica
+36312;Duga Poljana;Sjenica
+36313;Ugao;Sjenica
+36314;Štitare;Novi Pazar
+36315;Bare;Sjenica
+36320;Tutin;Tutin
+36321;Crkvine;Tutin
+36340;Konarevo;Kraljevo
+36341;Bogutovac;Kraljevo
+36342;Ušće;Kraljevo
+36343;Studenica;Kraljevo
+36344;Baljevac;Raška
+36345;Jošanička Banja;Raška
+36346;Brvenik;Raška
+36350;Raška;Raška
+36353;Rudnica;Raški okrug
+36354;Kopaonik;Raška
+37000;Kruševac;Kruševac
+37201;Parunovac;Kruševac
+37202;Đunis;Kruševac
+37203;Zdravinje;Kruševac
+37204;Veliki Šiljegovac;Kruševac
+37205;Ribarska Banja;Kruševac
+37206;Gornje Dvorane;Kruševac
+37208;Čitluk;Kruševac
+37209;Velika Lomnica;Kruševac
+37210;Ćićevac;Ćićevac
+37212;Stalać;Ćićevac
+37213;Vitoševac;Ražanj
+37214;Pojate;Ćićevac
+37215;Ražanj;Ražanj
+37216;Novi Bračin;Ražanj
+37220;Brus;Brus
+37221;Gornji Stepoš;Kruševac
+37222;Kupci;Kruševac
+37223;Razbojna;Brus
+37224;Lepenac;Brus
+37225;Brzeće;Brus
+37226;Blaževo;Brus
+37227;Milentija;Brus
+37230;Aleksandrovac;Aleksandrovac
+37231;Pepeljevac;Kruševac
+37233;Velika Vrbnica;Aleksandrovac
+37234;Gornji Stupanj;Aleksandrovac
+37235;Trnavci;Aleksandrovac
+37236;Rataje;Aleksandrovac
+37238;Pleš;Aleksandrovac
+37239;Šljivovo;Aleksandrovac
+37240;Trstenik;Trstenik
+37242;Stopanja;Trstenik
+37243;Počekovina;Trstenik
+37244;Medveđa;Trstenik
+37245;Velika Drenova;Trstenik
+37246;Milutovac;Trstenik
+37247;Jasikovica;Trstenik
+37251;Globoder;Kruševac
+37252;Jasika;Kruševac
+37253;Bela Voda;Grad Kruševac
+37254;Konjuh;Kruševac
+37255;Kukljin;Kruševac
+37256;Kaonik;Kruševac
+37257;Padež;Kruševac
+37258;Donji Krčin;Varvarin
+37260;Varvarin;Varvarin
+37262;Bošnjane;Varvarin
+37265;Bačina;Varvarin
+37266;Obrež;Varvarin
+38157;Brezovica;Štrpce
+38204;Laplje Selo;Priština
+38205;Gračanica;Priština
+38207;Donja Gušterica;Lipljan
+38208;Lepina;Lipljan
+38210;Batuse;Kosovo Polje
+38210;Kosovo Polje;Kosovo Polje
+38211;Plemetina;Obilić
+38213;Prilužje;Vučitrn
+38216;Banjska;Zvečan
+38217;Sočanica;Leposavić
+38218;Leposavić;Leposavić
+38219;Lešak;Leposavić
+38220;Kosovska Mitrovica;Kosovska Mitrovica
+38227;Zvečan;Zvečan
+38228;Zubin Potok;Zubin Potok
+38236;Štrpce;Štrpce
+38239;Drajkovce;Štrpce
+38251;Parteš;Gnjilane
+38252;Šilovo;Gnjilane
+38260;Kosovska Kamenica;Kosovska Kamenica
+38263;Vrbovac;Vitina
+38266;Pasjane;Gnjilane
+38267;Ranilug;Kosovska Kamenica

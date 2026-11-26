@@ -7,80 +7,145 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/artikli.css">
   <link rel="stylesheet" href="/dobavljaci.css">
+  <link rel="stylesheet" href="/dobavljac-detalji.css">
 </head>
 <body>
   <!--
-    Artikli jednog dobavljača: /vlasnik/dobavljac.html?id=<dobavljac_id>
-    Podatke daje GET /dobavljaci/<id>/artikli.
-    Nabavna cena = cena iz POSLEDNJEG ulaza robe od ovog dobavljača
-    (ako artikal još nije stigao kroz ulaz: cena upisana kad je artikal povezan sa dobavljačem).
+    Jedan dobavljač: /vlasnik/dobavljac.html?id=<dobavljac_id>
+    Gore: osnovni podaci (GET /dobavljaci/<id>). Kartice: artikli (GET /dobavljaci/<id>/artikli),
+    kontakti, tekući računi i radne jedinice (dodavanje, izmena, brisanje).
   -->
   <main class="dobavljac">
-    <nav>
+    <nav class="glavni-meni">
       <a href="/pocetna.html">POCETNA</a>
       <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
       <a href="/vlasnik/ulaz.html">Ulaz robe</a>
       <a href="/vlasnik/artikli.html">Artikli</a>
+      <a class="nav-dugme" href="/vlasnik/ulazi.html">📋 Svi ulazi</a>
     </nav>
 
     <a class="nazad" href="/vlasnik/dobavljaci.html">← Svi dobavljači</a>
 
-    <header class="artikli-zaglavlje">
+    <header class="dobavljac-zaglavlje">
       <div>
-        <p class="nadnaslov">Dobavljač</p>
+        <p class="nadnaslov" id="tip-dobavljaca">Dobavljač</p>
         <h1 id="naziv-dobavljaca">Učitavanje…</h1>
+        <p class="dugi-naziv-veliki" id="dugi-naziv"></p>
+        <p class="znacke" id="znacke"></p>
       </div>
-      <div class="pretraga-dobavljaca uska">
-        <input id="pretraga" type="search" placeholder="Traži po nazivu ili šifri…" aria-label="Traži artikal">
-      </div>
+      <button type="button" id="izmeni-dobavljaca" class="dugme-novi" disabled>✎ Izmeni podatke</button>
     </header>
+
+    <p id="poruka" role="status"></p>
+
+    <!-- Osnovni podaci: četiri grupe -->
+    <section class="podaci-dobavljaca" aria-label="Podaci o dobavljaču">
+      <div class="podaci-grupa">
+        <h2>Identifikacija</h2>
+        <dl>
+          <div><dt>PIB</dt><dd data-polje="pib"></dd></div>
+          <div><dt>Matični broj</dt><dd data-polje="maticni_broj"></dd></div>
+          <div><dt>Registarski broj</dt><dd data-polje="registarski_broj"></dd></div>
+          <div><dt>Šifra delatnosti</dt><dd data-polje="sifra_delatnosti"></dd></div>
+          <div><dt>Broj gazdinstva</dt><dd data-polje="broj_gazdinstva"></dd></div>
+          <div><dt>Vlasnik</dt><dd data-polje="vlasnik"></dd></div>
+        </dl>
+      </div>
+      <div class="podaci-grupa">
+        <h2>Adresa</h2>
+        <dl>
+          <div><dt>Adresa</dt><dd data-polje="adresa"></dd></div>
+          <div><dt>Mesto</dt><dd data-polje="mesto_ptt"></dd></div>
+          <div><dt>Opština</dt><dd data-polje="opstina"></dd></div>
+          <div><dt>Zemlja</dt><dd data-polje="zemlja"></dd></div>
+        </dl>
+      </div>
+      <div class="podaci-grupa">
+        <h2>PDV</h2>
+        <dl>
+          <div><dt>PDV zona</dt><dd data-polje="pdv_zona"></dd></div>
+          <div><dt>PDV obveznik</dt><dd data-polje="pdv_obveznik"></dd></div>
+          <div><dt>Sistem eFaktura</dt><dd data-polje="e_faktura"></dd></div>
+        </dl>
+      </div>
+      <div class="podaci-grupa">
+        <h2>Kontakt</h2>
+        <dl>
+          <div><dt>Telefon</dt><dd data-polje="telefon"></dd></div>
+          <div><dt>Fax</dt><dd data-polje="fax"></dd></div>
+          <div><dt>E-mail</dt><dd data-polje="email"></dd></div>
+          <div><dt>Web</dt><dd data-polje="web"></dd></div>
+          <div><dt>El. dostava</dt><dd data-polje="el_dostava"></dd></div>
+        </dl>
+      </div>
+    </section>
 
     <!-- Kratak pregled -->
     <section class="kartice" aria-label="Pregled">
-      <div class="kartica-broj">
-        <span class="oznaka">Artikala</span>
-        <strong id="k-artikala">–</strong>
-      </div>
-      <div class="kartica-broj">
-        <span class="oznaka">Aktivnih</span>
-        <strong id="k-aktivnih">–</strong>
-      </div>
+      <div class="kartica-broj"><span class="oznaka">Artikala</span><strong id="k-artikala">–</strong></div>
+      <div class="kartica-broj"><span class="oznaka">Ulaza robe</span><strong id="k-ulaza">–</strong></div>
+      <div class="kartica-broj"><span class="oznaka">Poslednji ulaz</span><strong id="k-poslednji">–</strong></div>
       <div class="kartica-broj">
         <span class="oznaka" title="Zbir: stanje × nabavna cena sa PDV, samo za artikle sa stanjem većim od 0">Vrednost zaliha (nabavno, sa PDV)</span>
         <strong id="k-vrednost">–</strong>
       </div>
     </section>
 
-    <p id="poruka" role="status"></p>
-
-    <div class="tabela-okvir">
-      <table class="tabela-artikli tabela-dobavljac">
-        <caption class="samo-citac">Artikli dobavljača. Klik na zaglavlje sortira.</caption>
-        <thead>
-          <tr class="naslovi">
-            <th scope="col" data-kolona="sifra" class="broj" aria-sort="ascending"><button type="button" class="sortiraj">Šifra</button></th>
-            <th scope="col" data-kolona="naziv"><button type="button" class="sortiraj">Naziv</button></th>
-            <th scope="col" data-kolona="sifra_dobavljac"><button type="button" class="sortiraj" title="Šifra pod kojom ovaj dobavljač vodi artikal">Šifra dob.</button></th>
-            <th scope="col" data-kolona="jedinica_mere"><button type="button" class="sortiraj">JM</button></th>
-            <th scope="col" data-kolona="nabavna_cena" class="broj istaknuto"><button type="button" class="sortiraj" title="Iz poslednjeg ulaza robe od ovog dobavljača">Nabavna bez PDV</button></th>
-            <th scope="col" data-kolona="pdv" class="broj"><button type="button" class="sortiraj">PDV</button></th>
-            <th scope="col" data-kolona="nabavna_cena_pdv" class="broj istaknuto"><button type="button" class="sortiraj">Nabavna sa PDV</button></th>
-            <th scope="col" data-kolona="prodajna_cena" class="broj"><button type="button" class="sortiraj">Prodajna</button></th>
-            <th scope="col" data-kolona="marza" class="broj"><button type="button" class="sortiraj" title="(prodajna − nabavna sa PDV) / nabavna sa PDV × 100">Marža</button></th>
-            <th scope="col" data-kolona="stanje" class="broj"><button type="button" class="sortiraj">Stanje</button></th>
-            <th scope="col" data-kolona="ukupno_nabavljeno" class="broj"><button type="button" class="sortiraj" title="Ukupna količina primljena od ovog dobavljača kroz sve ulaze">Nabavljeno</button></th>
-            <th scope="col" data-kolona="poslednji_ulaz" class="broj"><button type="button" class="sortiraj">Poslednji ulaz</button></th>
-          </tr>
-        </thead>
-        <tbody id="artikli-telo"></tbody>
-      </table>
-      <p id="nema-artikala" class="nema" hidden></p>
+    <!-- Kartice -->
+    <div class="jezicci" role="tablist" aria-label="Detalji dobavljača">
+      <button type="button" role="tab" id="tab-artikli" aria-controls="panel-artikli" aria-selected="true">Artikli <span class="broj-tab" id="n-artikli">0</span></button>
+      <button type="button" role="tab" id="tab-kontakti" aria-controls="panel-kontakti" aria-selected="false" tabindex="-1">Kontakti <span class="broj-tab" id="n-kontakti">0</span></button>
+      <button type="button" role="tab" id="tab-racuni" aria-controls="panel-racuni" aria-selected="false" tabindex="-1">Tekući računi <span class="broj-tab" id="n-racuni">0</span></button>
+      <button type="button" role="tab" id="tab-jedinice" aria-controls="panel-jedinice" aria-selected="false" tabindex="-1">Radne jedinice <span class="broj-tab" id="n-jedinice">0</span></button>
     </div>
 
-    <p class="pomoc">
-      Nabavna cena je iz poslednjeg ulaza robe od ovog dobavljača. Ako artikal još nije stigao
-      kroz ulaz, prikazuje se cena upisana kad je artikal povezan sa dobavljačem (označeno sa *).
-    </p>
+    <!-- Artikli -->
+    <section id="panel-artikli" role="tabpanel" aria-labelledby="tab-artikli" class="panel">
+      <div class="panel-alati">
+        <input id="pretraga" type="search" placeholder="Traži po nazivu ili šifri…" aria-label="Traži artikal">
+      </div>
+      <div class="tabela-okvir">
+        <table class="tabela-artikli tabela-dobavljac">
+          <caption class="samo-citac">Artikli dobavljača. Klik na zaglavlje sortira.</caption>
+          <thead>
+            <tr class="naslovi">
+              <th scope="col" data-kolona="sifra" class="broj" aria-sort="ascending"><button type="button" class="sortiraj">Šifra</button></th>
+              <th scope="col" data-kolona="naziv"><button type="button" class="sortiraj">Naziv</button></th>
+              <th scope="col" data-kolona="sifra_dobavljac"><button type="button" class="sortiraj" title="Šifra pod kojom ovaj dobavljač vodi artikal">Šifra dob.</button></th>
+              <th scope="col" data-kolona="jedinica_mere"><button type="button" class="sortiraj">JM</button></th>
+              <th scope="col" data-kolona="nabavna_cena" class="broj istaknuto"><button type="button" class="sortiraj" title="Iz poslednjeg ulaza robe od ovog dobavljača">Nabavna bez PDV</button></th>
+              <th scope="col" data-kolona="pdv" class="broj"><button type="button" class="sortiraj">PDV</button></th>
+              <th scope="col" data-kolona="nabavna_cena_pdv" class="broj istaknuto"><button type="button" class="sortiraj">Nabavna sa PDV</button></th>
+              <th scope="col" data-kolona="prodajna_cena" class="broj"><button type="button" class="sortiraj">Prodajna</button></th>
+              <th scope="col" data-kolona="marza" class="broj"><button type="button" class="sortiraj" title="(prodajna − nabavna sa PDV) / nabavna sa PDV × 100">Marža</button></th>
+              <th scope="col" data-kolona="stanje" class="broj"><button type="button" class="sortiraj">Stanje</button></th>
+              <th scope="col" data-kolona="ukupno_nabavljeno" class="broj"><button type="button" class="sortiraj" title="Ukupna količina primljena od ovog dobavljača kroz sve ulaze">Nabavljeno</button></th>
+              <th scope="col" data-kolona="poslednji_ulaz" class="broj"><button type="button" class="sortiraj">Poslednji ulaz</button></th>
+            </tr>
+          </thead>
+          <tbody id="artikli-telo"></tbody>
+        </table>
+        <p id="nema-artikala" class="nema" hidden></p>
+      </div>
+      <p class="pomoc">
+        Nabavna cena je iz poslednjeg ulaza robe od ovog dobavljača. Ako artikal još nije stigao
+        kroz ulaz, prikazuje se cena upisana kad je artikal povezan sa dobavljačem (označeno sa *).
+      </p>
+    </section>
+
+    <!-- Kontakti, tekući računi, radne jedinice: isti oblik, popunjava dobavljac.js -->
+    <section id="panel-kontakti" role="tabpanel" aria-labelledby="tab-kontakti" class="panel" hidden>
+      <div class="panel-alati"><button type="button" class="dugme-novi" data-dodaj="kontakti">+ Dodaj kontakt</button></div>
+      <div class="lista-kartica" id="lista-kontakti"></div>
+    </section>
+    <section id="panel-racuni" role="tabpanel" aria-labelledby="tab-racuni" class="panel" hidden>
+      <div class="panel-alati"><button type="button" class="dugme-novi" data-dodaj="racuni">+ Dodaj tekući račun</button></div>
+      <div class="lista-kartica" id="lista-racuni"></div>
+    </section>
+    <section id="panel-jedinice" role="tabpanel" aria-labelledby="tab-jedinice" class="panel" hidden>
+      <div class="panel-alati"><button type="button" class="dugme-novi" data-dodaj="jedinice">+ Dodaj radnu jedinicu</button></div>
+      <div class="lista-kartica" id="lista-jedinice"></div>
+    </section>
   </main>
 
   <template id="red-sablon">
@@ -103,6 +168,24 @@
     </tr>
   </template>
 
+  <!-- Jedna kartica (kontakt / račun / radna jedinica) -->
+  <template id="kartica-sablon">
+    <article class="mala-kartica">
+      <header>
+        <div>
+          <h3 data-polje="naslov"></h3>
+          <p class="podnaslov-kartice" data-polje="podnaslov"></p>
+        </div>
+        <div class="kartica-akcije">
+          <button type="button" class="ikona izmeni" aria-label="Izmeni" title="Izmeni">✎</button>
+          <button type="button" class="ikona obrisi" aria-label="Obriši" title="Obriši">🗑</button>
+        </div>
+      </header>
+      <dl data-polje="detalji"></dl>
+    </article>
+  </template>
+
+  <script src="/dobavljac-forma.js"></script>
   <script src="/dobavljac.js"></script>
 </body>
 </html>

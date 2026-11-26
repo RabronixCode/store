@@ -1,0 +1,209 @@
+# Izvor: sh.wikipedia.org/wiki/Teritorijalna_organizacija_Srbije (tabela opština po upravnim okruzima), preuzeto 26.11.2026.
+# Dopunjeno gradskim opštinama Kostolac (Požarevac), Vranjska Banja (Vranje) i Sevojno (Užice), kojih nema u toj tabeli.
+# Kolona sifra je prazna: 3-cifrene šifre opština (npr. 070) nisu nađene ni na jednoj zvaničnoj stranici, pa se mogu dopuniti kasnije.
+# Kolona ptt: glavni PTT broj sedišta opštine (puni PTT broj u formi dobavljača kad se izabere opština). Prazno = nije nađen.
+naziv;okrug;sifra;ptt
+Barajevo;Grad Beograd;;11460
+Voždovac;Grad Beograd;;11010
+Vračar;Grad Beograd;;11000
+Grocka;Grad Beograd;;11306
+Zvezdara;Grad Beograd;;11050
+Zemun;Grad Beograd;;11080
+Lazarevac;Grad Beograd;;11550
+Mladenovac;Grad Beograd;;11400
+Novi Beograd;Grad Beograd;;11070
+Obrenovac;Grad Beograd;;11500
+Palilula;Grad Beograd;;11060
+Rakovica;Grad Beograd;;11090
+Savski Venac;Grad Beograd;;11000
+Sopot;Grad Beograd;;11450
+Stari grad;Grad Beograd;;11000
+Surčin;Grad Beograd;;11271
+Čukarica;Grad Beograd;;11030
+Šabac;Mačvanski;;15000
+Bogatić;Mačvanski;;15350
+Loznica;Mačvanski;;15300
+Vladimirci;Mačvanski;;15225
+Koceljeva;Mačvanski;;15220
+Mali Zvornik;Mačvanski;;15318
+Krupanj;Mačvanski;;15314
+Ljubovija;Mačvanski;;15320
+Valjevo;Kolubarski;;14000
+Osečina;Kolubarski;;14253
+Ub;Kolubarski;;14210
+Lajkovac;Kolubarski;;14224
+Mionica;Kolubarski;;14242
+Ljig;Kolubarski;;14240
+Smederevo;Podunavski;;11300
+Smederevska Palanka;Podunavski;;11420
+Velika Plana;Podunavski;;11320
+Veliko Gradište;Braničevski;;12220
+Požarevac;Braničevski;;12000
+Kostolac;Braničevski;;12208
+Golubac;Braničevski;;12223
+Malo Crniće;Braničevski;;12311
+Žabari;Braničevski;;12374
+Petrovac na Mlavi;Braničevski;;12300
+Kučevo;Braničevski;;12240
+Žagubica;Braničevski;;12320
+Kragujevac;Šumadijski;;34000
+Aranđelovac;Šumadijski;;34300
+Topola;Šumadijski;;34310
+Rača;Šumadijski;;34210
+Aerodrom (Kragujevac);Šumadijski;;34000
+Pivara (Kragujevac);Šumadijski;;34000
+Stanovo (Kragujevac);Šumadijski;;34000
+Stari grad (Kragujevac);Šumadijski;;34000
+Stragari (Kragujevac);Šumadijski;;34323
+Batočina;Šumadijski;;34227
+Knić;Šumadijski;;34240
+Lapovo;Šumadijski;;34221
+Jagodina;Pomoravski;;35000
+Ćuprija;Pomoravski;;35230
+Paraćin;Pomoravski;;35250
+Svilajnac;Pomoravski;;35210
+Despotovac;Pomoravski;;35213
+Rekovac;Pomoravski;;35260
+Bor;Borski;;19210
+Kladovo;Borski;;19320
+Majdanpek;Borski;;19250
+Negotin;Borski;;19300
+Boljevac;Zaječarski;;19370
+Knjaževac;Zaječarski;;19350
+Zaječar;Zaječarski;;19000
+Sokobanja;Zaječarski;;18230
+Bajina Bašta;Zlatiborski;;31250
+Kosjerić;Zlatiborski;;31260
+Užice;Zlatiborski;;31000
+Sevojno;Zlatiborski;;31205
+Požega;Zlatiborski;;31210
+Čajetina;Zlatiborski;;31310
+Arilje;Zlatiborski;;31230
+Priboj;Zlatiborski;;31330
+Nova Varoš;Zlatiborski;;31320
+Prijepolje;Zlatiborski;;31300
+Sjenica;Zlatiborski;;36310
+Čačak;Moravički;;32000
+Gornji Milanovac;Moravički;;32300
+Lučani;Moravički;;32240
+Ivanjica;Moravički;;32250
+Kraljevo;Raški;;36000
+Vrnjačka Banja;Raški;;36210
+Raška;Raški;;36350
+Novi Pazar;Raški;;36300
+Tutin;Raški;;36320
+Varvarin;Rasinski;;37260
+Trstenik;Rasinski;;37240
+Ćićevac;Rasinski;;37210
+Kruševac;Rasinski;;37000
+Aleksandrovac;Rasinski;;12370
+Brus;Rasinski;;37220
+Niš;Nišavski;;18000
+Aleksinac;Nišavski;;18220
+Svrljig;Nišavski;;18360
+Merošina;Nišavski;;18252
+Ražanj;Nišavski;;37215
+Medijana (Niš);Nišavski;;18000
+Niška Banja (Niš);Nišavski;;18205
+Palilula (Niš);Nišavski;;18000
+Pantelej (Niš);Nišavski;;18000
+Crveni Krst (Niš);Nišavski;;18000
+Doljevac;Nišavski;;18410
+Gadžin Han;Nišavski;;18240
+Prokuplje;Toplički;;18400
+Blace;Toplički;;18420
+Kuršumlija;Toplički;;18430
+Žitorađa;Toplički;;18412
+Bela Palanka;Pirotski;;18310
+Pirot;Pirotski;;18300
+Babušnica;Pirotski;;18330
+Dimitrovgrad;Pirotski;;18320
+Leskovac;Jablanički;;16000
+Bojnik;Jablanički;;16205
+Lebane;Jablanički;;16230
+Medveđa;Jablanički;;16240
+Vlasotince;Jablanički;;16210
+Crna Trava;Jablanički;;16215
+Vladičin Han;Pčinjski;;17510
+Surdulica;Pčinjski;;17530
+Bosilegrad;Pčinjski;;17540
+Trgovište;Pčinjski;;17525
+Vranje;Pčinjski;;17500
+Vranjska Banja;Pčinjski;;17541
+Bujanovac;Pčinjski;;17520
+Preševo;Pčinjski;;17523
+Podujevo;Kosovski;;
+Obilić;Kosovski;;
+Priština;Kosovski;;
+Kosovo Polje;Kosovski;;38210
+Glogovac;Kosovski;;
+Štimlje;Kosovski;;
+Štrpce;Kosovski;;38236
+Uroševac;Kosovski;;
+Kačanik;Kosovski;;
+Lipljan;Kosovski;;
+Istok;Pećki;;
+Peć;Pećki;;
+Klina;Pećki;;
+Dečani;Pećki;;
+Đakovica;Pećki;;
+Suva Reka;Prizrenski;;
+Orahovac;Prizrenski;;
+Prizren;Prizrenski;;
+Gora;Prizrenski;;
+Zubin Potok;Kosovskomitrovački;;38228
+Leposavić;Kosovskomitrovački;;38218
+Zvečan;Kosovskomitrovački;;38227
+Kosovska Mitrovica;Kosovskomitrovački;;38220
+Srbica;Kosovskomitrovački;;
+Vučitrn;Kosovskomitrovački;;
+Kosovska Kamenica;Kosovskopomoravski;;38260
+Novo Brdo;Kosovskopomoravski;;
+Gnjilane;Kosovskopomoravski;;
+Vitina;Kosovskopomoravski;;
+Šid;Sremski;;22239
+Stara Pazova;Sremski;;22300
+Sremska Mitrovica;Sremski;;22000
+Ruma;Sremski;;22400
+Pećinci;Sremski;;22410
+Irig;Sremski;;22406
+Inđija;Sremski;;22320
+Ada;Severnobanatski;;24430
+Kanjiža;Severnobanatski;;24420
+Kikinda;Severnobanatski;;23300
+Novi Kneževac;Severnobanatski;;23330
+Senta;Severnobanatski;;24400
+Čoka;Severnobanatski;;23320
+Alibunar;Južnobanatski;;26310
+Bela Crkva;Južnobanatski;;15313
+Vršac;Južnobanatski;;26300
+Kovačica;Južnobanatski;;26210
+Kovin;Južnobanatski;;26220
+Opovo;Južnobanatski;;26204
+Pančevo;Južnobanatski;;26000
+Plandište;Južnobanatski;;26360
+Žitište;Srednjobanatski;;23210
+Zrenjanin;Srednjobanatski;;23000
+Nova Crnja;Srednjobanatski;;23218
+Novi Bečej;Srednjobanatski;;23272
+Sečanj;Srednjobanatski;;23240
+Bačka Topola;Severnobački;;24300
+Mali Iđoš;Severnobački;;24321
+Subotica;Severnobački;;24000
+Apatin;Zapadnobački;;25260
+Kula;Zapadnobački;;25230
+Odžaci;Zapadnobački;;25250
+Sombor;Zapadnobački;;25000
+Bač;Južnobački;;21420
+Bačka Palanka;Južnobački;;21400
+Bački Petrovac;Južnobački;;21470
+Beočin;Južnobački;;21300
+Bečej;Južnobački;;21220
+Vrbas;Južnobački;;21460
+Žabalj;Južnobački;;21230
+Novi Sad;Južnobački;;21000
+Petrovaradin;Južnobački;;21131
+Srbobran;Južnobački;;21480
+Sremski Karlovci;Južnobački;;21205
+Temerin;Južnobački;;21235
+Titel;Južnobački;;21240

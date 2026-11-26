@@ -30,10 +30,215 @@ from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
 from racun_pdf import izdaj_racun
 import asistent
+import dobavljaci as dobavljaci_db
 
 
-class Dobavljac(BaseModel):
-    naziv: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+# ---------- Dobavljači: osnovni podaci, kontakti, tekući računi, radne jedinice ----------
+from typing import Literal
+import re as _re
+
+
+def _prazno_u_none(v):
+    """'  ' -> None, ' x ' -> 'x'. Brojevi se prihvataju kao tekst."""
+    if v is None:
+        return None
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        v = str(v)
+    if isinstance(v, str):
+        return v.strip() or None
+    return v
+
+
+def Tekst(duzina):
+    return Annotated[str | None, StringConstraints(max_length=duzina)]
+
+
+EMAIL = _re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _cifre(v, naziv, najmanje, najvise):
+    if v is not None and not (v.isdigit() and najmanje <= len(v) <= najvise):
+        duzina = f"{najmanje}" if najmanje == najvise else f"{najmanje} do {najvise}"
+        raise ValueError(f"{naziv} mora imati {duzina} cifara (samo brojevi).")
+
+
+def _email(v):
+    if v is not None and not EMAIL.match(v):
+        raise ValueError("E-mail nije ispravan (npr. ime@firma.rs).")
+
+
+def pib_ispravan(pib):
+    """Kontrolna cifra PIB-a (ISO 7064, MOD 11,10)."""
+    s = 10
+    for c in pib[:8]:
+        t = (s + int(c)) % 10 or 10
+        s = (2 * t) % 11
+    return (11 - s) % 10 == int(pib[8])
+
+
+def kontrolni_broj_racuna(banka, racun):
+    """Domaći tekući račun: kontrolni broj = 98 - (banka + račun na 13 cifara + '00') mod 97."""
+    return f"{98 - int(banka + racun.zfill(13)) * 100 % 97:02d}"
+
+
+def rastavi_racun(tekst, banka=None, kb=None):
+    """Domaći račun upisan od početka do kraja -> (banka, srednji deo, Kb ili None).
+    Primaju se: 160-12345-95, 160-12345 (Kb se računa), 160000000001234595 (18 cifara),
+    16012345 (bez Kb) i 1601234595 (poslednje dve cifre se uzimaju kao Kb samo ako su tačan Kb).
+    Ista pravila su u dobavljac-forma.js (rastaviRacun)."""
+    delovi = tekst.split("-")
+    if len(delovi) in (2, 3):
+        banka, broj = delovi[0], delovi[1]
+        kb = delovi[2] if len(delovi) == 3 and delovi[2] else None
+    elif len(delovi) != 1 or not tekst.isdigit():
+        raise ValueError("Broj računa upiši kao 160-12345-95 (banka - račun - kontrolni broj).")
+    elif banka:                          # banka poslata posebno: ovo je samo srednji deo
+        broj = tekst
+    elif len(tekst) == 18:
+        banka, broj, kb = tekst[:3], tekst[3:16], tekst[16:]
+    elif len(tekst) >= 4:
+        banka, ostatak = tekst[:3], tekst[3:]
+        sredina = ostatak[:-2]
+        if 1 <= len(sredina) <= 13 and kontrolni_broj_racuna(banka, sredina) == ostatak[-2:]:
+            broj, kb = sredina, ostatak[-2:]
+        else:
+            broj = ostatak
+    else:
+        raise ValueError("Broj računa je prekratak. Upiši ceo broj, npr. 160-12345-95.")
+    _cifre(banka, "Šifra banke (prve 3 cifre računa)", 3, 3)
+    if not banka:
+        raise ValueError("Upiši ceo broj računa, sa šifrom banke na početku (npr. 160-12345-95).")
+    _cifre(broj, "Srednji deo računa", 1, 13)
+    return banka, broj, kb
+
+
+class PodaciDobavljaca(BaseModel):
+    """Sva polja su opciona osim PIB-a. Podrazumevane vrednosti su kao u formi za unos."""
+    tip: Literal["P", "F", "R", "J", "L"] = "P"
+    pib: Annotated[str, StringConstraints(max_length=30)]
+    naziv: Tekst(100) = None                 # kratki naziv (prikazuje se svuda)
+    dugi_naziv: Tekst(255) = None
+    vlasnik: Tekst(100) = None
+    zemlja: Tekst(100) = None
+    opstina: Tekst(100) = "Mladenovac"
+    ptt_broj: Tekst(10) = "11400"
+    adresa: Tekst(255) = None
+    mesto: Tekst(100) = None
+    maticni_broj: Tekst(13) = None
+    broj_gazdinstva: Tekst(30) = None
+    registarski_broj: Tekst(50) = None
+    sifra_delatnosti: Tekst(10) = None
+    pdv_zona: Annotated[int, Field(ge=0, le=3)] = 0
+    pdv_obveznik: bool = True
+    e_faktura: bool = False                  # za sada se ne menja iz forme
+    telefon: Tekst(50) = None
+    fax: Tekst(50) = None
+    el_dostava: bool = False
+    email: Tekst(255) = None
+    web: Tekst(255) = None
+    aktivan: bool = True
+
+    @field_validator("pib", "naziv", "dugi_naziv", "vlasnik", "zemlja", "opstina", "ptt_broj", "adresa", "mesto",
+                     "maticni_broj", "broj_gazdinstva", "registarski_broj", "sifra_delatnosti", "telefon", "fax",
+                     "email", "web", mode="before")
+    @classmethod
+    def _ocisti(cls, v):
+        return _prazno_u_none(v)
+
+    @model_validator(mode="after")
+    def _pravila(self):
+        if not self.pib:
+            raise ValueError("PIB je obavezan.")
+        pib = self.pib.replace(" ", "")
+        if self.pdv_zona != 3:           # domaći dobavljač
+            if not pib.isdigit() or len(pib) not in (9, 13):
+                raise ValueError("PIB mora imati 9 cifara (ili 13 za fizičko lice: JMBG).")
+            if len(pib) == 9 and not pib_ispravan(pib):
+                raise ValueError(f"PIB {pib} nije ispravan (kontrolna cifra se ne slaže). Proveri unos.")
+        self.pib = pib
+        _cifre(self.maticni_broj, "Matični broj", 8, 13)
+        _cifre(self.sifra_delatnosti, "Šifra delatnosti", 4, 5)
+        _email(self.email)
+        if not self.naziv:               # kratki naziv nije obavezan, ali je potreban za prikaz
+            self.naziv = (self.dugi_naziv or f"PIB {self.pib}")[:100]
+        return self
+
+
+class KontaktDobavljaca(BaseModel):
+    naziv: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+    telefon: Tekst(50) = None
+    mobilni: Tekst(50) = None
+    fax: Tekst(50) = None
+    web: Tekst(255) = None
+    email: Tekst(255) = None
+    sluzba: Tekst(100) = None
+    funkcija: Tekst(100) = None
+
+    @field_validator("telefon", "mobilni", "fax", "web", "email", "sluzba", "funkcija", mode="before")
+    @classmethod
+    def _ocisti(cls, v):
+        return _prazno_u_none(v)
+
+    @model_validator(mode="after")
+    def _pravila(self):
+        _email(self.email)
+        return self
+
+
+class RacunDobavljaca(BaseModel):
+    valuta: Annotated[str, StringConstraints(strip_whitespace=True, to_upper=True, pattern=r"^[A-Za-z]{3}$")] = "RSD"
+    banka_sifra: Tekst(3) = None
+    banka_naziv: Tekst(150) = None
+    broj_racuna: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=40)]
+    kontrolni_broj: Tekst(2) = None
+    dug_konto: Tekst(10) = "43500"
+    pot_konto: Tekst(10) = "20410"
+
+    @field_validator("banka_sifra", "banka_naziv", "kontrolni_broj", "dug_konto", "pot_konto", mode="before")
+    @classmethod
+    def _ocisti(cls, v):
+        return _prazno_u_none(v)
+
+    @model_validator(mode="after")
+    def _pravila(self):
+        broj = self.broj_racuna.replace(" ", "")
+        if self.valuta == "RSD":         # domaći račun: 3 + do 13 + 2 cifre, kontrola mod 97
+            self.banka_sifra, broj, self.kontrolni_broj = rastavi_racun(broj, self.banka_sifra, self.kontrolni_broj)
+            broj = broj.zfill(13)
+            tacan = kontrolni_broj_racuna(self.banka_sifra, broj)
+            if self.kontrolni_broj is None:
+                self.kontrolni_broj = tacan
+            else:
+                _cifre(self.kontrolni_broj, "Kontrolni broj", 2, 2)
+                if self.kontrolni_broj != tacan:
+                    raise ValueError(f"Kontrolni broj ne odgovara računu {self.banka_sifra}-{broj} "
+                                     f"(treba {tacan}). Proveri broj računa.")
+        self.broj_racuna = broj
+        _cifre(self.dug_konto, "Dug konto", 3, 10)
+        _cifre(self.pot_konto, "Pot konto", 3, 10)
+        return self
+
+
+class JedinicaDobavljaca(BaseModel):
+    naziv: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=150)]
+    adresa: Tekst(255) = None
+    mesto: Tekst(100) = None
+    ptt_broj: Tekst(10) = None
+    gln: Tekst(13) = None
+    dostava: bool = False
+    email: Tekst(255) = None
+    aktivan: bool = True
+
+    @field_validator("adresa", "mesto", "ptt_broj", "gln", "email", mode="before")
+    @classmethod
+    def _ocisti(cls, v):
+        return _prazno_u_none(v)
+
+    @model_validator(mode="after")
+    def _pravila(self):
+        _cifre(self.gln, "GLN", 13, 13)
+        _email(self.email)
+        return self
 
 TekstObavezan = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 TekstNeobavezan = Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)]
@@ -305,25 +510,11 @@ async def lista_dobavljaca(korisnik = Depends(samo_vlasnik)):
     return citaj_iz_baze(lambda k: [dict(r) for r in k.execute(
         "SELECT dobavljac_id, naziv FROM dobavljac ORDER BY naziv COLLATE NOCASE").fetchall()])
 
-@app.post("/dobavljaci")
-async def kreiraj_dobavljaca(dobavljac: Dobavljac, korisnik = Depends(samo_vlasnik)):
-    proveri_duplikat(dobavljac)
-    unesi_dobavljaca(dobavljac)
-    return "Dobavljac sacuvan!"
-
-# Stranica Dobavljači (samo vlasnik)
+# Stranica Dobavljači (samo vlasnik). Ostale rute za dobavljače su niže, u bloku "Dobavljači: detalji".
 
 @app.get("/dobavljaci/pregled")
-async def pregled_svih_dobavljaca(korisnik = Depends(trenutni_korisnik)):
-    if korisnik != 'vlasnik':
-        raise ForbiddenAccess()
-    return citaj_iz_baze(pregled_dobavljaca)
-
-@app.patch("/dobavljaci/{dobavljac_id}")
-async def promeni_dobavljaca(dobavljac_id: int, dobavljac: Dobavljac, korisnik = Depends(trenutni_korisnik)):
-    if korisnik != 'vlasnik':
-        raise ForbiddenAccess()
-    return sacuvaj_naziv_dobavljaca(dobavljac_id, dobavljac.naziv)
+async def pregled_svih_dobavljaca(korisnik = Depends(samo_vlasnik)):
+    return citaj_iz_baze(dobavljaci_db.pregled_dobavljaca_detaljno)
 
 @app.get("/dobavljaci/{dobavljac_id}/artikli")
 async def artikli_jednog_dobavljaca(dobavljac_id: int, korisnik = Depends(trenutni_korisnik)):
@@ -404,6 +595,97 @@ async def promeni_artikal(sifra: int, izmena: IzmenaArtikla, korisnik = Depends(
     if korisnik != 'vlasnik':
         raise ForbiddenAccess()
     return sacuvaj_izmenu_artikla(sifra, izmena)
+
+# ---------- Dobavljači: detalji (samo vlasnik) ----------
+# Osnovni podaci + tri vezane tabele (kontakti, tekući računi, radne jedinice).
+
+@app.get("/sifarnici")
+async def sifarnici_dobavljaca(korisnik = Depends(samo_vlasnik)):
+    return citaj_iz_baze(dobavljaci_db.sifarnici)
+
+@app.post("/dobavljaci")
+async def kreiraj_dobavljaca(podaci: PodaciDobavljaca, korisnik = Depends(samo_vlasnik)):
+    novi_id = pisi_u_bazu(dobavljaci_db.dodaj_dobavljaca, podaci.model_dump())
+    return citaj_iz_baze(dobavljaci_db.dobavljac_ceo, novi_id)
+
+@app.get("/dobavljaci/{dobavljac_id}")
+async def jedan_dobavljac_ceo(dobavljac_id: int, korisnik = Depends(samo_vlasnik)):
+    d = citaj_iz_baze(dobavljaci_db.dobavljac_ceo, dobavljac_id)
+    if not d:
+        raise BadInput("Taj dobavljač ne postoji.", 404)
+    return d
+
+@app.put("/dobavljaci/{dobavljac_id}")
+async def izmeni_dobavljaca_ceo(dobavljac_id: int, podaci: PodaciDobavljaca, korisnik = Depends(samo_vlasnik)):
+    pisi_u_bazu(dobavljaci_db.izmeni_dobavljaca, dobavljac_id, podaci.model_dump())
+    return citaj_iz_baze(dobavljaci_db.dobavljac_ceo, dobavljac_id)
+
+
+def _podaci_racuna(konekcija, r):
+    """Naziv banke iz šifarnika za domaći račun (ako nije upisan ručno)."""
+    podaci = r.model_dump()
+    if podaci["valuta"] == "RSD" and podaci["banka_sifra"]:
+        podaci["banka_naziv"] = dobavljaci_db.naziv_banke(konekcija, podaci["banka_sifra"]) or podaci["banka_naziv"]
+    return podaci
+
+
+def _dodaj(vrsta, dobavljac_id, podaci):
+    def upis(konekcija):
+        p = _podaci_racuna(konekcija, podaci) if vrsta == "racuni" else podaci.model_dump()
+        return dobavljaci_db.dodaj_podstavku(konekcija, vrsta, dobavljac_id, p)
+    pisi_u_bazu(upis)
+    return citaj_iz_baze(dobavljaci_db.dobavljac_ceo, dobavljac_id)
+
+
+def _izmeni(vrsta, dobavljac_id, stavka_id, podaci):
+    def upis(konekcija):
+        p = _podaci_racuna(konekcija, podaci) if vrsta == "racuni" else podaci.model_dump()
+        dobavljaci_db.izmeni_podstavku(konekcija, vrsta, dobavljac_id, stavka_id, p)
+    pisi_u_bazu(upis)
+    return citaj_iz_baze(dobavljaci_db.dobavljac_ceo, dobavljac_id)
+
+
+def _obrisi(vrsta, dobavljac_id, stavka_id):
+    pisi_u_bazu(dobavljaci_db.obrisi_podstavku, vrsta, dobavljac_id, stavka_id)
+    return citaj_iz_baze(dobavljaci_db.dobavljac_ceo, dobavljac_id)
+
+
+@app.post("/dobavljaci/{dobavljac_id}/kontakti")
+async def dodaj_kontakt(dobavljac_id: int, podaci: KontaktDobavljaca, korisnik = Depends(samo_vlasnik)):
+    return _dodaj("kontakti", dobavljac_id, podaci)
+
+@app.put("/dobavljaci/{dobavljac_id}/kontakti/{stavka_id}")
+async def izmeni_kontakt(dobavljac_id: int, stavka_id: int, podaci: KontaktDobavljaca, korisnik = Depends(samo_vlasnik)):
+    return _izmeni("kontakti", dobavljac_id, stavka_id, podaci)
+
+@app.delete("/dobavljaci/{dobavljac_id}/kontakti/{stavka_id}")
+async def obrisi_kontakt(dobavljac_id: int, stavka_id: int, korisnik = Depends(samo_vlasnik)):
+    return _obrisi("kontakti", dobavljac_id, stavka_id)
+
+@app.post("/dobavljaci/{dobavljac_id}/racuni")
+async def dodaj_racun(dobavljac_id: int, podaci: RacunDobavljaca, korisnik = Depends(samo_vlasnik)):
+    return _dodaj("racuni", dobavljac_id, podaci)
+
+@app.put("/dobavljaci/{dobavljac_id}/racuni/{stavka_id}")
+async def izmeni_racun(dobavljac_id: int, stavka_id: int, podaci: RacunDobavljaca, korisnik = Depends(samo_vlasnik)):
+    return _izmeni("racuni", dobavljac_id, stavka_id, podaci)
+
+@app.delete("/dobavljaci/{dobavljac_id}/racuni/{stavka_id}")
+async def obrisi_racun(dobavljac_id: int, stavka_id: int, korisnik = Depends(samo_vlasnik)):
+    return _obrisi("racuni", dobavljac_id, stavka_id)
+
+@app.post("/dobavljaci/{dobavljac_id}/jedinice")
+async def dodaj_jedinicu(dobavljac_id: int, podaci: JedinicaDobavljaca, korisnik = Depends(samo_vlasnik)):
+    return _dodaj("jedinice", dobavljac_id, podaci)
+
+@app.put("/dobavljaci/{dobavljac_id}/jedinice/{stavka_id}")
+async def izmeni_jedinicu(dobavljac_id: int, stavka_id: int, podaci: JedinicaDobavljaca, korisnik = Depends(samo_vlasnik)):
+    return _izmeni("jedinice", dobavljac_id, stavka_id, podaci)
+
+@app.delete("/dobavljaci/{dobavljac_id}/jedinice/{stavka_id}")
+async def obrisi_jedinicu(dobavljac_id: int, stavka_id: int, korisnik = Depends(samo_vlasnik)):
+    return _obrisi("jedinice", dobavljac_id, stavka_id)
+
 
 # ---------- AI asistent (samo vlasnik) ----------
 # Rute su obične (def, ne async def): poziv modela traje, pa ih FastAPI izvršava u posebnoj niti.
@@ -576,17 +858,16 @@ def obradjivac_korisnickog_logovanja(request, e: NotLoggedIn):
 
 # FUNKCIJE
 
-def proveri_duplikat(podatak: object):
-    konekcija = konektuj_se()
-    veza = konekcija.cursor()
-    if (type(podatak) == Dobavljac):
-        upit = "SELECT * FROM dobavljac WHERE naziv=?"
-        vrednosti = (podatak.naziv,)
-        rezultat = veza.execute(upit, vrednosti).fetchone()
-    else:
-        print("NIJE DOBAR PODATAK")
-    if rezultat:
-        raise DuplicateInputError()
+# Nazivi polja dobavljača u porukama o greškama (dopuna NAZIVI_POLJA)
+NAZIVI_POLJA.update({
+    "tip": "tip", "pib": "PIB", "dugi_naziv": "dugi naziv", "vlasnik": "vlasnik", "zemlja": "zemlja",
+    "opstina": "opština", "ptt_broj": "PTT broj", "adresa": "adresa", "mesto": "mesto", "maticni_broj": "matični broj",
+    "broj_gazdinstva": "broj gazdinstva", "registarski_broj": "registarski broj", "sifra_delatnosti": "šifra delatnosti",
+    "pdv_zona": "PDV zona", "pdv_obveznik": "PDV obveznik", "telefon": "telefon", "fax": "fax", "email": "e-mail",
+    "web": "web", "mobilni": "mobilni", "sluzba": "služba", "funkcija": "funkcija", "valuta": "valuta",
+    "banka_sifra": "šifra banke", "banka_naziv": "banka", "broj_racuna": "broj računa", "kontrolni_broj": "kontrolni broj",
+    "dug_konto": "dug konto", "pot_konto": "pot konto", "gln": "GLN",
+})
 
 def punoletan(datum_rodjenja: date):
     now = datetime.now()
@@ -597,16 +878,6 @@ def punoletan(datum_rodjenja: date):
         raise NotAdultError()
     else:
         return True
-
-def unesi_dobavljaca(d: Dobavljac):
-    try:
-        konekcija = konektuj_se()
-        sacuvaj_dobavljaca(konekcija, d.naziv) # iz DOBAVLJACI.py
-        konekcija.commit()
-    except Exception as e:
-        print(e)
-    finally:
-        konekcija.close()
 
 def korisnik_postoji(k):
     try:
@@ -685,22 +956,6 @@ def sacuvaj_izmene_ulaza(konekcija, ulaz_id, izmena: IzmenaUlaza):
     for stavka in izmena.stavke:
         izmeni_stavku(konekcija, ulaz_id, dobavljac_id, stavka)
     return jedan_ulaz(konekcija, ulaz_id)
-
-def sacuvaj_naziv_dobavljaca(dobavljac_id, naziv):
-    try:
-        konekcija = konektuj_se()
-        konekcija.row_factory = sqlite3.Row
-        if naziv_zauzet(konekcija, naziv, dobavljac_id):
-            raise DuplicateInputError(f"Dobavljač „{naziv}“ već postoji!")
-        if promeni_naziv_dobavljaca(konekcija, dobavljac_id, naziv) == 0:
-            return JSONResponse(status_code=404, content="Taj dobavljač ne postoji.")
-        konekcija.commit()
-        return jedan_dobavljac(konekcija, dobavljac_id)
-    except Exception:
-        konekcija.rollback()
-        raise
-    finally:
-        konekcija.close()
 
 def vrati_sve_artikle():
     try:

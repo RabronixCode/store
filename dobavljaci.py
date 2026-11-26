@@ -1,7 +1,10 @@
+from Errors.BadInput import BadInput
+
+
 
 
 def sacuvaj_dobavljaca(konekcija, naziv):
-    print("OVDE 2")
+
     veza = konekcija.cursor()
     upit = "INSERT INTO dobavljac (naziv) VALUES (?)"
     vrednosti = (naziv,)
@@ -88,3 +91,126 @@ def artikli_dobavljaca(konekcija, dobavljac_id):
     for r in redovi:
         r["nabavna_cena_pdv"] = round(r["nabavna_cena"] * (1 + r["pdv"] / 100), 4)
     return redovi
+
+
+# ---------- Svi podaci dobavljača (osnovno + kontakti, tekući računi, radne jedinice) ----------
+
+KOLONE_DOBAVLJACA = [
+    "tip", "pib", "naziv", "dugi_naziv", "vlasnik", "zemlja", "opstina", "ptt_broj", "adresa", "mesto",
+    "maticni_broj", "broj_gazdinstva", "registarski_broj", "sifra_delatnosti", "pdv_zona", "pdv_obveznik",
+    "e_faktura", "telefon", "fax", "el_dostava", "email", "web", "aktivan",
+]
+
+# vrsta -> (tabela, kolona ID-a, kolone koje se upisuju, redosled)
+PODTABELE = {
+    "kontakti": ("dobavljac_kontakt", "kontakt_id",
+                 ["naziv", "telefon", "mobilni", "fax", "web", "email", "sluzba", "funkcija"], "naziv COLLATE NOCASE"),
+    "racuni": ("dobavljac_racun", "racun_id",
+               ["valuta", "banka_sifra", "banka_naziv", "broj_racuna", "kontrolni_broj", "dug_konto", "pot_konto"], "racun_id"),
+    "jedinice": ("dobavljac_jedinica", "jedinica_id",
+                 ["naziv", "adresa", "mesto", "ptt_broj", "gln", "dostava", "email", "aktivan"], "naziv COLLATE NOCASE"),
+}
+
+
+def pregled_dobavljaca_detaljno(konekcija):
+    """Spisak za stranicu Dobavljači: osnovni podaci + broj artikala, broj ulaza, poslednji ulaz."""
+    upit = """
+        SELECT d.dobavljac_id, d.naziv, d.dugi_naziv, d.pib, d.tip, d.mesto, d.telefon, d.email, d.aktivan,
+               (SELECT COUNT(*) FROM dobavljac_artikal da WHERE da.dobavljac_id = d.dobavljac_id) AS broj_artikala,
+               (SELECT COUNT(*) FROM ulaz u WHERE u.dobavljac_id = d.dobavljac_id) AS broj_ulaza,
+               (SELECT COALESCE(u.ulaz_datum, u.otpremnica_datum) FROM ulaz u WHERE u.dobavljac_id = d.dobavljac_id
+                 ORDER BY u.ulaz_id DESC LIMIT 1) AS poslednji_ulaz
+        FROM dobavljac d
+        ORDER BY d.naziv COLLATE NOCASE
+    """
+    return [dict(r) for r in konekcija.execute(upit).fetchall()]
+
+
+def dobavljac_ceo(konekcija, dobavljac_id):
+    red = konekcija.execute(
+        f"SELECT dobavljac_id, {', '.join(KOLONE_DOBAVLJACA)} FROM dobavljac WHERE dobavljac_id = ?",
+        (dobavljac_id,)).fetchone()
+    if not red:
+        return None
+    rezultat = dict(red)
+    for vrsta, (tabela, kljuc, kolone, redosled) in PODTABELE.items():
+        rezultat[vrsta] = [dict(r) for r in konekcija.execute(
+            f"SELECT {kljuc} AS id, {', '.join(kolone)} FROM {tabela} WHERE dobavljac_id = ? ORDER BY {redosled}",
+            (dobavljac_id,)).fetchall()]
+    statistika = konekcija.execute("""
+        SELECT (SELECT COUNT(*) FROM dobavljac_artikal WHERE dobavljac_id = ?) AS broj_artikala,
+               (SELECT COUNT(*) FROM ulaz WHERE dobavljac_id = ?) AS broj_ulaza,
+               (SELECT COALESCE(ulaz_datum, otpremnica_datum) FROM ulaz WHERE dobavljac_id = ?
+                 ORDER BY ulaz_id DESC LIMIT 1) AS poslednji_ulaz""",
+        (dobavljac_id, dobavljac_id, dobavljac_id)).fetchone()
+    rezultat.update(dict(statistika))
+    return rezultat
+
+
+def _proveri_jedinstveno(konekcija, podaci, osim_id=None):
+    if podaci["pib"] and konekcija.execute(
+            "SELECT 1 FROM dobavljac WHERE pib = ? AND dobavljac_id IS NOT ?", (podaci["pib"], osim_id)).fetchone():
+        raise BadInput(f"Dobavljač sa PIB-om {podaci['pib']} već postoji.", 409)
+    if naziv_zauzet(konekcija, podaci["naziv"], osim_id):
+        raise BadInput(f"Dobavljač „{podaci['naziv']}“ već postoji. Promeni kratki naziv.", 409)
+
+
+def dodaj_dobavljaca(konekcija, podaci):
+    """podaci: dict sa ključevima iz KOLONE_DOBAVLJACA (već provereni). Vraća novi ID."""
+    _proveri_jedinstveno(konekcija, podaci)
+    kolone = [k for k in KOLONE_DOBAVLJACA if k in podaci]
+    kursor = konekcija.execute(
+        f"INSERT INTO dobavljac ({', '.join(kolone)}) VALUES ({', '.join('?' for _ in kolone)})",
+        [podaci[k] for k in kolone])
+    return kursor.lastrowid
+
+
+def izmeni_dobavljaca(konekcija, dobavljac_id, podaci):
+    if not konekcija.execute("SELECT 1 FROM dobavljac WHERE dobavljac_id = ?", (dobavljac_id,)).fetchone():
+        raise BadInput("Taj dobavljač ne postoji.", 404)
+    _proveri_jedinstveno(konekcija, podaci, dobavljac_id)
+    kolone = [k for k in KOLONE_DOBAVLJACA if k in podaci]
+    konekcija.execute(
+        f"UPDATE dobavljac SET {', '.join(f'{k} = ?' for k in kolone)} WHERE dobavljac_id = ?",
+        [podaci[k] for k in kolone] + [dobavljac_id])
+    # naziv se čuva i u vezi artikal-dobavljač (stari prikazi): ne menja se ovde, samo dobavljac.naziv
+
+
+def dodaj_podstavku(konekcija, vrsta, dobavljac_id, podaci):
+    tabela, kljuc, kolone, _ = PODTABELE[vrsta]
+    if not konekcija.execute("SELECT 1 FROM dobavljac WHERE dobavljac_id = ?", (dobavljac_id,)).fetchone():
+        raise BadInput("Taj dobavljač ne postoji.", 404)
+    kursor = konekcija.execute(
+        f"INSERT INTO {tabela} (dobavljac_id, {', '.join(kolone)}) VALUES (?, {', '.join('?' for _ in kolone)})",
+        [dobavljac_id] + [podaci.get(k) for k in kolone])
+    return kursor.lastrowid
+
+
+def izmeni_podstavku(konekcija, vrsta, dobavljac_id, stavka_id, podaci):
+    tabela, kljuc, kolone, _ = PODTABELE[vrsta]
+    kursor = konekcija.execute(
+        f"UPDATE {tabela} SET {', '.join(f'{k} = ?' for k in kolone)} WHERE {kljuc} = ? AND dobavljac_id = ?",
+        [podaci.get(k) for k in kolone] + [stavka_id, dobavljac_id])
+    if kursor.rowcount == 0:
+        raise BadInput("Taj zapis ne postoji (možda je već obrisan).", 404)
+
+
+def obrisi_podstavku(konekcija, vrsta, dobavljac_id, stavka_id):
+    tabela, kljuc, _, _ = PODTABELE[vrsta]
+    kursor = konekcija.execute(f"DELETE FROM {tabela} WHERE {kljuc} = ? AND dobavljac_id = ?", (stavka_id, dobavljac_id))
+    if kursor.rowcount == 0:
+        raise BadInput("Taj zapis ne postoji (možda je već obrisan).", 404)
+
+
+def sifarnici(konekcija):
+    return {
+        "opstine": [dict(r) for r in konekcija.execute(
+            "SELECT naziv, okrug, sifra, ptt FROM sif_opstina ORDER BY okrug, naziv").fetchall()],
+        "ptt": [dict(r) for r in konekcija.execute("SELECT broj, mesto FROM sif_ptt ORDER BY broj, mesto").fetchall()],
+        "banke": [dict(r) for r in konekcija.execute("SELECT sifra, naziv FROM sif_banka ORDER BY sifra").fetchall()],
+    }
+
+
+def naziv_banke(konekcija, sifra):
+    red = konekcija.execute("SELECT naziv FROM sif_banka WHERE sifra = ?", (sifra,)).fetchone()
+    return red[0] if red else None

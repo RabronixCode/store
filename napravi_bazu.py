@@ -123,3 +123,8 @@ konekcija.commit()
 
 
 
+
+# Dobavljači: dodatne kolone, kontakti, tekući računi, radne jedinice i šifarnici (opštine, PTT, banke)
+import migracija_dobavljaci_detalji
+konekcija.isolation_level = None
+migracija_dobavljaci_detalji.migriraj(konekcija)

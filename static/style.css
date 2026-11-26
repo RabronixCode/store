@@ -71,6 +71,29 @@ nav a { color: var(--akcenat); text-decoration: none; }
 nav a:hover { text-decoration: underline; }
 nav a[aria-current="page"] { color: var(--tekst); font-weight: 600; }
 
+/* Glavni meni vlasnika: ostaje gore pri skrolovanju; "Svi ulazi" je dugme desno */
+nav.glavni-meni {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 8px 0;
+  background: var(--pozadina);
+  border-bottom: 1px solid var(--linija);
+}
+nav.glavni-meni a.nav-dugme {
+  margin-left: auto;
+  padding: 6px 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--akcenat);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+nav.glavni-meni a.nav-dugme:hover { text-decoration: none; filter: brightness(1.1); }
+nav.glavni-meni a.nav-dugme[aria-current="page"] { color: var(--akcenat); background: #e3eafc; }
+
 /* select izgleda kao input */
 select {
   font: inherit;
