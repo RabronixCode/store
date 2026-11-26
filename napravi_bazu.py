@@ -152,3 +152,7 @@ migracija_dobavljaci_detalji.migriraj(konekcija)
 # Tarifa (PDV) pripada artiklu
 import migracija_tarifa_artikla
 migracija_tarifa_artikla.migriraj(konekcija)
+
+# Kasa: način plaćanja, status računa i storno
+import migracija_kasa_storno
+migracija_kasa_storno.migriraj(konekcija)

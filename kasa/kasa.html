@@ -25,7 +25,8 @@
       #obrisi-izabrano        briše izabrani red (disabled dok nijedan red nije izabran)
       #broj-stavki            broj stavki u korpi
       #ukupno                 konačna cena (zbir cena puta količina)
-      #kupi                   dugme KUPI (disabled dok je korpa prazna)
+      .dugme-placanje         KEŠ / KARTICA / ČEK (data-nacin), disabled dok je korpa prazna
+      #dijalog-placanje       potvrda: artikli, ukupno, način plaćanja (i kusur za keš)
       #poruka                 uspeh ili greška
       #odjava                 dugme "Odjavi se"
 
@@ -36,10 +37,12 @@
   <main class="kasa">
     <header class="kasa-zaglavlje">
       <nav>
-        <a href="/pocetna.html">POCETNA</a>
         <a href="/kasa/kasa.html" aria-current="page">Kasa</a>
       </nav>
-      <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
+      <div class="zaglavlje-dugmad">
+        <a class="dugme dugme-pregled" href="/kasa/racuni.html">🧾 Pregled izdatih računa</a>
+        <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
+      </div>
     </header>
 
     <h1>Kasa</h1>
@@ -87,11 +90,48 @@
         <span class="iznos"><output id="ukupno" for="korpa">0,00</output> RSD</span>
       </div>
 
-      <button type="submit" id="kupi" disabled>KUPI</button>
+      <!-- Način plaćanja: klik otvara potvrdu sa artiklima i ukupnom cenom -->
+      <div class="placanje" role="group" aria-label="Način plaćanja">
+        <button type="button" class="dugme-placanje gotovina" data-nacin="gotovina" disabled>
+          <span class="ikona-placanja" aria-hidden="true">💵</span> KEŠ <kbd>F7</kbd></button>
+        <button type="button" class="dugme-placanje kartica" data-nacin="kartica" disabled>
+          <span class="ikona-placanja" aria-hidden="true">💳</span> KARTICA <kbd>F8</kbd></button>
+        <button type="button" class="dugme-placanje cek" data-nacin="cek" disabled>
+          <span class="ikona-placanja" aria-hidden="true">🧾</span> ČEK <kbd>F9</kbd></button>
+      </div>
     </form>
 
     <p id="poruka" role="status"></p>
   </main>
+
+  <!-- Potvrda plaćanja -->
+  <dialog id="dijalog-placanje" class="dijalog-placanje" aria-labelledby="placanje-naslov">
+    <form method="dialog" id="forma-placanje">
+      <header class="dijalog-zaglavlje">
+        <h2 id="placanje-naslov">Potvrdi račun</h2>
+        <p>Način plaćanja: <strong id="placanje-nacin"></strong></p>
+      </header>
+      <div class="placanje-telo">
+        <table class="placanje-stavke">
+          <caption class="samo-citac">Artikli na računu</caption>
+          <thead><tr><th scope="col">Artikal</th><th scope="col" class="desno">Količina × cena</th><th scope="col" class="desno">Iznos</th></tr></thead>
+          <tbody id="placanje-stavke"></tbody>
+        </table>
+        <div class="placanje-ukupno"><span>UKUPNO ZA NAPLATU</span><strong><output id="placanje-iznos">0,00</output> RSD</strong></div>
+        <div class="placanje-kes" id="placanje-kes" hidden>
+          <label>Primljeno od kupca (nije obavezno)
+            <input id="primljeno" type="number" min="0" step="any" inputmode="decimal" autocomplete="off">
+          </label>
+          <p>Kusur: <strong id="kusur">—</strong></p>
+        </div>
+        <p id="placanje-greska" class="greska-tekst" role="alert"></p>
+      </div>
+      <footer class="dijalog-podnozje">
+        <button type="button" id="placanje-odustani" class="sekundarno">Odustani <kbd>Esc</kbd></button>
+        <button type="submit" id="placanje-potvrdi" class="potvrdi">Potvrdi i izdaj račun <kbd>Enter</kbd></button>
+      </footer>
+    </form>
+  </dialog>
 
   <!-- Šablon jednog predloga u listi. JS postavlja i id (npr. "rezultat-123") zbog aria-activedescendant. -->
   <template id="rezultat-sablon">

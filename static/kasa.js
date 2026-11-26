@@ -22,7 +22,8 @@ const sablonKorpa = document.getElementById('stavka-korpe-sablon');
 const praznaKorpa = document.getElementById('prazna-korpa');
 const ukupnoPolje = document.getElementById('ukupno');
 const brojStavki = document.getElementById('broj-stavki');
-const dugmeKupi = document.getElementById('kupi');
+const dugmadPlacanja = [...document.querySelectorAll('.dugme-placanje')];
+const dijalogPlacanje = document.getElementById('dijalog-placanje');
 const dugmeObrisiIzabrano = document.getElementById('obrisi-izabrano');
 
 const MAX_REZULTATA = 50;   // koliko najviše tražimo od servera
@@ -237,7 +238,7 @@ function nacrtajKorpu() {
     const prazna = korpa.size === 0;
     praznaKorpa.hidden = !prazna;
     korpaOkvir.hidden = prazna;
-    dugmeKupi.disabled = prazna || kupovinaUToku;
+    dugmadPlacanja.forEach((d) => { d.disabled = prazna || kupovinaUToku; });
     dugmeObrisiIzabrano.disabled = izabranaSifra === null;
     brojStavki.textContent = korpa.size;
     osveziZbir();
@@ -258,26 +259,75 @@ function osveziZbir() {
 }
 
 
-// ---------- Kupovina ----------
+// ---------- Kupovina: način plaćanja i potvrda ----------
+//
+// Klik na KEŠ / KARTICA / ČEK (ili F7 / F8 / F9) otvara potvrdu: artikli, ukupno i način plaćanja.
+// Tek "Potvrdi" šalje račun: POST /racuni { stavke, nacin_placanja }.
 
-forma.addEventListener('submit', async (event) => {
-    event.preventDefault();
+const NAZIV_NACINA = { gotovina: 'Gotovina (keš)', kartica: 'Kartica', cek: 'Ček' };
+const formaPlacanje = document.getElementById('forma-placanje');
+const placanjeGreska = document.getElementById('placanje-greska');
+const dugmePotvrdi = document.getElementById('placanje-potvrdi');
+const poljePrimljeno = document.getElementById('primljeno');
+let izabraniNacin = null;
+
+function ukupnoKorpe() {
+    return [...korpa.values()].reduce((z, s) => z + s.cena * s.kolicina, 0);
+}
+
+function osveziKusur() {
+    const primljeno = parseFloat(poljePrimljeno.value);
+    const kusur = document.getElementById('kusur');
+    if (!Number.isFinite(primljeno)) { kusur.textContent = '—'; kusur.className = ''; return; }
+    const razlika = primljeno - ukupnoKorpe();
+    kusur.textContent = razlika >= 0 ? `${formatCena(razlika)} RSD` : `nedostaje ${formatCena(-razlika)} RSD`;
+    kusur.className = razlika >= 0 ? '' : 'nedostaje';
+}
+
+function otvoriPlacanje(nacin) {
     if (korpa.size === 0 || kupovinaUToku) return;
+    // Količina koja se upravo kuca: potvrdi je pre prikaza (change)
+    if (document.activeElement?.matches('input.kolicina')) document.activeElement.blur();
+    izabraniNacin = nacin;
+    document.getElementById('placanje-nacin').textContent = NAZIV_NACINA[nacin];
+    dijalogPlacanje.dataset.nacin = nacin;
+    document.getElementById('placanje-stavke').replaceChildren(...[...korpa.values()].map((s) => {
+        const red = document.createElement('tr');
+        const naziv = document.createElement('td');
+        naziv.textContent = `${s.sifra} – ${s.naziv}`;
+        const kol = document.createElement('td');
+        kol.className = 'desno';
+        kol.textContent = `${formatKolicina(s.kolicina)} ${s.jedinica_mere} × ${formatCena(s.cena)}`;
+        const iznos = document.createElement('td');
+        iznos.className = 'desno';
+        iznos.textContent = formatCena(s.cena * s.kolicina);
+        red.append(naziv, kol, iznos);
+        return red;
+    }));
+    document.getElementById('placanje-iznos').textContent = formatCena(ukupnoKorpe());
+    document.getElementById('placanje-kes').hidden = nacin !== 'gotovina';
+    poljePrimljeno.value = '';
+    osveziKusur();
+    placanjeGreska.textContent = '';
+    dijalogPlacanje.showModal();
+    (nacin === 'gotovina' ? poljePrimljeno : dugmePotvrdi).focus();
+}
 
-    // Ako je kasir upisao količinu pa odmah kliknuo KUPI, change je već okinut
-    // pre submit-a (blur ide pre klika), pa je korpa ažurna.
+async function izdajRacun() {
+    if (korpa.size === 0 || kupovinaUToku) return;
     const stavke = [...korpa.values()].map((s) => ({ sifra: s.sifra, kolicina: s.kolicina }));
 
     kupovinaUToku = true;
-    dugmeKupi.disabled = true;
-    dugmeKupi.textContent = 'Obrada…';
-    javi('');
+    dugmePotvrdi.disabled = true;
+    dugmePotvrdi.textContent = 'Obrada…';
+    dugmadPlacanja.forEach((d) => { d.disabled = true; });
+    placanjeGreska.textContent = '';
 
     try {
         const odgovor = await fetch('/racuni', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stavke })
+            body: JSON.stringify({ stavke, nacin_placanja: izabraniNacin })
         });
 
         if (odgovor.status === 401) {
@@ -291,21 +341,45 @@ forma.addEventListener('submit', async (event) => {
         }
 
         const rezultat = await odgovor.json();
+        dijalogPlacanje.close();
         korpa.clear();
         izabranaSifra = null;
-        javi(rezultat.pdf
-            ? `Račun br. ${rezultat.racun_id} je izdat (${rezultat.pdf}).`
-            : `Račun br. ${rezultat.racun_id} je sačuvan, ali PDF nije napravljen.`,
-            'uspeh');
+        poruka.className = 'uspeh';
+        poruka.replaceChildren(
+            `Račun br. ${rezultat.racun_id} je izdat: ${formatCena(rezultat.ukupno)} RSD, ${NAZIV_NACINA[rezultat.nacin_placanja].toLowerCase()}. `);
+        const veza = document.createElement('a');
+        veza.href = rezultat.pdf_adresa;
+        veza.target = '_blank';
+        veza.rel = 'noopener';
+        veza.textContent = rezultat.pdf ? 'Otvori PDF računa' : 'Napravi PDF računa';
+        poruka.append(veza);
         polje.focus();
     } catch (greska) {
-        javi(greska.message === 'Failed to fetch' ? 'Nema veze sa serverom.' : greska.message, 'greska');
+        placanjeGreska.textContent = greska.message === 'Failed to fetch' ? 'Nema veze sa serverom.' : greska.message;
     } finally {
         kupovinaUToku = false;
-        dugmeKupi.textContent = 'KUPI';
+        dugmePotvrdi.disabled = false;
+        dugmePotvrdi.replaceChildren('Potvrdi i izdaj račun ', Object.assign(document.createElement('kbd'), { textContent: 'Enter' }));
         nacrtajKorpu();
     }
+}
+
+dugmadPlacanja.forEach((d) => d.addEventListener('click', () => otvoriPlacanje(d.dataset.nacin)));
+formaPlacanje.addEventListener('submit', (event) => { event.preventDefault(); izdajRacun(); });
+document.getElementById('placanje-odustani').addEventListener('click', () => dijalogPlacanje.close());
+poljePrimljeno.addEventListener('input', osveziKusur);
+dijalogPlacanje.addEventListener('close', () => { if (!kupovinaUToku) polje.focus(); });
+
+// F7 / F8 / F9: keš / kartica / ček (radi i dok je kursor u pretrazi)
+const PRECICE = { F7: 'gotovina', F8: 'kartica', F9: 'cek' };
+document.addEventListener('keydown', (event) => {
+    if (!PRECICE[event.key] || dijalogPlacanje.open) return;
+    event.preventDefault();
+    otvoriPlacanje(PRECICE[event.key]);
 });
+
+// Forma korpe se više ne šalje direktno (Enter u polju ne izdaje račun)
+forma.addEventListener('submit', (event) => event.preventDefault());
 
 
 // ---------- Događaji: pretraga ----------
@@ -431,7 +505,7 @@ dugmeObrisiIzabrano.addEventListener('click', () => {
 //   + / -   povećava / smanjuje količinu za 1 (radi i na numeričkom delu tastature);
 //           kad količina padne na 0, red se briše
 document.addEventListener('keydown', (event) => {
-    if (izabranaSifra === null) return;
+    if (izabranaSifra === null || dijalogPlacanje.open) return;
     if (event.target.matches('input, textarea')) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;   // npr. Ctrl + / Ctrl - (zum) ostaje pregledaču
 

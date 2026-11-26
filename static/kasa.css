@@ -323,17 +323,77 @@ main.kasa { max-width: 1200px; }
   .stavka-korpe td.ukupno { font-size: 1.05rem; }
 }
 
-/* ---------- Dugme KUPI ---------- */
+/* ---------- Zaglavlje: pregled računa ---------- */
 
-#kupi {
-  font-size: 1.35rem;
-  letter-spacing: 0.08em;
-  padding: 18px;
-  background: var(--uspeh);
+.zaglavlje-dugmad { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+a.dugme-pregled { padding: 8px 14px; font-weight: 600; }
+
+/* ---------- Način plaćanja ---------- */
+
+.placanje { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.dugme-placanje {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 10px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
   border-radius: 8px;
 }
-#kupi:not(:disabled):hover { filter: brightness(1.08); }
-#kupi:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.dugme-placanje.gotovina { background: var(--uspeh); }
+.dugme-placanje.kartica { background: var(--akcenat); }
+.dugme-placanje.cek { background: #7a4ab8; }
+.dugme-placanje:not(:disabled):hover { filter: brightness(1.08); }
+.dugme-placanje:disabled { opacity: 0.45; cursor: not-allowed; }
+.dugme-placanje kbd, .dijalog-placanje kbd {
+  padding: 1px 6px;
+  font: 600 0.72rem ui-monospace, Consolas, monospace;
+  letter-spacing: 0;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
 }
+.ikona-placanja { font-size: 1.4rem; }
+
+/* ---------- Potvrda plaćanja ---------- */
+
+dialog.dijalog-placanje { width: min(620px, 94vw); }
+.dijalog-placanje form { display: grid; gap: 0; padding: 0; border: 0; background: transparent; }
+.dijalog-placanje .dijalog-zaglavlje p strong { color: var(--tekst); font-size: 1.05rem; }
+.placanje-telo { display: grid; gap: 12px; padding: 14px 16px; }
+.placanje-stavke { width: 100%; border-collapse: collapse; font-size: 0.92rem; background: var(--kartica); border-radius: 8px; overflow: hidden; }
+.placanje-stavke th { padding: 6px 10px; font-size: 0.75rem; color: var(--prigusen); text-align: left; background: #eef1f6; }
+.placanje-stavke td { padding: 6px 10px; border-top: 1px solid var(--linija); font-variant-numeric: tabular-nums; }
+.placanje-stavke th.desno, .placanje-stavke td.desno { text-align: right; white-space: nowrap; }
+.placanje-ukupno {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 14px;
+  font-weight: 700;
+  background: var(--kartica);
+  border: 2px solid var(--tekst);
+  border-radius: 8px;
+}
+.placanje-ukupno strong { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+.placanje-kes { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; }
+.placanje-kes label { display: grid; gap: 4px; font-size: 0.85rem; font-weight: 600; color: var(--prigusen); }
+.placanje-kes input { font-size: 1.2rem; padding: 10px 12px; text-align: right; }
+.placanje-kes p { margin: 0 0 10px; font-size: 1.05rem; }
+.placanje-kes #kusur.nedostaje { color: var(--greska); }
+.dijalog-placanje .dijalog-podnozje { padding: 12px 16px; border-top: 1px solid var(--linija); }
+.dijalog-placanje button.potvrdi { background: var(--uspeh); font-weight: 700; }
+.dijalog-placanje button.sekundarno kbd { background: #eef1f6; }
+.dijalog-placanje[data-nacin="kartica"] button.potvrdi { background: var(--akcenat); }
+.dijalog-placanje[data-nacin="cek"] button.potvrdi { background: #7a4ab8; }
+#poruka a { margin-left: 6px; font-weight: 700; color: var(--akcenat); }
+
+@media (max-width: 640px) {
+  .placanje { grid-template-columns: 1fr; }
+  .dugme-placanje kbd { display: none; }
+}
+.greska-tekst { margin: 0; font-weight: 600; color: var(--greska); }
+.greska-tekst:empty { display: none; }

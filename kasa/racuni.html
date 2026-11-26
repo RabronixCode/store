@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Izdati računi</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/kasa.css">
+  <link rel="stylesheet" href="/racuni.css">
+</head>
+<body>
+  <!--
+    Pregled izdatih računa (kasir). Servira je ruta /kasa/racuni.html.
+    Server: GET /racuni?od=&do=, GET /racuni/<id>, POST /storna, PDF: /racuni/<id>/pdf, /storna/<id>/pdf
+  -->
+  <main class="kasa izdati">
+    <header class="kasa-zaglavlje">
+      <nav>
+        <a href="/kasa/kasa.html">Kasa</a>
+        <a href="/kasa/racuni.html" aria-current="page">Pregled izdatih računa</a>
+      </nav>
+      <div class="zaglavlje-dugmad">
+        <a class="dugme dugme-pregled" href="/kasa/kasa.html">← Nazad na kasu</a>
+        <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
+      </div>
+    </header>
+
+    <h1>Izdati računi</h1>
+
+    <form id="period" class="period" novalidate>
+      <label>Od
+        <input type="datetime-local" name="od" required>
+      </label>
+      <label>Do
+        <input type="datetime-local" name="do" required>
+      </label>
+      <button type="submit">Prikaži</button>
+      <div class="brzo" role="group" aria-label="Brz izbor perioda">
+        <button type="button" class="sekundarno" data-period="danas">Danas</button>
+        <button type="button" class="sekundarno" data-period="juce">Juče</button>
+        <button type="button" class="sekundarno" data-period="mesec">Ovaj mesec</button>
+      </div>
+      <button type="button" id="otvori-storno" class="opasno storno-dugme">↩ Storniraj račune…</button>
+    </form>
+
+    <p id="opis-perioda" class="opis-perioda"></p>
+
+    <section class="zbirovi" aria-label="Zbir za period">
+      <div class="zbir-kartica gotovina"><span>💵 Gotovina (keš)</span><strong id="z-gotovina">–</strong></div>
+      <div class="zbir-kartica kartica"><span>💳 Kartica</span><strong id="z-kartica">–</strong></div>
+      <div class="zbir-kartica cek"><span>🧾 Ček</span><strong id="z-cek">–</strong></div>
+      <div class="zbir-kartica ukupno"><span>UKUPNO</span><strong id="z-ukupno">–</strong><small id="z-broj"></small></div>
+      <div class="zbir-kartica stornirano"><span>Stornirano</span><strong id="z-stornirano">–</strong></div>
+    </section>
+    <p class="pomoc">Iznosi po načinu plaćanja i ukupno su <strong>posle storna</strong> (izdato − stornirano).</p>
+
+    <p id="poruka" role="status"></p>
+
+    <div class="filter-statusa">
+      <label>Status
+        <select id="filter-status">
+          <option value="">Svi računi</option>
+          <option value="izdat">Izdati</option>
+          <option value="delimicno_storniran">Delimično stornirani</option>
+          <option value="storniran">Stornirani</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="tabela-okvir">
+      <table class="tabela-racuni">
+        <caption class="samo-citac">Izdati računi u periodu. Klik na red otvara račun.</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="desno">Br.</th>
+            <th scope="col">Datum i vreme</th>
+            <th scope="col">Kasir</th>
+            <th scope="col">Plaćanje</th>
+            <th scope="col" class="desno">Stavki</th>
+            <th scope="col" class="desno">Iznos</th>
+            <th scope="col" class="desno">Stornirano</th>
+            <th scope="col" class="desno">Posle storna</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody id="racuni-telo"></tbody>
+      </table>
+      <p id="nema-racuna" class="prazno" hidden>Nema izdatih računa u ovom periodu.</p>
+    </div>
+  </main>
+
+  <template id="racun-sablon">
+    <tr class="red-racun" tabindex="0">
+      <td class="desno jako" data-polje="racun_id"></td>
+      <td data-polje="datum_vreme"></td>
+      <td class="prigusen" data-polje="korisnik"></td>
+      <td><span class="znacka-placanja" data-polje="nacin_placanja"></span></td>
+      <td class="desno" data-polje="broj_stavki"></td>
+      <td class="desno" data-polje="iznos"></td>
+      <td class="desno storno-iznos" data-polje="stornirano"></td>
+      <td class="desno jako" data-polje="neto"></td>
+      <td><span class="znacka-statusa" data-polje="status"></span></td>
+    </tr>
+  </template>
+
+  <!-- Jedan račun: artikli, zbir, storno artikla ili celog računa -->
+  <dialog id="dijalog-racun" class="dijalog-racun" aria-labelledby="racun-naslov">
+    <div class="dr-okvir">
+      <header class="dijalog-zaglavlje dr-zaglavlje">
+        <div>
+          <h2 id="racun-naslov">Račun</h2>
+          <p id="racun-podaci"></p>
+        </div>
+        <button type="button" class="dr-x" data-zatvori aria-label="Zatvori">×</button>
+      </header>
+      <div class="dr-telo">
+        <table class="tabela-stavke-racuna">
+          <caption class="samo-citac">Artikli na računu</caption>
+          <thead>
+            <tr>
+              <th scope="col">Šifra</th>
+              <th scope="col">Naziv</th>
+              <th scope="col" class="desno">Količina</th>
+              <th scope="col" class="desno">Cena</th>
+              <th scope="col" class="desno">Iznos</th>
+              <th scope="col" class="desno">Stornirano</th>
+              <th scope="col"><span class="samo-citac">Storno</span></th>
+            </tr>
+          </thead>
+          <tbody id="stavke-telo"></tbody>
+        </table>
+
+        <!-- Potvrda storna jednog artikla -->
+        <form id="storno-artikla" class="storno-artikla" hidden novalidate>
+          <p>Storno artikla <strong id="sa-naziv"></strong>: količina se vraća na zalihe.</p>
+          <label><span>Količina za storno (najviše <span id="sa-max"></span>)</span>
+            <input name="kolicina" type="number" min="0" step="any" inputmode="decimal" required>
+          </label>
+          <p class="sa-iznos">Iznos storna: <strong id="sa-iznos">0,00</strong> RSD</p>
+          <div class="sa-dugmad">
+            <button type="button" class="sekundarno" id="sa-odustani">Odustani</button>
+            <button type="submit" class="opasno">Potvrdi storno artikla</button>
+          </div>
+          <p class="greska-tekst" id="sa-greska" role="alert"></p>
+        </form>
+
+        <dl class="dr-zbir">
+          <div><dt>Iznos računa</dt><dd id="dr-iznos"></dd></div>
+          <div><dt>Stornirano</dt><dd id="dr-stornirano" class="storno-iznos"></dd></div>
+          <div class="jako"><dt>Posle storna</dt><dd id="dr-neto"></dd></div>
+        </dl>
+        <div id="dr-storna" class="dr-storna"></div>
+        <p id="dr-poruka" role="status"></p>
+      </div>
+      <footer class="dijalog-podnozje dr-podnozje">
+        <a id="dr-pdf" class="dugme sekundarno-veza" target="_blank" rel="noopener">📄 PDF računa</a>
+        <span class="razmak"></span>
+        <button type="button" id="dr-storniraj-ceo" class="opasno">↩ Storniraj ceo račun</button>
+        <button type="button" class="sekundarno" data-zatvori>Zatvori</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <template id="stavka-sablon">
+    <tr>
+      <td class="prigusen" data-polje="sifra"></td>
+      <td class="jako" data-polje="naziv"></td>
+      <td class="desno" data-polje="kolicina"></td>
+      <td class="desno" data-polje="cena_po_komadu"></td>
+      <td class="desno" data-polje="iznos"></td>
+      <td class="desno storno-iznos" data-polje="stornirano"></td>
+      <td class="desno"><button type="button" class="storniraj-artikal">↩ Storniraj</button></td>
+    </tr>
+  </template>
+
+  <!-- Storno više računa: period, izbor računa, potvrda -->
+  <dialog id="dijalog-storno" class="dijalog-storno" aria-labelledby="storno-naslov">
+    <form id="forma-storno" class="dr-okvir" novalidate>
+      <header class="dijalog-zaglavlje dr-zaglavlje">
+        <div>
+          <h2 id="storno-naslov">Storno računa</h2>
+          <p>Izaberi račune za storno. Sve njihove količine se vraćaju na zalihe i pravi se PDF storna.</p>
+        </div>
+        <button type="button" class="dr-x" data-zatvori aria-label="Zatvori">×</button>
+      </header>
+      <div class="dr-telo">
+        <div class="period storno-period">
+          <label>Od <input type="datetime-local" name="od"></label>
+          <label>Do <input type="datetime-local" name="do"></label>
+          <button type="button" id="storno-prikazi" class="sekundarno">Prikaži</button>
+        </div>
+        <label class="izaberi-sve"><input type="checkbox" id="izaberi-sve"> Izaberi sve račune koji mogu da se storniraju</label>
+        <div class="storno-lista-okvir">
+          <table class="tabela-racuni tabela-storno">
+            <thead>
+              <tr>
+                <th scope="col"><span class="samo-citac">Izaberi</span></th>
+                <th scope="col" class="desno">Br.</th>
+                <th scope="col">Datum i vreme</th>
+                <th scope="col">Plaćanje</th>
+                <th scope="col" class="desno">Za storno</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody id="storno-telo"></tbody>
+          </table>
+          <p id="storno-nema" class="prazno" hidden>Nema računa za storno u ovom periodu.</p>
+        </div>
+        <p class="storno-izabrano">Izabrano: <strong id="storno-broj">0</strong> računa, <strong id="storno-iznos">0,00</strong> RSD</p>
+        <p class="greska-tekst" id="storno-greska" role="alert"></p>
+      </div>
+      <footer class="dijalog-podnozje dr-podnozje">
+        <span class="razmak"></span>
+        <button type="button" class="sekundarno" data-zatvori>Odustani</button>
+        <button type="submit" id="storno-potvrdi" class="opasno" disabled>↩ Storniraj izabrane</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="/racuni.js"></script>
+</body>
+</html>

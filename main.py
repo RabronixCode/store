@@ -28,7 +28,8 @@ from artikli import svi_artikli, jedan_artikal, izmeni_artikal, dodaj_jedan_arti
 from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
-from racun_pdf import izdaj_racun
+import racuni as racuni_db
+from racun_pdf import izdaj_racun, izdaj_storno, FOLDER_PDF
 import asistent
 import dobavljaci as dobavljaci_db
 
@@ -413,6 +414,24 @@ class StavkaKorpe(BaseModel):
 
 class Kupovina(BaseModel):
     stavke: list[StavkaKorpe]
+    nacin_placanja: Literal["gotovina", "kartica", "cek"] = "gotovina"
+
+
+class StavkaZaStorno(BaseModel):
+    stavka_id: Annotated[int, Field(gt=0)]
+    kolicina: Annotated[float, Field(gt=0, allow_inf_nan=False)] | None = None   # None = sve preostalo
+
+
+class Storno(BaseModel):
+    """Šta se stornira: celi računi i/ili pojedinačne stavke (artikli) sa računa."""
+    racuni: Annotated[list[Annotated[int, Field(gt=0)]], Field(max_length=1000)] = []
+    stavke: Annotated[list[StavkaZaStorno], Field(max_length=1000)] = []
+
+    @model_validator(mode="after")
+    def _nesto(self):
+        if not self.racuni and not self.stavke:
+            raise ValueError("Izaberi bar jedan račun ili artikal za storno.")
+        return self
 
 
 app = FastAPI()
@@ -510,21 +529,22 @@ async def stranica_artikli(korisnik = Depends(trenutni_korisnik)):
 
 @app.get("/pocetna.html")
 async def stranica_pocetna(korisnik = Depends(trenutni_korisnik)):
-    print("USAO U ULAZ")
-    if korisnik == 'vlasnik':
-        return FileResponse("static/pocetna.html", headers={"Cache-Control": "no-store"})
-    elif korisnik == 'kasir':
-        return FileResponse("kasa/kasa.html", headers={"Cache-Control": "no-store"})
-    else:
-        print("OVO NIJE VLASNIK")
+    # Kasir nema početnu stranu: uvek ide na kasu
+    if korisnik == 'kasir':
+        return RedirectResponse('/kasa/kasa.html')
+    return FileResponse("static/pocetna.html", headers={"Cache-Control": "no-store"})
 
 @app.get("/kasa/kasa.html")
 async def stranica_kasa(korisnik = Depends(trenutni_korisnik)):
-    print("USAO U ULAZ")
-    if korisnik == 'kasir':
-        return FileResponse("kasa/kasa.html", headers={"Cache-Control": "no-store"})
-    else:
-        print("OVO NIJE KASIR")
+    if korisnik != 'kasir':
+        return RedirectResponse('/pocetna.html')
+    return FileResponse("kasa/kasa.html", headers={"Cache-Control": "no-store"})
+
+@app.get("/kasa/racuni.html")
+async def stranica_izdati_racuni(korisnik = Depends(trenutni_korisnik)):
+    if korisnik != 'kasir':
+        return RedirectResponse('/pocetna.html')
+    return FileResponse("kasa/racuni.html", headers={"Cache-Control": "no-store"})
 # RUTE
 
 @app.get("/dobavljaci")
@@ -754,7 +774,77 @@ def asistent_nacrt(token: str, trenutna_sesija: str | None = Cookie(default=None
 async def kreiraj_racun(kupovina: Kupovina, korisnik = Depends(trenutni_korisnik)):
     if korisnik != 'kasir':
         raise ForbiddenAccess()
-    return unesi_racun(kupovina)
+    return unesi_racun(kupovina, korisnik)
+
+# ---------- Izdati računi i storno (kasir i vlasnik) ----------
+
+def kasir_ili_vlasnik(korisnik = Depends(trenutni_korisnik)):
+    if korisnik not in ('kasir', 'vlasnik'):
+        raise ForbiddenAccess()
+    return korisnik
+
+def _granica_perioda(tekst, kraj):
+    """'2026-11-26T08:30' -> '2026-11-26 08:30:00' (početak) ili '... 08:30:59' (kraj, minut je uključen).
+    Prazno: danas od 00:00 do 23:59."""
+    if not tekst:
+        return date.today().isoformat() + (" 23:59:59" if kraj else " 00:00:00")
+    try:
+        d = datetime.fromisoformat(tekst)
+    except ValueError:
+        raise BadInput(f"Neispravan datum i vreme: {tekst}", 400)
+    return d.strftime("%Y-%m-%d %H:%M:") + ("59" if kraj else "00")
+
+@app.get('/racuni')
+async def izdati_racuni(od: Annotated[str, Query(max_length=30)] = "",
+                        do: Annotated[str, Query(max_length=30)] = "",
+                        korisnik = Depends(kasir_ili_vlasnik)):
+    pocetak, kraj = _granica_perioda(od, False), _granica_perioda(do, True)
+    if pocetak > kraj:
+        raise BadInput("Početak perioda je posle kraja. Proveri datume „od“ i „do“.", 400)
+    return citaj_iz_baze(racuni_db.lista_racuna, pocetak, kraj)
+
+@app.get('/racuni/{racun_id}')
+async def jedan_izdat_racun(racun_id: int, korisnik = Depends(kasir_ili_vlasnik)):
+    racun = citaj_iz_baze(racuni_db.jedan_racun, racun_id)
+    if not racun:
+        raise BadInput(f"Račun br. {racun_id} ne postoji.", 404)
+    return racun
+
+@app.get('/racuni/{racun_id}/pdf')
+async def pdf_racuna(racun_id: int, korisnik = Depends(kasir_ili_vlasnik)):
+    putanja = FOLDER_PDF / f"racun_{racun_id}.pdf"
+    if not putanja.exists():            # npr. PDF nije napravljen pri prodaji: napravi ga sada
+        r = citaj_iz_baze(racuni_db.racun_za_pdf, racun_id)
+        if not r:
+            raise BadInput(f"Račun br. {racun_id} ne postoji.", 404)
+        putanja = izdaj_racun(r["racun_id"], r["datum_vreme"], r["korisnik"], r["stavke"], r["nacin_placanja"])
+    return FileResponse(putanja, media_type="application/pdf", filename=putanja.name,
+                        content_disposition_type="inline")
+
+@app.post('/storna')
+async def napravi_storno(storno: Storno, korisnik = Depends(kasir_ili_vlasnik)):
+    stavke = [(s.stavka_id, s.kolicina) for s in storno.stavke]
+    storno_id = pisi_u_bazu(racuni_db.storniraj, korisnik, storno.racuni, stavke)
+    podaci = citaj_iz_baze(racuni_db.storno_za_pdf, storno_id)
+    try:                                # storno je već upisan; ako PDF ne uspe, pravi se kad se otvori
+        izdaj_storno(podaci)
+    except Exception as e:
+        print(type(e).__name__, e)
+        traceback.print_exc()
+    return {"storno_id": storno_id, "pdf": f"/storna/{storno_id}/pdf", "ukupno": podaci["ukupno"],
+            "po_nacinu": podaci["po_nacinu"], "broj_stavki": len(podaci["stavke"]),
+            "racuni": sorted({s["racun_id"] for s in podaci["stavke"]})}
+
+@app.get('/storna/{storno_id}/pdf')
+async def pdf_storna(storno_id: int, korisnik = Depends(kasir_ili_vlasnik)):
+    putanja = FOLDER_PDF / f"storno_{storno_id}.pdf"
+    if not putanja.exists():
+        podaci = citaj_iz_baze(racuni_db.storno_za_pdf, storno_id)
+        if not podaci:
+            raise BadInput(f"Storno br. {storno_id} ne postoji.", 404)
+        putanja = izdaj_storno(podaci)
+    return FileResponse(putanja, media_type="application/pdf", filename=putanja.name,
+                        content_disposition_type="inline")
 
 @app.post('/login')
 async def proveri_login(korisnik: Korisnik, response: Response):
@@ -795,7 +885,8 @@ NAZIVI_POLJA = {
     "valuta_datum": "valuta", "stavke": "stavke", "sifra_artikal": "artikal", "sifra_dobavljac": "šifra dobavljača",
     "kolicina": "količina", "nabavna_cena": "nabavna cena", "pdv": "PDV",
     "rabat_osnovni": "rabat osnovni", "rabat_posebni": "rabat posebni", "rabat_dodatni": "rabat dodatni",
-    "tarifa_id": "tarifa", "novi_artikal": "novi artikal",
+    "tarifa_id": "tarifa", "novi_artikal": "novi artikal", "nacin_placanja": "način plaćanja",
+    "racuni": "računi",
     "naziv": "naziv", "jedinica_mere": "jedinica mere", "prodajna_cena": "prodajna cena",
     "minimalno_stanje": "minimalno stanje", "kategorija": "kategorija", "bar_kod": "bar kod", "q": "pretraga",
 }
@@ -1046,7 +1137,7 @@ def sacuvaj_izmenu_artikla(sifra, izmena: IzmenaArtikla):
     finally:
         konekcija.close()
 
-def unesi_racun(kupovina: Kupovina):
+def unesi_racun(kupovina: Kupovina, korisnik="kasir"):
     # Cena i nabavna cena se uzimaju iz baze, ne sa stranice (da se ne bi mogle podmetnuti)
     if len(kupovina.stavke) == 0:
         return JSONResponse(status_code=400, content="Korpa je prazna.")
@@ -1056,8 +1147,7 @@ def unesi_racun(kupovina: Kupovina):
 
     try:
         konekcija = konektuj_se()
-        korisnik = "kasir"   # TODO: kasnije uzeti iz sesije
-        racun_id, datum_vreme = sacuvaj_racun(konekcija, korisnik)
+        racun_id, datum_vreme = sacuvaj_racun(konekcija, korisnik, kupovina.nacin_placanja)
 
         stavke_racuna = []
         for s in kupovina.stavke:
@@ -1091,14 +1181,16 @@ def unesi_racun(kupovina: Kupovina):
 
     # Račun je već sačuvan u bazi; ako PDF ne uspe, to ne poništava prodaju
     try:
-        putanja = izdaj_racun(racun_id, datum_vreme, korisnik, stavke_racuna)
+        putanja = izdaj_racun(racun_id, datum_vreme, korisnik, stavke_racuna, kupovina.nacin_placanja)
         pdf = putanja.name
     except Exception as e:
         print(type(e).__name__, e)
         traceback.print_exc()
         pdf = None
 
-    return {"racun_id": racun_id, "pdf": pdf}
+    return {"racun_id": racun_id, "pdf": pdf, "pdf_adresa": f"/racuni/{racun_id}/pdf",
+            "nacin_placanja": kupovina.nacin_placanja,
+            "ukupno": round(sum(s["kolicina"] * s["cena_po_komadu"] for s in stavke_racuna), 2)}
 
 # TEKST
 
