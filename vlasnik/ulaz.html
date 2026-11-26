@@ -29,6 +29,14 @@
       <a class="dugme sekundarno-veza" href="/vlasnik/ulazi.html">Svi ulazi →</a>
     </header>
 
+    <!-- Prikazuje se kad je forma popunjena iz dokumenta preko asistenta (?nacrt=...) -->
+    <section id="nacrt-info" class="nacrt-info" hidden aria-labelledby="nacrt-naslov">
+      <h2 id="nacrt-naslov">Popunjeno iz dokumenta (asistent)</h2>
+      <p>Asistent je pročitao dokument i popunio formu. <strong>Ništa još nije sačuvano.</strong>
+        Uporedi sva polja sa dokumentom, ispravi šta treba i klikni „Sačuvaj ulaz“.</p>
+      <ul id="nacrt-napomene"></ul>
+    </section>
+
     <form id="forma-ulaz" novalidate>
       <!-- ---------- Dokument ---------- -->
       <section class="sekcija" aria-labelledby="naslov-dokument">

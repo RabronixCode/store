@@ -5,31 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Početna</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="asistent.css">
 </head>
 <body>
-  <main>
+  <!-- Početna vlasnika (ruta /pocetna.html u main.py kasira šalje na kasu). -->
+  <main class="pocetna">
     <h1>POCETNA</h1>
 
-    <!-- Veze ka drugim stranicama izgledaju kao dugmad (a, ne button: ovo vodi na drugu stranicu).
-         Atribut hidden: veze su podrazumevano sakrivene, a JavaScript otkriva samo one
-         čija se rola (data-rola) poklapa sa ulogovanim korisnikom.
-         Ovo je samo izgled. Pravu zaštitu rade rute na serveru. -->
     <nav>
-      <a href="/pocetna.html">POCETNA</a>
+      <a href="/pocetna.html" aria-current="page">POCETNA</a>
       <a href="../vlasnik/dobavljaci.html">Dobavljači</a>
       <a href="../vlasnik/ulaz.html">Ulaz robe</a>
+      <a href="../vlasnik/ulazi.html">Svi ulazi</a>
       <a href="../vlasnik/artikli.html">Artikli</a>
     </nav>
 
-    <p>Prijavljen: <strong id="ulogovan-korisnik"></strong></p>
-    <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
+    <!-- ---------- AI asistent ---------- -->
+    <section class="asistent" aria-labelledby="asistent-naslov">
+      <header class="asistent-zaglavlje">
+        <div>
+          <h2 id="asistent-naslov">Asistent</h2>
+          <p>Pitaj o artiklima, stanju, prodaji i zaradi, ili uslikaj račun dobavljača da ti pripremim ulaz.</p>
+        </div>
+        <button type="button" id="asistent-novi" class="sekundarno">Nov razgovor</button>
+      </header>
 
-    <!-- Ovde će kod iz JavaScript fajla ispisivati uspeh ili grešku -->
+      <div id="asistent-poruke" class="asistent-poruke" role="log" aria-live="polite" aria-label="Razgovor sa asistentom">
+        <div class="asistent-predlozi" id="asistent-predlozi">
+          <p>Na primer:</p>
+          <button type="button" class="predlog">Izvuci mi sve artikle kojih ima manje od 5 komada</button>
+          <button type="button" class="predlog">Koji artikal najmanje zarađuje?</button>
+          <button type="button" class="predlog">Postoji li artikal koji trenutno nemamo, a dobro se prodavao?</button>
+          <button type="button" class="predlog">Napravi Excel sa svim artiklima na minimumu i njihovim dobavljačima</button>
+        </div>
+      </div>
+
+      <form id="asistent-forma" class="asistent-forma" novalidate>
+        <ul id="asistent-prilozi" class="asistent-prilozi" aria-label="Priloženi fajlovi"></ul>
+        <div class="asistent-unos">
+          <label class="dugme-ikona" title="Uslikaj dokument (telefon)">
+            <input id="asistent-kamera" type="file" accept="image/*" capture="environment" class="samo-citac">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <span class="samo-citac">Uslikaj dokument</span>
+          </label>
+          <label class="dugme-ikona" title="Priloži sliku ili PDF">
+            <input id="asistent-fajl" type="file" accept="image/*,application/pdf" multiple class="samo-citac">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 7l-7.5 7.5a2 2 0 0 0 2.8 2.8L19 9.6a4 4 0 0 0-5.7-5.7l-7.8 7.8a6 6 0 0 0 8.5 8.5L20 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span class="samo-citac">Priloži sliku ili PDF</span>
+          </label>
+          <textarea id="asistent-tekst" rows="1" maxlength="4000"
+                    placeholder="Napiši pitanje…" title="Enter šalje, Shift+Enter nov red" aria-label="Pitanje za asistenta"></textarea>
+          <button type="submit" id="asistent-posalji">Pošalji</button>
+        </div>
+        <p id="asistent-greska" class="asistent-greska" role="alert"></p>
+      </form>
+    </section>
+
+    <p class="odjava-red">Prijavljen: <strong>vlasnik</strong>
+      <button id="odjava" class="sekundarno" type="button">Odjavi se</button></p>
     <p id="poruka" role="status"></p>
   </main>
+
+  <template id="poruka-sablon">
+    <article class="poruka">
+      <div class="poruka-telo"></div>
+    </article>
+  </template>
 
   <script src="app.js"></script>
   <script src="auth.js"></script>
   <script src="pocetna.js"></script>
+  <script src="asistent.js"></script>
 </body>
 </html>

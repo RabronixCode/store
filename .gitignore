@@ -5,3 +5,5 @@ radnja.db
 prodavnica.db
 /pdfs
 __pycache__/
+/izvestaji
+.env

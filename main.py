@@ -1,6 +1,6 @@
 import traceback
 
-from fastapi import Cookie, Depends, FastAPI, Query, Request, Response
+from fastapi import Cookie, Depends, FastAPI, File, Form, Query, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +29,7 @@ from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
 from racun_pdf import izdaj_racun
+import asistent
 
 
 class Dobavljac(BaseModel):
@@ -403,6 +404,43 @@ async def promeni_artikal(sifra: int, izmena: IzmenaArtikla, korisnik = Depends(
     if korisnik != 'vlasnik':
         raise ForbiddenAccess()
     return sacuvaj_izmenu_artikla(sifra, izmena)
+
+# ---------- AI asistent (samo vlasnik) ----------
+# Rute su obične (def, ne async def): poziv modela traje, pa ih FastAPI izvršava u posebnoj niti.
+
+@app.post("/asistent/poruka")
+def asistent_poruka(tekst: Annotated[str, Form(max_length=4000)] = "",
+                    fajlovi: Annotated[list[UploadFile], File()] = [],
+                    trenutna_sesija: str | None = Cookie(default=None),
+                    korisnik = Depends(samo_vlasnik)):
+    if len(fajlovi) > asistent.MAX_PRILOGA:
+        raise BadInput(f"Najviše {asistent.MAX_PRILOGA} priloga odjednom.")
+    prilozi = []
+    for f in fajlovi:
+        sadrzaj = f.file.read(asistent.MAX_VELICINA_PRILOGA + 1)
+        prilozi.append(asistent.pripremi_prilog(f.filename or "prilog", f.content_type, sadrzaj))
+    return asistent.posalji_poruku(trenutna_sesija, tekst, prilozi)
+
+@app.post("/asistent/novi")
+def asistent_novi(trenutna_sesija: str | None = Cookie(default=None), korisnik = Depends(samo_vlasnik)):
+    asistent.novi_razgovor(trenutna_sesija)
+    return True
+
+@app.get("/asistent/fajl/{ime}")
+def asistent_fajl(ime: str, korisnik = Depends(samo_vlasnik)):
+    putanja = asistent.putanja_izvestaja(ime)
+    if not putanja:
+        raise BadInput("Taj fajl ne postoji (možda je obrisan).", 404)
+    return FileResponse(putanja, filename=ime, headers={"Cache-Control": "no-store"},
+                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.get("/asistent/nacrt/{token}")
+def asistent_nacrt(token: str, trenutna_sesija: str | None = Cookie(default=None),
+                   korisnik = Depends(samo_vlasnik)):
+    podaci = asistent.procitaj_nacrt(token, trenutna_sesija)
+    if podaci is None:
+        raise BadInput("Nacrt ulaza ne postoji ili je istekao. Pošalji dokument asistentu ponovo.", 404)
+    return podaci
 
 @app.post('/racuni')
 async def kreiraj_racun(kupovina: Kupovina, korisnik = Depends(trenutni_korisnik)):

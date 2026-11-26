@@ -12,6 +12,7 @@
 //                        stavke: [{ sifra_artikal | novi_artikal, sifra_dobavljac, kolicina, nabavna_cena, pdv,
 //                                   prodajna_cena (sa PDV; null = postojećem artiklu se ne menja) }] }
 //                -> { ulaz_id }
+//   GET  /asistent/nacrt/<token>  -> nacrt ulaza koji je asistent izvukao iz dokumenta (?nacrt=<token>)
 // Server proverava SVE ponovo; provere ovde su samo da korisnik odmah vidi grešku.
 
 const forma = document.getElementById('forma-ulaz');
@@ -851,6 +852,7 @@ forma.addEventListener('submit', async (event) => {
         const { ulaz_id } = await procitaj(odgovor, 'Ulaz nije sačuvan.');
 
         resetujFormu();
+        if (window.location.search) history.replaceState(null, '', window.location.pathname);
         const veza = document.createElement('a');
         veza.href = '/vlasnik/ulazi.html';
         veza.textContent = 'Pogledaj sve ulaze';
@@ -898,6 +900,7 @@ function resetujFormu() {
     polje('ulaz_datum').value = danas();          // datum računa je uvek podrazumevano danas
     stavkeOkvir.replaceChildren();
     dodajRed();
+    document.getElementById('nacrt-info').hidden = true;
     izmenjeno = false;
 }
 
@@ -912,8 +915,91 @@ window.addEventListener('beforeunload', (event) => {
 });
 
 
+// ---------- Nacrt iz asistenta (?nacrt=...) ----------
+// Asistent je pročitao račun/otpremnicu; ovde se samo POPUNJAVA forma. Čuva korisnik, kao i inače.
+
+function upisiVrednost(red, ime, vrednost) {
+    const el = red.querySelector(`[name="${ime}"]`);
+    if (vrednost === null || vrednost === undefined) return;
+    el.value = vrednost;
+    delete el.dataset.auto;              // korisnikov (dokumentov) podatak: program ga ne prepisuje
+    if (ime === 'pdv') el.dataset.rucno = '1';
+}
+
+async function nadjiArtikal(sifra) {
+    const dobavljacId = dobavljacPolje.value;
+    if (dobavljacId) {
+        const params = new URLSearchParams({ dobavljac_id: dobavljacId, sifra_artikal: sifra });
+        return procitaj(await fetch(`/ulazi/veza?${params}`), 'Artikal ne može da se učita.');
+    }
+    const lista = await procitaj(await fetch(`/ulazi/artikli?${new URLSearchParams({ q: sifra, limit: 5 })}`),
+                                 'Artikal ne može da se učita.');
+    return lista.find((a) => a.sifra === sifra) || null;
+}
+
+async function ucitajNacrt() {
+    const token = new URLSearchParams(window.location.search).get('nacrt');
+    if (!token) return;
+    let n;
+    try {
+        n = await procitaj(await fetch(`/asistent/nacrt/${encodeURIComponent(token)}`), 'Nacrt ulaza ne može da se učita.');
+    } catch (greska) {
+        javi(porukaGreske(greska), 'greska');
+        return;
+    }
+
+    const napomene = [...(n.napomene || [])];
+    if (n.dobavljac_id && [...dobavljacPolje.options].some((o) => o.value === String(n.dobavljac_id))) {
+        dobavljacPolje.value = String(n.dobavljac_id);
+    } else {
+        napomene.unshift(`Dobavljač nije prepoznat${n.dobavljac_naziv ? ` („${n.dobavljac_naziv}“ na dokumentu)` : ''}: izaberi ga ručno.`);
+    }
+    for (const ime of ['racun_broj', 'racun_poziv_na_broj', 'ulaz_datum', 'otpremnica_broj', 'otpremnica_datum', 'valuta_datum']) {
+        polje(ime).value = n[ime] || '';
+    }
+    if (!n.ulaz_datum && !n.otpremnica_datum) napomene.push('Datum nije pročitan: upiši datum računa ili otpremnice.');
+
+    stavkeOkvir.replaceChildren();
+    for (const [i, s] of (n.stavke || []).entries()) {
+        const red = dodajRed();
+        if (s.sifra_artikal) {
+            try {
+                const a = await nadjiArtikal(s.sifra_artikal);
+                if (a) postaviArtikal(red, a, { popuniCene: false });
+                else napomene.push(`Stavka ${i + 1}: artikal ${s.sifra_artikal} nije nađen, upisan je kao nov.`);
+            } catch (greska) {
+                greskaStavke(red, porukaGreske(greska));
+            }
+        }
+        if (!red.dataset.sifra) {
+            red.querySelector('.artikal-pretraga').value = s.naziv || '';
+            oznaciKaoNov(red);
+        }
+        upisiVrednost(red, 'sifra_dobavljac', s.sifra_dobavljac);
+        upisiVrednost(red, 'kolicina', s.kolicina);
+        upisiVrednost(red, 'nabavna_cena', s.nabavna_cena);
+        upisiVrednost(red, 'pdv', s.pdv);
+        upisiVrednost(red, 'prodajna_cena', s.prodajna_cena);
+        if (s.kolicina === null || s.nabavna_cena === null || s.pdv === null) {
+            napomene.push(`Stavka ${i + 1} (${s.naziv || 'bez naziva'}): neki brojevi nisu pročitani, dopuni ih.`);
+        }
+    }
+    if (sviRedovi().length === 0) dodajRed();
+    osveziZbir();
+
+    const lista = document.getElementById('nacrt-napomene');
+    lista.replaceChildren(...napomene.map((t) => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        return li;
+    }));
+    document.getElementById('nacrt-info').hidden = false;
+    izmenjeno = true;
+}
+
+
 // ---------- Početak ----------
 
 for (const ime of ['ulaz_datum', 'otpremnica_datum']) polje(ime).max = danas();
 resetujFormu();
-ucitajDobavljace();
+ucitajDobavljace().then(ucitajNacrt);

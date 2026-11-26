@@ -56,6 +56,20 @@ a.sekundarno-veza:hover { background: var(--izabrano); opacity: 1; }
 .napomena { margin: 0; font-size: 0.88rem; color: var(--prigusen); }
 .obavezno { color: var(--greska); font-weight: 700; }
 
+/* Forma popunjena iz dokumenta preko asistenta */
+.nacrt-info {
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  background: #eef3fe;
+  border: 1px solid #c6d5f7;
+  border-left: 4px solid var(--akcenat);
+  border-radius: 10px;
+}
+.nacrt-info h2 { margin: 0 0 4px; font-size: 1.05rem; }
+.nacrt-info p { margin: 0; }
+.nacrt-info ul { margin: 8px 0 0; padding-left: 20px; color: var(--upozorenje); }
+.nacrt-info ul:empty { display: none; }
+
 /* ---------- Dokument ---------- */
 
 .polja-dokument {
