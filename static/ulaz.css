@@ -214,6 +214,37 @@ fieldset.grupa legend {
 .stavka-rezultati .jako dd { font-weight: 700; }
 dd.minus { color: var(--greska); font-weight: 600; }
 
+/* Računica ispod polja: formula (sivo, kurziv) i ista računica sa brojevima stavke */
+.stavka .formula, .stavka .racun {
+  display: block;
+  font-size: 0.66rem;
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.stavka .formula { margin-top: 2px; font-style: italic; color: var(--prigusen); }
+.stavka .racun { color: #2f3a52; font-variant-numeric: tabular-nums; }
+.stavka .racun:empty { display: none; }
+.stavka-rezultati .formula, .stavka-rezultati .racun { text-align: right; }
+.stavka-unos .formula, .stavka-unos .racun { text-align: right; }
+.bez-racunice .formula, .bez-racunice .racun { display: none; }
+.stavka-unos .polje-st { align-content: start; }
+/* Tarifa u stavci: samo prikaz (tarifa artikla) */
+.stavka select[name="tarifa_id"]:disabled {
+  opacity: 1;
+  color: var(--tekst);
+  background: #f3f5f8;
+  border-color: var(--linija);
+  cursor: default;
+  appearance: none;
+}
+.tarifa-napomena { font-size: 0.66rem; color: #8a4106; }
+.tarifa-napomena:empty { display: none; }
+.stavka-rezultati .jako .formula, .stavka-rezultati .jako .racun { font-weight: 400; }
+.naslov-sa-prekidacem { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.prekidac-formula { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--prigusen); cursor: pointer; }
+.prekidac-formula input { width: auto; margin: 0; accent-color: var(--akcenat); }
+
 .desno { text-align: right; }
 
 .sa-jedinicom { position: relative; display: block; }
@@ -472,3 +503,6 @@ main.ulazi-strana { max-width: 1400px; }
 /* Popup novog artikla: zvezdica ostaje u istom redu sa nazivom polja */
 .novi-artikal label { display: block; }
 .novi-artikal label input { display: block; width: 100%; margin-top: 4px; }
+.tabela-stavki select.tarifa:disabled { opacity: 1; color: var(--tekst); background: #f3f5f8; appearance: none; cursor: default; }
+.tabela-ulazi .ispod.sadrzi { color: #1d3f9e; font-weight: 600; }
+.tabela-ulazi .ispod.sadrzi:empty { display: none; }

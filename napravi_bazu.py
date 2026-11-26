@@ -148,3 +148,7 @@ konekcija.commit()
 import migracija_dobavljaci_detalji
 konekcija.isolation_level = None
 migracija_dobavljaci_detalji.migriraj(konekcija)
+
+# Tarifa (PDV) pripada artiklu
+import migracija_tarifa_artikla
+migracija_tarifa_artikla.migriraj(konekcija)

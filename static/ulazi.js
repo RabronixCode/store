@@ -18,6 +18,7 @@ const sablonUlaz = document.getElementById('ulaz-sablon');
 const poruka = document.getElementById('poruka');
 const pretraga = document.getElementById('pretraga');
 const filterDobavljac = document.getElementById('filter-dobavljac');
+const pretragaArtikal = document.getElementById('pretraga-artikal');
 
 const TEKSTUALNE = new Set(['dobavljac', 'racun_broj', 'otpremnica_broj', 'ulaz_datum', 'otpremnica_datum', 'valuta_datum', 'datum_vreme']);
 const POLJA_ZAGLAVLJA = ['racun_broj', 'racun_poziv_na_broj', 'ulaz_datum', 'otpremnica_broj', 'otpremnica_datum', 'valuta_datum'];
@@ -27,6 +28,10 @@ let sort = { kolona: 'ulaz_id', smer: 'desc' };
 
 
 // ---------- Pomoćne ----------
+
+function formatKolicina(broj) {
+    return Number(broj).toLocaleString('sr-RS', { maximumFractionDigits: 3 });
+}
 
 function formatBroj(broj, decimala = 2) {
     return Number(broj).toLocaleString('sr-RS', { minimumFractionDigits: decimala, maximumFractionDigits: decimala });
@@ -84,11 +89,20 @@ function uporedi(a, b) {
     return (smer === 'desc' ? -r : r) || b.ulaz_id - a.ulaz_id;
 }
 
+// Artikli ulaza koji odgovaraju pretrazi po artiklu: šifra (tačno, ako su kucane samo cifre) ili deo naziva
+function nadjeniArtikli(u, trazi) {
+    if (!trazi) return [];
+    const sifra = /^\d+$/.test(trazi) ? Number(trazi) : null;
+    return (u.artikli || []).filter((a) => a.sifra === sifra || normalizuj(a.naziv).includes(trazi));
+}
+
 function vidljivi() {
     const trazi = normalizuj(pretraga.value.trim()).replace(/^#/, '');
+    const traziArtikal = normalizuj(pretragaArtikal.value.trim());
     const dob = filterDobavljac.value;
     return ulazi
         .filter((u) => !dob || String(u.dobavljac_id) === dob)
+        .filter((u) => !traziArtikal || nadjeniArtikli(u, traziArtikal).length > 0)
         .filter((u) => !trazi || [u.ulaz_id, u.dobavljac, u.racun_broj, u.racun_poziv_na_broj, u.otpremnica_broj]
             .some((v) => normalizuj(v).includes(trazi)))
         .sort(uporedi);
@@ -99,6 +113,11 @@ function popuniRed(red, u) {
     red.dataset.id = u.ulaz_id;
     p('ulaz_id').textContent = u.ulaz_id;
     p('dobavljac').textContent = u.dobavljac;
+    // Pretraga po artiklu: koji artikli iz ovog ulaza su nađeni
+    const nadjeni = nadjeniArtikli(u, normalizuj(pretragaArtikal.value.trim()));
+    p('sadrzi').textContent = nadjeni.length
+        ? `sadrži: ${nadjeni.map((a) => `${a.sifra} – ${a.naziv} (${formatKolicina(a.kolicina)})`).join(', ')}`
+        : '';
     p('racun_broj').textContent = u.racun_broj || '—';
     p('racun_poziv_na_broj').textContent = u.racun_poziv_na_broj ? `poziv: ${u.racun_poziv_na_broj}` : '';
     p('ulaz_datum').textContent = formatDatum(u.ulaz_datum);
@@ -124,7 +143,9 @@ function nacrtaj() {
 
     const nema = document.getElementById('nema-ulaza');
     nema.hidden = lista.length > 0;
-    nema.textContent = ulazi.length === 0 ? 'Još nema nijednog ulaza robe.' : 'Nijedan ulaz ne odgovara pretrazi.';
+    nema.textContent = ulazi.length === 0 ? 'Još nema nijednog ulaza robe.'
+        : pretragaArtikal.value.trim() ? 'Nijedan ulaz ne sadrži taj artikal (uz ostale filtere).'
+        : 'Nijedan ulaz ne odgovara pretrazi.';
     document.getElementById('brojac').textContent = `Ukupno ${ulazi.length} ulaza`;
     document.getElementById('k-broj').textContent = lista.length;
     document.getElementById('k-bez').textContent = `${formatBroj(lista.reduce((z, u) => z + u.ukupno_bez_pdv, 0))} RSD`;
@@ -162,6 +183,7 @@ document.querySelector('tr.naslovi').addEventListener('click', (event) => {
     nacrtaj();
 });
 pretraga.addEventListener('input', nacrtaj);
+pretragaArtikal.addEventListener('input', nacrtaj);
 filterDobavljac.addEventListener('change', nacrtaj);
 
 telo.addEventListener('click', (event) => {
@@ -234,6 +256,9 @@ function popuniDijalog(u) {
         select.replaceChildren(...tarife.map((t) => new Option(`${t.tarifa_id}  ${formatBroj(t.stopa)}%  ${t.naziv}`, t.tarifa_id)));
         if (s.tarifa_id === null || s.tarifa_id === undefined) select.prepend(new Option('— izaberi —', ''));
         select.value = s.tarifa_id ?? '';
+        // Tarifa pripada artiklu (menja se na stranici Artikli); ovde se samo prikazuje
+        select.disabled = true;
+        select.title = 'Tarifa artikla u trenutku ulaza (ne menja se ovde)';
         return red;
     }));
     osveziZbirove();
@@ -357,7 +382,6 @@ function proveri() {
             if (!Number.isFinite(nova[r]) || nova[r] < 0 || nova[r] > 100)
                 return greska(red.querySelector(`[name="${r}"]`), `${naziv}: rabat mora biti od 0 do 100.`);
         }
-        if (nova.tarifa_id === null) return greska(red.querySelector('[name="tarifa_id"]'), `${naziv}: izaberi tarifu.`);
     }
     return null;
 }

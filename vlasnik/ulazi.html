@@ -34,6 +34,8 @@
     <div class="filteri-ulaza">
       <input id="pretraga" type="search" placeholder="Traži: broj računa, otpremnice, poziv na broj, dobavljač, #ulaza…"
              aria-label="Pretraga ulaza">
+      <input id="pretraga-artikal" type="search" placeholder="Artikal u ulazu: šifra ili naziv…"
+             aria-label="Prikaži samo ulaze koji sadrže artikal (šifra ili naziv)">
       <select id="filter-dobavljac" aria-label="Dobavljač">
         <option value="">Svi dobavljači</option>
       </select>
@@ -74,7 +76,7 @@
   <template id="ulaz-sablon">
     <tr class="red-ulaz" tabindex="0">
       <td class="broj prigusen" data-polje="ulaz_id"></td>
-      <td class="jako" data-polje="dobavljac"></td>
+      <td><span class="jako" data-polje="dobavljac"></span><small class="ispod sadrzi" data-polje="sadrzi"></small></td>
       <td><span data-polje="racun_broj"></span><small class="ispod" data-polje="racun_poziv_na_broj"></small></td>
       <td data-polje="ulaz_datum"></td>
       <td data-polje="otpremnica_broj"></td>

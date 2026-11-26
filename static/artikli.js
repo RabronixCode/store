@@ -2,8 +2,9 @@
 //
 // Ugovor sa serverom:
 //   GET   /artikli/svi        -> [{ sifra, naziv, kategorija, bar_kod, stanje, minimalno_stanje, prodajna_cena,
-//                                   nabavna_cena_ponderisana, jedinica_mere, aktivan }]
-//   POST  /artikli            telo: { naziv, kategorija, bar_kod, prodajna_cena, jedinica_mere, minimalno_stanje, aktivan }
+//                                   nabavna_cena_ponderisana, jedinica_mere, aktivan, tarifa_id }]
+//   GET   /tarife             -> [{ tarifa_id, naziv, stopa, vrsta }]
+//   POST  /artikli            telo: { naziv, kategorija, bar_kod, prodajna_cena, jedinica_mere, minimalno_stanje, aktivan, tarifa_id }
 //                             -> novi artikal (isti oblik kao gore)
 //   PATCH /artikli/<sifra>    telo: samo polje koje se menja, npr. { naziv: "Hleb" }
 //                             -> izmenjen artikal
@@ -20,7 +21,10 @@ const formaArtikal = document.getElementById('forma-artikal');
 const dijalogGreska = document.getElementById('dijalog-greska');
 const dugmeSacuvaj = document.getElementById('dijalog-sacuvaj');
 
-const BROJCANE = new Set(['sifra', 'stanje', 'minimalno_stanje', 'prodajna_cena', 'nabavna_cena_ponderisana', 'aktivan']);
+const BROJCANE = new Set(['sifra', 'stanje', 'minimalno_stanje', 'prodajna_cena', 'nabavna_cena_ponderisana', 'aktivan', 'tarifa_id']);
+const PODRAZUMEVANA_TARIFA = 1;   // dobra, opšta stopa 20%
+
+let tarife = [];                                    // iz /tarife
 
 let artikli = [];                                   // svi artikli sa servera
 let sort = { kolona: 'sifra', smer: 'asc' };        // smer: 'asc' | 'desc' | null
@@ -97,7 +101,7 @@ function prolazi(artikal) {
     for (const [kolona, filter] of Object.entries(filteri)) {
         if (filter === '') continue;
         const vrednost = artikal[kolona];
-        if (kolona === 'aktivan') {
+        if (kolona === 'aktivan' || kolona === 'tarifa_id') {
             if (String(vrednost) !== filter) return false;
         } else if (BROJCANE.has(kolona)) {
             if (!prolaziBroj(Number(vrednost), filter.trim())) return false;
@@ -150,6 +154,14 @@ function popuniRed(red, a) {
     stanje.classList.toggle('minus', a.stanje < 0);
     stanje.classList.toggle('na-minimumu', a.stanje >= 0 && naMinimumu(a));
 
+    const tarifa = red.querySelector('[data-polje="tarifa_id"]');
+    if (!tarifa.classList.contains('menja-se')) {
+        const t = tarife.find((x) => x.tarifa_id === a.tarifa_id);
+        tarifa.textContent = t ? `${t.tarifa_id} · ${formatBroj(t.stopa, 0)}%` : '—';
+        tarifa.title = t ? t.naziv : 'Tarifa nije dodeljena';
+        tarifa.classList.toggle('prazno', !t);
+    }
+
     const minimum = red.querySelector('[data-polje="minimalno_stanje"]');
     if (!minimum.classList.contains('menja-se')) minimum.textContent = formatStanje(a.minimalno_stanje);
 
@@ -199,11 +211,50 @@ async function ucitaj() {
 
 let uIzmeni = null;   // ćelija koja se trenutno menja
 
+function opcijeTarifa(select, izabrana) {
+    select.replaceChildren(...tarife.map((t) => {
+        const o = new Option(`${t.tarifa_id}  ${formatBroj(t.stopa)}%  ${t.naziv}`, t.tarifa_id);
+        o.defaultSelected = t.tarifa_id === izabrana;      // forma.reset() vraća na ovu
+        return o;
+    }));
+    select.value = String(izabrana);
+}
+
+// Tarifa se menja padajućim spiskom: izbor odmah čuva, Esc ili klik van odustaje
+function zapocniIzmenuTarife(celija, sifra, artikal) {
+    const select = document.createElement('select');
+    select.className = 'izmena-polje';
+    opcijeTarifa(select, artikal.tarifa_id ?? PODRAZUMEVANA_TARIFA);
+    select.setAttribute('aria-label', 'Izmena: tarifa');
+    uIzmeni = celija;
+    celija.classList.add('menja-se');
+    celija.replaceChildren(select);
+    select.focus();
+    let zavrseno = false;
+    const zavrsi = async (sacuvaj) => {
+        if (zavrseno) return;
+        zavrseno = true;
+        uIzmeni = null;
+        const nova = Number(select.value);
+        if (!sacuvaj || nova === artikal.tarifa_id) { vratiCeliju(celija, artikal); return; }
+        celija.classList.add('cuva-se');
+        select.disabled = true;
+        await sacuvajIzmenu(sifra, { tarifa_id: nova });
+    };
+    select.addEventListener('change', () => zavrsi(true));
+    select.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') { event.preventDefault(); zavrsi(false); }
+        else if (event.key === 'Enter') { event.preventDefault(); zavrsi(true); }
+    });
+    select.addEventListener('blur', () => zavrsi(false));
+}
+
 function zapocniIzmenu(celija) {
     if (uIzmeni) return;
     const sifra = Number(celija.closest('tr').dataset.sifra);
     const polje = celija.dataset.polje;
     const artikal = artikli.find((a) => a.sifra === sifra);
+    if (polje === 'tarifa_id') return zapocniIzmenuTarife(celija, sifra, artikal);
     const stara = artikal[polje] ?? '';
 
     const brojcano = polje === 'minimalno_stanje';
@@ -389,7 +440,8 @@ formaArtikal.addEventListener('submit', async (event) => {
         kategorija: f.kategorija.value.trim(),
         bar_kod: f.bar_kod.value.trim(),
         minimalno_stanje: Number(f.minimalno_stanje.value || 0),
-        aktivan: f.aktivan.checked
+        aktivan: f.aktivan.checked,
+        tarifa_id: Number(f.tarifa_id.value)
     };
 
     dugmeSacuvaj.disabled = true;
@@ -520,4 +572,15 @@ dijalogLista.addEventListener('click', (event) => {
 });
 
 
-ucitaj();
+async function ucitajTarife() {
+    try {
+        tarife = await procitaj(await fetch('/tarife'), 'Tarife ne mogu da se učitaju.');
+    } catch (greska) {
+        javi(porukaGreske(greska), 'greska');
+    }
+    opcijeTarifa(formaArtikal.elements.tarifa_id, PODRAZUMEVANA_TARIFA);
+    const filter = document.getElementById('filter-tarifa');
+    filter.append(...tarife.map((t) => new Option(`${t.tarifa_id} · ${formatBroj(t.stopa, 0)}%`, t.tarifa_id)));
+}
+
+ucitajTarife().then(ucitaj);

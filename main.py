@@ -251,6 +251,7 @@ class NoviArtikal(BaseModel):
     jedinica_mere: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)]
     minimalno_stanje: Annotated[float, Field(ge=0)] = 0
     aktivan: bool = True
+    tarifa_id: Annotated[int, Field(ge=0, le=99)] = 1   # PDV tarifa artikla (1 = dobra, opšta stopa 20%)
 
 class IzmenaArtikla(BaseModel):
     # Šalje se samo polje koje se menja; ostala ostaju kakva jesu.
@@ -260,6 +261,7 @@ class IzmenaArtikla(BaseModel):
     jedinica_mere: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)] | None = None
     minimalno_stanje: Annotated[float, Field(ge=0)] | None = None
     aktivan: bool | None = None
+    tarifa_id: Annotated[int, Field(ge=0, le=99)] | None = None
 
 # ---------- Ulaz robe ----------
 
@@ -334,7 +336,8 @@ class StavkaUlaza(BaseModel):
     rabat_osnovni: Rabat = 0
     rabat_posebni: Rabat = 0
     rabat_dodatni: Rabat = 0
-    tarifa_id: TarifaId = 1                 # PDV stopa dolazi iz tarife (1 = dobra, opšta stopa 20%)
+    # Ne koristi se: tarifa (PDV) je tarifa artikla. Nov artikal: novi_artikal.tarifa_id. Ostaje radi starih klijenata.
+    tarifa_id: TarifaId | None = None
     # Prodajna cena (sa PDV). Postojeći artikal: None = ne menja se. Nov artikal: None = 0.
     prodajna_cena: Cena | None = None
 
@@ -381,7 +384,7 @@ class IzmenaStavke(BaseModel):
     rabat_osnovni: Rabat = 0
     rabat_posebni: Rabat = 0
     rabat_dodatni: Rabat = 0
-    tarifa_id: TarifaId
+    tarifa_id: TarifaId | None = None       # None = ostaje tarifa stavke
 
     @field_validator("sifra_dobavljac", mode="before")
     @classmethod
@@ -427,6 +430,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def proveri_kes_statike(request: Request, call_next):
+    """JS/CSS bez Cache-Control pregledač kešira po svom nahođenju, pa posle izmene ume da
+    koristi stari .js uz novi .html (npr. prazan spisak tarifa). "no-cache" = sme da čuva,
+    ali pre upotrebe uvek pita server (ETag), pa se izmena vidi odmah."""
+    response = await call_next(request)
+    if request.url.path.endswith((".js", ".css", ".html")) and "cache-control" not in response.headers:
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 
 # @app.middleware("http")
 # async def add_no_cache_headers(request: Request, call_next):
@@ -980,13 +993,19 @@ def vrati_sve_artikle():
     finally:
         konekcija.close()
 
+def _postojeca_tarifa(konekcija, tarifa_id):
+    if not konekcija.execute("SELECT 1 FROM tarifa WHERE tarifa_id = ?", (tarifa_id,)).fetchone():
+        raise BadInput(f"Tarifa {tarifa_id} ne postoji.", 400)
+    return tarifa_id
+
 def unesi_jedan_artikal(a: NoviArtikal):
     try:
         konekcija = konektuj_se()
         konekcija.row_factory = sqlite3.Row
         sifra = dodaj_jedan_artikal(
             konekcija, a.naziv, a.kategorija or None, a.bar_kod or None,
-            a.prodajna_cena, a.jedinica_mere, 1 if a.aktivan else 0, a.minimalno_stanje
+            a.prodajna_cena, a.jedinica_mere, 1 if a.aktivan else 0, a.minimalno_stanje,
+            _postojeca_tarifa(konekcija, a.tarifa_id)
         )
         konekcija.commit()
         return jedan_artikal(konekcija, sifra)
@@ -1001,7 +1020,7 @@ def unesi_jedan_artikal(a: NoviArtikal):
 def sacuvaj_izmenu_artikla(sifra, izmena: IzmenaArtikla):
     izmene = izmena.model_dump(exclude_unset=True)
     # Kolone koje ne smeju biti prazne: null znači "nije poslato", ne "obriši"
-    izmene = {k: v for k, v in izmene.items() if not (v is None and k in ("naziv", "jedinica_mere", "minimalno_stanje", "aktivan"))}
+    izmene = {k: v for k, v in izmene.items() if not (v is None and k in ("naziv", "jedinica_mere", "minimalno_stanje", "aktivan", "tarifa_id"))}
     if "aktivan" in izmene:
         izmene["aktivan"] = 1 if izmene["aktivan"] else 0
     for k in ("kategorija", "bar_kod"):
@@ -1013,6 +1032,8 @@ def sacuvaj_izmenu_artikla(sifra, izmena: IzmenaArtikla):
     try:
         konekcija = konektuj_se()
         konekcija.row_factory = sqlite3.Row
+        if "tarifa_id" in izmene:
+            _postojeca_tarifa(konekcija, izmene["tarifa_id"])
         if izmeni_artikal(konekcija, sifra, izmene) == 0:
             return JSONResponse(status_code=404, content=f"Artikal sa šifrom {sifra} ne postoji.")
         konekcija.commit()

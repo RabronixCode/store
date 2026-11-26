@@ -65,17 +65,17 @@ def prikazi_artikle(konekcija, text, limit):
 
 # Kolone koje vlasnik sme da menja direktno u tabeli. Sve ostalo (stanje, cene) menja se
 # kroz ulaz robe i prodaju, ne ručno.
-IZMENJIVE_KOLONE = ("naziv", "jedinica_mere", "kategorija", "bar_kod", "minimalno_stanje", "aktivan")
+IZMENJIVE_KOLONE = ("naziv", "jedinica_mere", "kategorija", "bar_kod", "minimalno_stanje", "aktivan", "tarifa_id")
 
 def svi_artikli(konekcija):
     veza = konekcija.cursor()
-    upit = "SELECT sifra, naziv, kategorija, bar_kod, stanje, minimalno_stanje, prodajna_cena, nabavna_cena_ponderisana, jedinica_mere, aktivan FROM artikal ORDER BY sifra ASC"
+    upit = "SELECT sifra, naziv, kategorija, bar_kod, stanje, minimalno_stanje, prodajna_cena, nabavna_cena_ponderisana, jedinica_mere, aktivan, tarifa_id FROM artikal ORDER BY sifra ASC"
     veza.execute(upit)
     return [dict(red) for red in veza.fetchall()]
 
 def jedan_artikal(konekcija, sifra):
     veza = konekcija.cursor()
-    upit = "SELECT sifra, naziv, kategorija, bar_kod, stanje, minimalno_stanje, prodajna_cena, nabavna_cena_ponderisana, jedinica_mere, aktivan FROM artikal WHERE sifra = ?"
+    upit = "SELECT sifra, naziv, kategorija, bar_kod, stanje, minimalno_stanje, prodajna_cena, nabavna_cena_ponderisana, jedinica_mere, aktivan, tarifa_id FROM artikal WHERE sifra = ?"
     red = veza.execute(upit, (sifra,)).fetchone()
     return dict(red) if red else None
 
@@ -91,11 +91,12 @@ def izmeni_artikal(konekcija, sifra, izmene):
     veza.execute(f"UPDATE artikal SET {postavi} WHERE sifra = ?", vrednosti)
     return veza.rowcount
 
-def dodaj_jedan_artikal(konekcija, naziv, kategorija, bar_kod, prodajna_cena, jedinica_mere, aktivan, minimalno_stanje=0):
+def dodaj_jedan_artikal(konekcija, naziv, kategorija, bar_kod, prodajna_cena, jedinica_mere, aktivan, minimalno_stanje=0,
+                        tarifa_id=1):
     """Novi artikal uvek kreće sa stanjem 0 i nabavnom cenom 0 (to menja tek ulaz robe)."""
     veza = konekcija.cursor()
-    upit = "INSERT INTO artikal (naziv, kategorija, bar_kod, stanje, minimalno_stanje, prodajna_cena, nabavna_cena_ponderisana, jedinica_mere, aktivan) VALUES (?,?,?,?,?,?,?,?,?)"
-    vrednosti = (naziv, kategorija, bar_kod, 0, minimalno_stanje, prodajna_cena, 0, jedinica_mere, aktivan)
+    upit = "INSERT INTO artikal (naziv, kategorija, bar_kod, stanje, minimalno_stanje, prodajna_cena, nabavna_cena_ponderisana, jedinica_mere, aktivan, tarifa_id) VALUES (?,?,?,?,?,?,?,?,?,?)"
+    vrednosti = (naziv, kategorija, bar_kod, 0, minimalno_stanje, prodajna_cena, 0, jedinica_mere, aktivan, tarifa_id)
     veza.execute(upit, vrednosti)
     return veza.lastrowid
 

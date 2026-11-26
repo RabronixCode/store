@@ -102,7 +102,10 @@
       <!-- ---------- Stavke ---------- -->
       <section class="sekcija" aria-labelledby="naslov-stavke">
         <div class="sekcija-naslov">
-          <h2 id="naslov-stavke">Stavke</h2>
+          <div class="naslov-sa-prekidacem">
+            <h2 id="naslov-stavke">Stavke</h2>
+            <label class="prekidac-formula"><input type="checkbox" id="prikazi-racunicu" checked> Prikaži računicu ispod polja</label>
+          </div>
           <ul class="uputstvo-stavke">
             <li><strong>Postojeći artikal:</strong> kucaj njegovu <strong>šifru ili naziv</strong> i izaberi ga sa spiska;
               ostalo se popuni iz poslednjeg ulaza od ovog dobavljača. <strong>Nov artikal:</strong> upiši njegov naziv.</li>
@@ -168,8 +171,9 @@
       <!-- Unos (bela polja) -->
       <div class="stavka-unos">
         <label class="polje-st tarifa-polje">
-          <span class="oznaka">Tarifa <span class="obavezno">*</span></span>
-          <select name="tarifa_id"></select>
+          <span class="oznaka" title="Tarifa (PDV) artikla: dodeljuje se pri pravljenju artikla, menja se na stranici Artikli">Tarifa (iz artikla)</span>
+          <select name="tarifa_id" disabled></select>
+          <small class="tarifa-napomena"></small>
         </label>
         <label class="polje-st">
           <span class="oznaka">Količina <span class="obavezno">*</span></span>
@@ -197,29 +201,32 @@
         <label class="polje-st">
           <span class="oznaka" title="Količina × neto nabavna cena (posle rabata), bez PDV. Može da se upiše: nabavna cena se izračuna.">Neto nab. vrednost</span>
           <input name="neto_vrednost" type="number" min="0" step="any" inputmode="decimal">
+          <small class="formula">količina × neto nabavna</small><small class="racun" data-racun="neto_vrednost"></small>
         </label>
         <label class="polje-st">
           <span class="oznaka" title="Marža na neto nabavnu cenu, bez PDV. Upiši je da se izračuna prodajna cena.">Marža %</span>
           <input name="marza" type="number" step="any" inputmode="decimal">
+          <small class="formula">(osnovica − neto) ÷ neto × 100</small><small class="racun" data-racun="marza"></small>
         </label>
         <label class="polje-st">
           <span class="oznaka" title="Prodajna cena sa PDV. Za postojeći artikal upisana je trenutna; promena važi od čuvanja ulaza.">Prodajna (sa PDV)</span>
           <input name="prodajna_cena" type="number" min="0" step="any" inputmode="decimal">
+          <small class="racun" data-racun="prodajna_cena"></small>
         </label>
       </div>
 
       <!-- Rezultati (siva polja) -->
       <dl class="stavka-rezultati">
-        <div><dt title="Umanjenje cene jednog artikla zbog rabata">Rabat iznos</dt><dd data-prikaz="rabat_iznos">—</dd></div>
-        <div><dt title="Nabavna cena jednog artikla posle rabata, bez PDV">Neto nabavna</dt><dd data-prikaz="neto">—</dd></div>
-        <div><dt title="PDV koji plaćamo dobavljaču, po komadu (prethodni porez)">Prenet PDV</dt><dd data-prikaz="prenet">—</dd></div>
-        <div><dt title="Neto nabavna + PDV: koliko plaćamo dobavljaču po komadu">Dobavljaču</dt><dd data-prikaz="dobavljac">—</dd></div>
-        <div><dt title="Osnovica − neto nabavna, po komadu">Marža iznos</dt><dd data-prikaz="marza_iznos">—</dd></div>
-        <div><dt title="Prodajna cena bez PDV">Osnovica</dt><dd data-prikaz="osnovica">—</dd></div>
-        <div><dt title="Nabavna cena jednog artikla sa PDV (nabavna sa računa, pre rabata × (1 + PDV))">Kalk. cena</dt><dd data-prikaz="kalk_cena">—</dd></div>
-        <div><dt title="Prosečna nabavna cena bez PDV koju će artikal imati posle ovog ulaza">Prosek posle ulaza</dt><dd data-prikaz="prosek_posle">—</dd></div>
-        <div><dt title="Marža na prosečnu nabavnu cenu posle ulaza, bez PDV">Marža na prosek</dt><dd data-prikaz="marza_prosek">—</dd></div>
-        <div class="jako"><dt>Iznos sa PDV</dt><dd data-prikaz="iznos_sa">—</dd></div>
+        <div><dt title="Umanjenje cene jednog artikla zbog rabata">Rabat iznos</dt><dd data-prikaz="rabat_iznos">—</dd><small class="formula">nabavna − neto nabavna</small><small class="racun" data-racun="rabat_iznos"></small></div>
+        <div><dt title="Nabavna cena jednog artikla posle rabata, bez PDV">Neto nabavna</dt><dd data-prikaz="neto">—</dd><small class="formula">nabavna × (1 − rabat%) za svaki rabat</small><small class="racun" data-racun="neto"></small></div>
+        <div><dt title="PDV koji plaćamo dobavljaču, po komadu (prethodni porez)">Prenet PDV</dt><dd data-prikaz="prenet">—</dd><small class="formula">neto nabavna × PDV%</small><small class="racun" data-racun="prenet"></small></div>
+        <div><dt title="Neto nabavna + PDV: koliko plaćamo dobavljaču po komadu">Dobavljaču</dt><dd data-prikaz="dobavljac">—</dd><small class="formula">neto nabavna + prenet PDV</small><small class="racun" data-racun="dobavljac"></small></div>
+        <div><dt title="Osnovica − neto nabavna, po komadu">Marža iznos</dt><dd data-prikaz="marza_iznos">—</dd><small class="formula">osnovica − neto nabavna</small><small class="racun" data-racun="marza_iznos"></small></div>
+        <div><dt title="Prodajna cena bez PDV">Osnovica</dt><dd data-prikaz="osnovica">—</dd><small class="formula">prodajna ÷ (1 + PDV%)</small><small class="racun" data-racun="osnovica"></small></div>
+        <div><dt title="Nabavna cena jednog artikla sa PDV (nabavna sa računa, pre rabata × (1 + PDV))">Kalk. cena</dt><dd data-prikaz="kalk_cena">—</dd><small class="formula">nabavna × (1 + PDV%)</small><small class="racun" data-racun="kalk_cena"></small></div>
+        <div><dt title="Prosečna nabavna cena bez PDV koju će artikal imati posle ovog ulaza">Prosek posle ulaza</dt><dd data-prikaz="prosek_posle">—</dd><small class="formula">(stanje × prosek + količina × neto) ÷ (stanje + količina)</small><small class="racun" data-racun="prosek_posle"></small></div>
+        <div><dt title="Marža na prosečnu nabavnu cenu posle ulaza, bez PDV">Marža na prosek</dt><dd data-prikaz="marza_prosek">—</dd><small class="formula">(osnovica − prosek posle) ÷ prosek posle × 100</small><small class="racun" data-racun="marza_prosek"></small></div>
+        <div class="jako"><dt>Iznos sa PDV</dt><dd data-prikaz="iznos_sa">—</dd><small class="formula">količina × dobavljaču</small><small class="racun" data-racun="iznos_sa"></small></div>
       </dl>
       <small class="greska-stavke" role="alert"></small>
     </section>
@@ -269,7 +276,7 @@
         <div><dt>Stavka</dt><dd data-polje="stavka"></dd></div>
         <div><dt>Šifra kod dobavljača</dt><dd data-polje="sifra_dobavljac"></dd></div>
         <div><dt>Količina</dt><dd data-polje="kolicina"></dd></div>
-        <div><dt>Nabavna / rabat / tarifa</dt><dd data-polje="cena"></dd></div>
+        <div><dt>Nabavna / rabat</dt><dd data-polje="cena"></dd></div>
       </dl>
 
       <label>Naziv artikla <span class="obavezno">*</span>
@@ -286,6 +293,9 @@
       </label>
       <label>Minimalno stanje (kad stanje padne na ovo, artikal treba naručiti)
         <input name="minimalno_stanje" type="number" min="0" step="any" inputmode="decimal" value="0">
+      </label>
+      <label>Tarifa (PDV) <span class="obavezno">*</span>
+        <select name="tarifa_id" required></select>
       </label>
       <small class="greska-novog" role="alert"></small>
 

@@ -164,6 +164,19 @@ function popuniTarife(select, izabrana = PODRAZUMEVANA_TARIFA) {
     if (tarife.some((t) => t.tarifa_id === Number(izabrana))) select.value = String(izabrana);
 }
 
+// Tarifa u stavci je sivo polje: tarifa izabranog artikla. Za nov artikal bira se u popupu
+// pri čuvanju; do tada važi privremena (podrazumevana ili predlog iz asistenta), da se vidi računica.
+function postaviTarifu(red, tarifaId, napomena = '') {
+    const select = red.querySelector('[name="tarifa_id"]');
+    const id = tarife.some((t) => t.tarifa_id === Number(tarifaId)) ? Number(tarifaId) : PODRAZUMEVANA_TARIFA;
+    select.value = String(id);
+    red.querySelector('.tarifa-napomena').textContent = napomena;
+}
+
+function tarifaNovog(red) {
+    return red._noviArtikal?.tarifa_id ?? red._predlogTarife ?? PODRAZUMEVANA_TARIFA;
+}
+
 function stopaReda(red) {
     const t = tarife.find((x) => String(x.tarifa_id) === red.querySelector('[name="tarifa_id"]').value);
     return t ? t.stopa / 100 : null;
@@ -210,6 +223,7 @@ function postaviArtikal(red, a, { popuniCene = true } = {}) {
     red.dataset.sifra = a.sifra;
     red.classList.remove('nov-artikal');
     delete red._noviArtikal;
+    postaviTarifu(red, a.tarifa_id);
     // Za maržu: trenutno stanje, prosečna nabavna i prodajna cena artikla
     red._artikal = {
         naziv: a.naziv || '',
@@ -241,6 +255,7 @@ function ponistiArtikal(red) {
     if (!red.dataset.sifra) return;
     delete red.dataset.sifra;
     delete red._artikal;
+    postaviTarifu(red, tarifaNovog(red));
     prikaziArtikal(red);
     const prodajna = red.querySelector('[name="prodajna_cena"]');
     if (prodajna.dataset.auto === '1') { prodajna.value = ''; delete prodajna.dataset.auto; }
@@ -253,6 +268,7 @@ function oznaciKaoNov(red) {
     const tekst = red.querySelector('.artikal-pretraga').value.trim();
     if (!red.dataset.sifra && tekst) {
         red.classList.add('nov-artikal');
+        postaviTarifu(red, tarifaNovog(red), red._noviArtikal ? 'izabrana za nov artikal' : 'privremeno: bira se pri čuvanju');
         if (/^\d+$/.test(tekst)) {
             // Samo cifre: verovatno je kucana šifra koja ne postoji, a ne naziv
             postaviInfo(red, `Nema artikla sa šifrom ${tekst}. Za nov artikal upiši njegov naziv.`, 'upozorenje');
@@ -261,7 +277,7 @@ function oznaciKaoNov(red) {
         }
     } else {
         red.classList.remove('nov-artikal');
-        if (!red.dataset.sifra) postaviInfo(red, '');
+        if (!red.dataset.sifra) { postaviInfo(red, ''); postaviTarifu(red, PODRAZUMEVANA_TARIFA); }
     }
 }
 
@@ -286,7 +302,6 @@ function primeniVezu(red, veza, promenjenDobavljac) {
     upisi('rabat_osnovni', veza.rabat_osnovni);
     upisi('rabat_posebni', veza.rabat_posebni);
     upisi('rabat_dodatni', veza.rabat_dodatni);
-    upisi('tarifa_id', veza.tarifa_id ?? tarifaZaStopu(veza.pdv));
     if (!veza.povezan) {
         const info = red.querySelector('.artikal-info');
         info.textContent += ' · prvi put od ovog dobavljača';
@@ -498,6 +513,16 @@ function napraviPretragu(red) {
 
 // ---------- Događaji u stavkama ----------
 
+// Prekidač "Prikaži računicu ispod polja" (pamti se u ovom pregledaču)
+const prikaziRacunicu = document.getElementById('prikazi-racunicu');
+try { prikaziRacunicu.checked = localStorage.getItem('ulaz-racunica') !== '0'; } catch { /* nema skladišta */ }
+const primeniRacunicu = () => stavkeOkvir.classList.toggle('bez-racunice', !prikaziRacunicu.checked);
+prikaziRacunicu.addEventListener('change', () => {
+    primeniRacunicu();
+    try { localStorage.setItem('ulaz-racunica', prikaziRacunicu.checked ? '1' : '0'); } catch { /* nema skladišta */ }
+});
+primeniRacunicu();
+
 stavkeOkvir.addEventListener('click', (event) => {
     const dugme = event.target.closest('.ukloni-stavku');
     if (dugme) ukloniRed(dugme.closest('.stavka'));
@@ -524,7 +549,7 @@ stavkeOkvir.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter' || !event.target.name) return;
     event.preventDefault();
     const red = event.target.closest('.stavka');
-    const redosled = ['sifra_dobavljac', 'tarifa_id', 'kolicina', 'nabavna_cena', 'rabat_osnovni', 'rabat_posebni',
+    const redosled = ['sifra_dobavljac', 'kolicina', 'nabavna_cena', 'rabat_osnovni', 'rabat_posebni',
                       'rabat_dodatni', 'neto_vrednost', 'marza', 'prodajna_cena'];
     const i = redosled.indexOf(event.target.name);
     if (i < redosled.length - 1) {
@@ -589,7 +614,7 @@ function izracunajStavku(red, izvor = null) {
     }
     const neto = ispravan(cena) && cena >= 0 ? cena * faktor : null;
     if (izvor !== 'neto_vrednost') {
-        el('neto_vrednost').value = neto !== null && ispravan(kolicina) ? zaokruzi(kolicina * neto, 2) : '';
+        el('neto_vrednost').value = neto !== null && ispravan(kolicina) ? zaokruzi(kolicina * neto, 4) : '';
     }
 
     if (izvor === 'marza') {
@@ -602,7 +627,7 @@ function izracunajStavku(red, izvor = null) {
     const prodajna = broj('prodajna_cena');
     const osnovica = ispravan(prodajna) && stopa !== null ? prodajna / (1 + stopa) : null;
     if (izvor !== 'marza') {
-        el('marza').value = osnovica !== null && neto > 0 ? zaokruzi((osnovica - neto) / neto * 100, 2) : '';
+        el('marza').value = osnovica !== null && neto > 0 ? zaokruzi((osnovica - neto) / neto * 100, 4) : '';
     }
 
     // Prosečna nabavna posle ulaza (isto kao server: stanje <= 0 -> važi cena iz ovog ulaza)
@@ -620,17 +645,54 @@ function izracunajStavku(red, izvor = null) {
     prikaz('neto', neto, 4);
     prikaz('prenet', neto !== null && stopa !== null ? neto * stopa : null, 4);
     prikaz('dobavljac', neto !== null && stopa !== null ? neto * (1 + stopa) : null, 4);
-    prikaz('marza_iznos', osnovica !== null && neto !== null ? osnovica - neto : null, 2, true);
-    prikaz('osnovica', osnovica);
+    prikaz('marza_iznos', osnovica !== null && neto !== null ? osnovica - neto : null, 4, true);
+    prikaz('osnovica', osnovica, 4);
     // Kalk. cena: nabavna cena jednog artikla sa PDV (polje "Nabavna", pre rabata)
     prikaz('kalk_cena', ispravan(cena) && cena >= 0 && stopa !== null ? cena * (1 + stopa) : null, 4);
     prikaz('prosek_posle', prosekPosle, 4);
     const marzaProsek = osnovica !== null && prosekPosle > 0 ? (osnovica - prosekPosle) / prosekPosle * 100 : null;
     const mp = red.querySelector('[data-prikaz="marza_prosek"]');
-    mp.textContent = marzaProsek === null ? '—' : `${formatBroj(marzaProsek)} %`;
+    mp.textContent = marzaProsek === null ? '—' : `${formatBroj(marzaProsek, 4)} %`;
     mp.classList.toggle('minus', marzaProsek !== null && marzaProsek < 0);
-    prikaz('iznos_sa', neto !== null && stopa !== null && ispravan(kolicina) ? kolicina * neto * (1 + stopa) : null);
+    prikaz('iznos_sa', neto !== null && stopa !== null && ispravan(kolicina) ? kolicina * neto * (1 + stopa) : null, 4);
     el('marza').classList.toggle('minus', ispravan(broj('marza')) && broj('marza') < 0);
+
+    // Računica sa brojevima ove stavke, ispod svakog polja koje se računa (formula je u HTML-u iznad)
+    // n: izračunat iznos, uvek na 4 decimale; u: upisan podatak (količina, rabat %, PDV %) kako je upisan
+    const n = (v) => formatBroj(v, 4);
+    const u = (v) => Number(v).toLocaleString('sr-RS', { maximumFractionDigits: 4 });
+    const pdv = stopa !== null ? `${u(stopa * 100)}%` : null;
+    const racun = (ime, uslov, tekst) => {
+        red.querySelector(`[data-racun="${ime}"]`).textContent = uslov ? tekst() : '';
+    };
+    const imaNeto = neto !== null, imaKol = ispravan(kolicina);
+    const rabati = [r1, r2, r3].filter((r) => r !== 0);
+    racun('neto', imaNeto, () => rabati.length
+        ? `${n(cena)} × ${rabati.map((r) => `(1 − ${u(r)}%)`).join(' × ')} = ${n(neto)}`
+        : `${n(cena)} (nema rabata) = ${n(neto)}`);
+    racun('rabat_iznos', imaNeto, () => `${n(cena)} − ${n(neto)} = ${n(cena - neto)}`);
+    racun('prenet', imaNeto && pdv, () => `${n(neto)} × ${pdv} = ${n(neto * stopa)}`);
+    racun('dobavljac', imaNeto && pdv, () => `${n(neto)} + ${n(neto * stopa)} = ${n(neto * (1 + stopa))}`);
+    racun('osnovica', osnovica !== null, () => `${n(prodajna)} ÷ ${u(1 + stopa)} = ${n(osnovica)}`);
+    racun('marza_iznos', osnovica !== null && imaNeto, () => `${n(osnovica)} − ${n(neto)} = ${n(osnovica - neto)}`);
+    racun('kalk_cena', ispravan(cena) && pdv, () => `${n(cena)} × ${u(1 + stopa)} = ${n(cena * (1 + stopa))}`);
+    racun('prosek_posle', prosekPosle !== null, () => stanje > 0
+        ? `(${u(stanje)} × ${n(a.prosek)} + ${u(k)} × ${n(neto)}) ÷ (${u(stanje)} + ${u(k)}) = ${n(prosekPosle)}`
+        : `stanje je ${u(stanje)}, pa važi neto iz ovog ulaza = ${n(prosekPosle)}`);
+    racun('marza_prosek', marzaProsek !== null, () =>
+        `(${n(osnovica)} − ${n(prosekPosle)}) ÷ ${n(prosekPosle)} × 100 = ${n(marzaProsek)}%`);
+    racun('iznos_sa', imaNeto && pdv && imaKol, () =>
+        `${u(kolicina)} × ${n(neto * (1 + stopa))} = ${n(kolicina * neto * (1 + stopa))}`);
+    racun('neto_vrednost', imaNeto && imaKol, () => `${u(kolicina)} × ${n(neto)} = ${n(kolicina * neto)}`);
+    racun('marza', osnovica !== null && neto > 0, () =>
+        `(${n(osnovica)} − ${n(neto)}) ÷ ${n(neto)} × 100 = ${n((osnovica - neto) / neto * 100)}%`);
+    // Prodajna: računica samo kad je izračunata iz upisane marže (inače je upisana ručno)
+    if (izvor === 'marza') el('prodajna_cena').dataset.izMarze = '1';
+    else if (izvor === 'prodajna_cena') delete el('prodajna_cena').dataset.izMarze;
+    const marzaUpisana = broj('marza');
+    racun('prodajna_cena', el('prodajna_cena').dataset.izMarze && imaNeto && pdv && ispravan(marzaUpisana), () =>
+        `iz marže: ${n(neto)} × ${u(1 + marzaUpisana / 100)} × ${u(1 + stopa)} = `
+        + `${n(neto * (1 + marzaUpisana / 100) * (1 + stopa))}`);
 
     // Prodajna cena drugačija od trenutne: polje se istakne (promena važi od čuvanja ulaza)
     el('prodajna_cena').classList.toggle('promenjena',
@@ -832,9 +894,9 @@ function popuniNoveArtikle(redovi) {
             f.querySelector('[data-polje="sifra_dobavljac"]').textContent = vr('sifra_dobavljac') || '—';
             f.querySelector('[data-polje="kolicina"]').textContent = vr('kolicina');
             const rabati = procitajRabate(red).filter((r) => r > 0).map((r) => `${formatBroj(r)}%`).join(' + ');
-            const tarifaTekst = red.querySelector('[name="tarifa_id"]').selectedOptions[0]?.textContent || '';
             f.querySelector('[data-polje="cena"]').textContent =
-                `${vr('nabavna_cena')}${rabati ? ` − ${rabati}` : ''} / ${tarifaTekst}`;
+                `${vr('nabavna_cena')}${rabati ? ` − ${rabati}` : ''}`;
+            popuniTarife(f.elements.tarifa_id, tarifaNovog(red));
             // Čisto brojevi u pretrazi su verovatno šifra, ne naziv
             f.elements.naziv.value = /^\d+$/.test(tekst) ? '' : tekst;
             f.addEventListener('submit', (event) => {
@@ -851,9 +913,12 @@ function popuniNoveArtikle(redovi) {
                     jedinica_mere: e.jedinica_mere.value.trim(),
                     bar_kod: e.bar_kod.value.trim(),
                     kategorija: e.kategorija.value.trim(),
-                    minimalno_stanje: minimum
+                    minimalno_stanje: minimum,
+                    tarifa_id: Number(e.tarifa_id.value)
                 };
                 red._noviZaTekst = tekst;
+                postaviTarifu(red, red._noviArtikal.tarifa_id, 'izabrana za nov artikal');
+                osveziZbir();
                 red.querySelector('.jm').textContent = red._noviArtikal.jedinica_mere;
                 postaviInfo(red, `Nov artikal: „${red._noviArtikal.naziv}“ (${red._noviArtikal.jedinica_mere})`, 'nov');
 
@@ -900,7 +965,6 @@ function napraviZahtev(popunjeni) {
                 rabat_osnovni: procitajRabate(red)[0],
                 rabat_posebni: procitajRabate(red)[1],
                 rabat_dodatni: procitajRabate(red)[2],
-                tarifa_id: Number(red.querySelector('[name="tarifa_id"]').value),
                 prodajna_cena: procitajBroj(red.querySelector('[name="prodajna_cena"]'))
             };
             if (red.dataset.sifra) stavka.sifra_artikal = Number(red.dataset.sifra);
@@ -1087,7 +1151,11 @@ async function ucitajNacrt() {
         for (const r of ['rabat_osnovni', 'rabat_posebni', 'rabat_dodatni']) {
             if (s[r]) upisiVrednost(red, r, s[r]);
         }
-        upisiVrednost(red, 'tarifa_id', s.tarifa_id ?? tarifaZaStopu(s.pdv));
+        // Postojeći artikal ima svoju tarifu; za nov artikal tarifa sa dokumenta je predlog za popup
+        if (!red.dataset.sifra) {
+            red._predlogTarife = s.tarifa_id ?? tarifaZaStopu(s.pdv) ?? undefined;
+            postaviTarifu(red, tarifaNovog(red), 'predlog sa dokumenta: potvrđuje se pri čuvanju');
+        }
         upisiVrednost(red, 'prodajna_cena', s.prodajna_cena);
         if (s.kolicina === null || s.nabavna_cena === null || (s.tarifa_id ?? tarifaZaStopu(s.pdv)) === null) {
             napomene.push(`Stavka ${i + 1} (${s.naziv || 'bez naziva'}): neki brojevi nisu pročitani, dopuni ih.`);

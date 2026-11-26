@@ -58,6 +58,7 @@
             <th scope="col" data-kolona="kategorija"><button type="button" class="sortiraj">Kategorija</button></th>
             <th scope="col" data-kolona="bar_kod"><button type="button" class="sortiraj">Bar kod</button></th>
             <th scope="col" data-kolona="jedinica_mere"><button type="button" class="sortiraj">JM</button></th>
+            <th scope="col" data-kolona="tarifa_id"><button type="button" class="sortiraj" title="PDV tarifa artikla">Tarifa</button></th>
             <th scope="col" data-kolona="stanje" class="broj"><button type="button" class="sortiraj">Stanje</button></th>
             <th scope="col" data-kolona="minimalno_stanje" class="broj"><button type="button" class="sortiraj" title="Kad stanje padne na ovo, artikal treba naručiti">Min. stanje</button></th>
             <th scope="col" data-kolona="prodajna_cena" class="broj"><button type="button" class="sortiraj">Prodajna cena</button></th>
@@ -71,6 +72,11 @@
             <td><input type="search" data-filter="kategorija" placeholder="Traži…" aria-label="Filter kategorija"></td>
             <td><input type="search" data-filter="bar_kod" placeholder="Traži…" aria-label="Filter bar kod"></td>
             <td><input type="search" data-filter="jedinica_mere" placeholder="Traži…" aria-label="Filter jedinica mere"></td>
+            <td>
+              <select data-filter="tarifa_id" id="filter-tarifa" aria-label="Filter tarifa">
+                <option value="">Sve</option>
+              </select>
+            </td>
             <td><input type="search" data-filter="stanje" placeholder="npr. <=0" aria-label="Filter stanje"></td>
             <td><input type="search" data-filter="minimalno_stanje" placeholder="npr. >0" aria-label="Filter minimalno stanje"></td>
             <td><input type="search" data-filter="prodajna_cena" placeholder="npr. >100" aria-label="Filter prodajna cena"></td>
@@ -90,7 +96,7 @@
     </div>
 
     <p class="pomoc">
-      Klikni na naziv, kategoriju, bar kod, jedinicu mere ili minimalno stanje da ih izmeniš.
+      Klikni na naziv, kategoriju, bar kod, jedinicu mere, tarifu ili minimalno stanje da ih izmeniš.
       <kbd>Enter</kbd> ili klik van polja čuva, <kbd>Esc</kbd> odustaje.
     </p>
   </main>
@@ -103,6 +109,7 @@
       <td class="izmenjivo" data-polje="kategorija" data-tip="tekst" tabindex="0"></td>
       <td class="izmenjivo mono" data-polje="bar_kod" data-tip="tekst" tabindex="0"></td>
       <td class="izmenjivo" data-polje="jedinica_mere" data-tip="jm" tabindex="0"></td>
+      <td class="izmenjivo nowrap" data-polje="tarifa_id" data-tip="tarifa" tabindex="0"></td>
       <td class="broj" data-polje="stanje"></td>
       <td class="izmenjivo broj" data-polje="minimalno_stanje" data-tip="broj" tabindex="0"></td>
       <td class="broj" data-polje="prodajna_cena"></td>
@@ -130,6 +137,9 @@
         </label>
         <label>Jedinica mere *
           <input name="jedinica_mere" type="text" required maxlength="10" list="jedinice-mere" autocomplete="off" value="kom">
+        </label>
+        <label>Tarifa (PDV) *
+          <select name="tarifa_id" id="nova-tarifa" required></select>
         </label>
         <label>Prodajna cena (RSD)
           <input name="prodajna_cena" type="number" min="0" step="0.01" inputmode="decimal" value="0">

@@ -4,6 +4,7 @@ Funkcije ovde rade samo sa bazom (primaju otvorenu konekciju); commit/rollback r
 da bi ceo ulaz (zaglavlje, novi artikli, stavke, stanje) bio sačuvan u JEDNOJ transakciji.
 """
 
+import json
 import unicodedata
 
 from Errors.BadInput import BadInput
@@ -46,7 +47,7 @@ def pretrazi_artikle_za_ulaz(konekcija, tekst, limit=50):
     """
     limit = max(1, min(int(limit), 50))
     redovi = [dict(r) for r in konekcija.execute(
-        "SELECT sifra, naziv, jedinica_mere, stanje, aktivan, prodajna_cena, nabavna_cena_ponderisana, bar_kod "
+        "SELECT sifra, naziv, jedinica_mere, stanje, aktivan, prodajna_cena, nabavna_cena_ponderisana, bar_kod, tarifa_id "
         "FROM artikal ORDER BY sifra"
     ).fetchall()]
     tekst = _normalizuj(tekst).strip()
@@ -78,12 +79,12 @@ def veza_sa_dobavljacem(konekcija, dobavljac_id, sifra_artikal=None, sifra_dobav
     """
     if sifra_artikal is not None:
         artikal = konekcija.execute(
-            "SELECT sifra, naziv, jedinica_mere, stanje, aktivan, prodajna_cena, nabavna_cena_ponderisana, bar_kod "
+            "SELECT sifra, naziv, jedinica_mere, stanje, aktivan, prodajna_cena, nabavna_cena_ponderisana, bar_kod, tarifa_id "
             "FROM artikal WHERE sifra = ?",
             (sifra_artikal,)).fetchone()
     else:
         artikal = konekcija.execute("""
-            SELECT a.sifra, a.naziv, a.jedinica_mere, a.stanje, a.aktivan, a.prodajna_cena, a.nabavna_cena_ponderisana, a.bar_kod
+            SELECT a.sifra, a.naziv, a.jedinica_mere, a.stanje, a.aktivan, a.prodajna_cena, a.nabavna_cena_ponderisana, a.bar_kod, a.tarifa_id
             FROM dobavljac_artikal da JOIN artikal a ON a.sifra = da.sifra_artikal
             WHERE da.dobavljac_id = ? AND da.sifra_dobavljac = ?""",
             (dobavljac_id, sifra_dobavljac)).fetchone()
@@ -105,11 +106,10 @@ def veza_sa_dobavljacem(konekcija, dobavljac_id, sifra_artikal=None, sifra_dobav
     rezultat["povezan"] = veza is not None
     rezultat["sifra_dobavljac"] = veza["sifra_dobavljac"] if veza else None
     rezultat["rabat_osnovni"] = rezultat["rabat_posebni"] = rezultat["rabat_dodatni"] = None
-    rezultat["tarifa_id"] = None
+    # tarifa_id ostaje tarifa ARTIKLA (iz upita gore), ne iz poslednjeg ulaza
     if poslednja:
         # nabavna_cena ovde = cena PRE rabata (ono što se kuca u polje "Nabavna")
         rezultat["nabavna_cena"], rezultat["pdv"] = poslednja["cena"], poslednja["pdv"]
-        rezultat["tarifa_id"] = poslednja["tarifa_id"]
         for r in ("rabat_osnovni", "rabat_posebni", "rabat_dodatni"):
             rezultat[r] = poslednja[r]
     elif veza:
@@ -203,8 +203,9 @@ def sacuvaj_ulaz(konekcija, u):
             n = s.novi_artikal
             # Prodajna cena novog artikla dolazi iz stavke (polje u redu), ne iz popupa
             prodajna = s.prodajna_cena if s.prodajna_cena is not None else n.prodajna_cena
+            stopa_tarife(konekcija, n.tarifa_id, f"Stavka {i}: ")     # proverava da tarifa postoji
             sifra = dodaj_jedan_artikal(konekcija, n.naziv, n.kategorija or None, n.bar_kod or None,
-                                        prodajna, n.jedinica_mere, 1, n.minimalno_stanje)
+                                        prodajna, n.jedinica_mere, 1, n.minimalno_stanje, n.tarifa_id)
         else:
             sifra = s.sifra_artikal
             if not konekcija.execute("SELECT 1 FROM artikal WHERE sifra = ?", (sifra,)).fetchone():
@@ -213,7 +214,9 @@ def sacuvaj_ulaz(konekcija, u):
             if s.prodajna_cena is not None:
                 konekcija.execute("UPDATE artikal SET prodajna_cena = ? WHERE sifra = ?", (s.prodajna_cena, sifra))
 
-        pdv = stopa_tarife(konekcija, s.tarifa_id, f"Stavka {i}: ")
+        # Tarifa (PDV) je tarifa artikla; u stavci se čuva kakva je bila u trenutku ulaza
+        tarifa_id = konekcija.execute("SELECT tarifa_id FROM artikal WHERE sifra = ?", (sifra,)).fetchone()[0] or 1
+        pdv = stopa_tarife(konekcija, tarifa_id, f"Stavka {i}: ")
         neto = neto_cena(s.nabavna_cena, s.rabat_osnovni, s.rabat_posebni, s.rabat_dodatni)
         povezi_sa_dobavljacem(konekcija, u.dobavljac_id, sifra, s.sifra_dobavljac, neto, pdv)
         naziv = konekcija.execute("SELECT naziv FROM artikal WHERE sifra = ?", (sifra,)).fetchone()[0]
@@ -223,7 +226,7 @@ def sacuvaj_ulaz(konekcija, u):
                                       rabat_osnovni, rabat_posebni, rabat_dodatni, tarifa_id)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (ulaz_id, sifra, s.sifra_dobavljac, naziv, None, neto, pdv, s.kolicina, s.nabavna_cena,
-             s.rabat_osnovni, s.rabat_posebni, s.rabat_dodatni, s.tarifa_id))
+             s.rabat_osnovni, s.rabat_posebni, s.rabat_dodatni, tarifa_id))
         # stanje + prosečna (ponderisana) nabavna cena, po NETO ceni (posle rabata)
         azuriraj_ponderisanu_cenu(konekcija, sifra, s.kolicina, neto)
 
@@ -246,11 +249,19 @@ def lista_ulaza(konekcija):
                u.ulaz_datum, u.otpremnica_broj, u.otpremnica_datum, u.valuta_datum, u.datum_vreme,
                (SELECT COUNT(*) FROM stavka_ulaza s WHERE s.ulaz_id = u.ulaz_id) AS broj_stavki,
                {UKUPNO_BEZ_PDV} AS ukupno_bez_pdv,
-               {UKUPNO_SA_PDV} AS ukupno_sa_pdv
+               {UKUPNO_SA_PDV} AS ukupno_sa_pdv,
+               (SELECT json_group_array(json_object(
+                           'sifra', s.sifra_lokalna, 'naziv', COALESCE(a.naziv, s.naziv_lokalni),
+                           'sifra_dobavljac', s.sifra_dobavljac, 'kolicina', s.kolicina))
+                FROM stavka_ulaza s LEFT JOIN artikal a ON a.sifra = s.sifra_lokalna
+                WHERE s.ulaz_id = u.ulaz_id) AS artikli
         FROM ulaz u JOIN dobavljac d ON d.dobavljac_id = u.dobavljac_id
         ORDER BY u.ulaz_id DESC
     """
-    return [dict(r) for r in konekcija.execute(upit).fetchall()]
+    redovi = [dict(r) for r in konekcija.execute(upit).fetchall()]
+    for r in redovi:   # artikli u ulazu (za pretragu po šifri / nazivu artikla na stranici Svi ulazi)
+        r["artikli"] = json.loads(r["artikli"] or "[]")
+    return redovi
 
 
 def jedan_ulaz(konekcija, ulaz_id):
@@ -311,6 +322,9 @@ def izmeni_stavku(konekcija, ulaz_id, dobavljac_id, s):
         raise BadInput(f"Stavka {s.stavka_id} ne pripada ovom ulazu.", 404)
 
     sifra = stara["sifra_lokalna"]
+    if s.tarifa_id is None:              # tarifa se ne menja u izmeni ulaza (pripada artiklu)
+        s.tarifa_id = stara["tarifa_id"] if stara["tarifa_id"] is not None else (konekcija.execute(
+            "SELECT tarifa_id FROM artikal WHERE sifra = ?", (sifra,)).fetchone()[0] or 1)
     pdv = stopa_tarife(konekcija, s.tarifa_id, f"Stavka {s.stavka_id}: ")
     neto = neto_cena(s.nabavna_cena, s.rabat_osnovni, s.rabat_posebni, s.rabat_dodatni)
     promena_kolicine_cene = (stara["kolicina"] != s.kolicina or stara["nabavna_cena"] != neto)
