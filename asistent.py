@@ -289,8 +289,19 @@ def napravi_nacrt_ulaza(ulaz, kljuc_sesije):
                     (dobavljac_id, sifra_dob)).fetchone()
                 if red:
                     sifra = red[0]
+            tarifa_id = s.get("tarifa_id")
+            if tarifa_id is not None and not konekcija.execute("SELECT 1 FROM tarifa WHERE tarifa_id = ?", (tarifa_id,)).fetchone():
+                tarifa_id = None
+            if tarifa_id is None and _broj_ili_none(s.get("pdv"), 0, 100) is not None:
+                red = konekcija.execute("SELECT tarifa_id FROM tarifa WHERE vrsta = 'dobra' AND stopa = ? ORDER BY tarifa_id",
+                                        (float(s.get("pdv")),)).fetchone()
+                tarifa_id = red[0] if red else None
             stavke.append({
                 "sifra_artikal": sifra,
+                "rabat_osnovni": _broj_ili_none(s.get("rabat_osnovni"), 0, 100),
+                "rabat_posebni": _broj_ili_none(s.get("rabat_posebni"), 0, 100),
+                "rabat_dodatni": _broj_ili_none(s.get("rabat_dodatni"), 0, 100),
+                "tarifa_id": tarifa_id,
                 "naziv": _tekst_ili_none(s.get("naziv"), 255) or "",
                 "sifra_dobavljac": sifra_dob,
                 "kolicina": _broj_ili_none(s.get("kolicina"), 0, 1_000_000),
@@ -411,11 +422,16 @@ ALATI = [
                             "naziv": {"type": "string", "description": "Naziv sa dokumenta (za nov artikal: naziv novog)."},
                             "sifra_dobavljac": {"type": ["string", "null"], "description": "Šifra artikla kod dobavljača sa dokumenta."},
                             "kolicina": {"type": ["number", "null"]},
-                            "nabavna_cena": {"type": ["number", "null"], "description": "Jedinična cena BEZ PDV (posle rabata)."},
-                            "pdv": {"type": ["number", "null"], "description": "Stopa PDV u %, npr. 20 ili 10."},
+                            "nabavna_cena": {"type": ["number", "null"], "description": "Cena JEDNOG artikla BEZ PDV, PRE rabata (kako piše na dokumentu)."},
+                            "rabat_osnovni": {"type": ["number", "null"], "description": "Rabat u % (prvi), ili null."},
+                            "rabat_posebni": {"type": ["number", "null"], "description": "Drugi rabat u %, ili null."},
+                            "rabat_dodatni": {"type": ["number", "null"], "description": "Treći rabat u %, ili null."},
+                            "tarifa_id": {"type": ["integer", "null"], "description": "Tarifa iz tabele tarifa (1 = dobra 20%, 2 = dobra 10%...)."},
+                            "pdv": {"type": ["number", "null"], "description": "Stopa PDV u %, ako tarifa nije poznata."},
                             "prodajna_cena": {"type": ["number", "null"], "description": "Obično null (ne piše na dokumentu)."},
                         },
-                        "required": ["sifra_artikal", "naziv", "sifra_dobavljac", "kolicina", "nabavna_cena", "pdv", "prodajna_cena"],
+                        "required": ["sifra_artikal", "naziv", "sifra_dobavljac", "kolicina", "nabavna_cena", "rabat_osnovni",
+                                     "rabat_posebni", "rabat_dodatni", "tarifa_id", "pdv", "prodajna_cena"],
                         "additionalProperties": False,
                     },
                 },
@@ -462,8 +478,11 @@ Odgovaraš na srpskom (latinica), kratko i jasno, kao iskusan saradnik koji pozn
   nabavna_cena_bez_pdv i pdv iz poslednjeg ulaza od tog dobavljača.
 - ulaz: dokument ulaza robe: racun_broj, racun_poziv_na_broj, ulaz_datum (= datum računa), otpremnica_broj,
   otpremnica_datum, valuta_datum (rok plaćanja), datum_vreme (kad je unet u program). Datumi 'YYYY-MM-DD'.
-- stavka_ulaza: stavke ulaza: sifra_lokalna (naša šifra), sifra_dobavljac, kolicina, nabavna_cena (BEZ PDV),
-  pdv (%), nabavna_cena_pdv (izračunato, SA PDV).
+- stavka_ulaza: stavke ulaza: sifra_lokalna (naša šifra), sifra_dobavljac, kolicina,
+  cena_pre_rabata (jedan artikal BEZ PDV, sa računa), rabat_osnovni/rabat_posebni/rabat_dodatni (%, jedan na drugi),
+  nabavna_cena (NETO posle rabata, BEZ PDV; po njoj se računa prosečna cena), tarifa_id, pdv (%),
+  nabavna_cena_pdv (izračunato, SA PDV).
+- tarifa: tarifa_id, naziv, stopa (PDV %), vrsta ('dobra'/'usluge'). Obično: 1 = dobra 20%, 2 = dobra 10%.
 - racun: prodaja na kasi (fiskalni račun kupcu): racun_id, datum_vreme 'YYYY-MM-DD HH:MM:SS', korisnik.
 - stavka_racuna: prodate stavke: sifra, naziv, kolicina, cena_po_komadu (prodajna SA PDV u trenutku prodaje),
   nabavna_cena (prosečna nabavna BEZ PDV u trenutku prodaje).

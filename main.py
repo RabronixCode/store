@@ -22,7 +22,7 @@ from db import konektuj_se
 from dobavljaci import sacuvaj_dobavljaca, pregled_dobavljaca, jedan_dobavljac, naziv_zauzet, promeni_naziv_dobavljaca, artikli_dobavljaca
 from korisnici import proveri_korisnika
 from ulazi import (pretrazi_artikle_za_ulaz, veza_sa_dobavljacem, zauzeti_dokumenti, sacuvaj_ulaz,
-                   lista_ulaza, jedan_ulaz, izmeni_zaglavlje, izmeni_stavku)
+                   lista_ulaza, jedan_ulaz, izmeni_zaglavlje, izmeni_stavku, sve_tarife)
 from artikli import prikazi_artikle, azuriraj_stanje
 from artikli import svi_artikli, jedan_artikal, izmeni_artikal, dodaj_jedan_artikal
 from lozinke import hash_password, verifikuj
@@ -268,6 +268,8 @@ KratakTekst = Annotated[str, StringConstraints(max_length=100)]
 Kolicina = Annotated[float, Field(gt=0, le=1_000_000, allow_inf_nan=False)]
 Cena = Annotated[float, Field(ge=0, le=100_000_000, allow_inf_nan=False)]
 Pdv = Annotated[float, Field(ge=0, le=100, allow_inf_nan=False)]
+Rabat = Annotated[float, Field(ge=0, le=100, allow_inf_nan=False)]
+TarifaId = Annotated[int, Field(ge=0, le=99)]
 
 
 def _tekst_ili_none(v):
@@ -327,8 +329,12 @@ class StavkaUlaza(BaseModel):
     novi_artikal: NoviArtikal | None = None
     sifra_dobavljac: Annotated[str, StringConstraints(max_length=50)] | None = None
     kolicina: Kolicina
+    # Nabavna cena JEDNOG artikla bez PDV, PRE rabata (sa računa). Neto cenu (posle rabata) računa server.
     nabavna_cena: Cena
-    pdv: Pdv = 20
+    rabat_osnovni: Rabat = 0
+    rabat_posebni: Rabat = 0
+    rabat_dodatni: Rabat = 0
+    tarifa_id: TarifaId = 1                 # PDV stopa dolazi iz tarife (1 = dobra, opšta stopa 20%)
     # Prodajna cena (sa PDV). Postojeći artikal: None = ne menja se. Nov artikal: None = 0.
     prodajna_cena: Cena | None = None
 
@@ -371,8 +377,11 @@ class IzmenaStavke(BaseModel):
     stavka_id: Annotated[int, Field(gt=0)]
     sifra_dobavljac: Annotated[str, StringConstraints(max_length=50)] | None = None
     kolicina: Kolicina
-    nabavna_cena: Cena
-    pdv: Pdv
+    nabavna_cena: Cena                      # pre rabata, kao u StavkaUlaza
+    rabat_osnovni: Rabat = 0
+    rabat_posebni: Rabat = 0
+    rabat_dodatni: Rabat = 0
+    tarifa_id: TarifaId
 
     @field_validator("sifra_dobavljac", mode="before")
     @classmethod
@@ -526,6 +535,10 @@ async def artikli_jednog_dobavljaca(dobavljac_id: int, korisnik = Depends(trenut
     return {"dobavljac": dobavljac, "artikli": citaj_iz_baze(artikli_dobavljaca, dobavljac_id)}
 
 # Ulaz robe (samo vlasnik). Rute sa stalnim imenom idu PRE /ulazi/{ulaz_id}.
+
+@app.get("/tarife")
+async def tarife(korisnik = Depends(samo_vlasnik)):
+    return citaj_iz_baze(sve_tarife)
 
 @app.get("/ulazi/artikli")
 async def artikli_za_ulaz(q: Annotated[str, Query(max_length=100)] = "",
@@ -767,7 +780,9 @@ NAZIVI_POLJA = {
     "dobavljac_id": "dobavljač", "racun_broj": "broj računa", "racun_poziv_na_broj": "poziv na broj",
     "ulaz_datum": "datum računa", "otpremnica_broj": "broj otpremnice", "otpremnica_datum": "datum otpremnice",
     "valuta_datum": "valuta", "stavke": "stavke", "sifra_artikal": "artikal", "sifra_dobavljac": "šifra dobavljača",
-    "kolicina": "količina", "nabavna_cena": "nabavna cena", "pdv": "PDV", "novi_artikal": "novi artikal",
+    "kolicina": "količina", "nabavna_cena": "nabavna cena", "pdv": "PDV",
+    "rabat_osnovni": "rabat osnovni", "rabat_posebni": "rabat posebni", "rabat_dodatni": "rabat dodatni",
+    "tarifa_id": "tarifa", "novi_artikal": "novi artikal",
     "naziv": "naziv", "jedinica_mere": "jedinica mere", "prodajna_cena": "prodajna cena",
     "minimalno_stanje": "minimalno stanje", "kategorija": "kategorija", "bar_kod": "bar kod", "q": "pretraga",
 }

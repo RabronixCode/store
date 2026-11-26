@@ -14,7 +14,21 @@ DROP TABLE IF EXISTS sesija;
 DROP TABLE IF EXISTS artikal;
 DROP TABLE IF EXISTS dobavljac;
 DROP TABLE IF EXISTS korisnik;
+DROP TABLE IF EXISTS tarifa;
 
+
+CREATE TABLE tarifa (
+    tarifa_id INTEGER PRIMARY KEY CHECK (tarifa_id BETWEEN 0 AND 99),
+    naziv TEXT NOT NULL,
+    stopa REAL NOT NULL CHECK (stopa >= 0 AND stopa <= 100),
+    vrsta TEXT NOT NULL CHECK (vrsta IN ('dobra', 'usluge'))
+);
+INSERT INTO tarifa (tarifa_id, naziv, stopa, vrsta) VALUES
+    (0, 'Dobra bez PDV-a', 0, 'dobra'), (1, 'Dobra opšta stopa', 20, 'dobra'),
+    (2, 'Dobra niža stopa', 10, 'dobra'), (3, 'Dobra poljop. otkup', 8, 'dobra'),
+    (4, 'Dobra van PDV-a', 0, 'dobra'), (5, 'Usluge bez PDV-a', 0, 'usluge'),
+    (6, 'Usluge opšta stopa', 20, 'usluge'), (7, 'Usluge niža stopa', 10, 'usluge'),
+    (8, 'Usluge poljop. otkup', 8, 'usluge'), (9, 'Usluge van PDV-a', 0, 'usluge');
 
 CREATE TABLE korisnik (
     korisnik_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,6 +108,12 @@ CREATE TABLE stavka_ulaza (
     pdv REAL NOT NULL CHECK (pdv >= 0),
     nabavna_cena_pdv REAL GENERATED ALWAYS AS (nabavna_cena * (1 + pdv / 100.0)) STORED,
     kolicina REAL NOT NULL CHECK (kolicina > 0),
+    -- nabavna_cena = NETO (posle rabata), bez PDV; cena_pre_rabata = cena sa računa pre rabata
+    cena_pre_rabata REAL CHECK (cena_pre_rabata >= 0),
+    rabat_osnovni REAL NOT NULL DEFAULT 0 CHECK (rabat_osnovni >= 0 AND rabat_osnovni <= 100),
+    rabat_posebni REAL NOT NULL DEFAULT 0 CHECK (rabat_posebni >= 0 AND rabat_posebni <= 100),
+    rabat_dodatni REAL NOT NULL DEFAULT 0 CHECK (rabat_dodatni >= 0 AND rabat_dodatni <= 100),
+    tarifa_id INTEGER REFERENCES tarifa(tarifa_id),
     CONSTRAINT fk_stavka_ulaza_ulaz FOREIGN KEY (ulaz_id) REFERENCES ulaz(ulaz_id),
     CONSTRAINT fk_stavka_ulaza_artikal FOREIGN KEY (sifra_lokalna) REFERENCES artikal(sifra)
 );

@@ -124,8 +124,12 @@
                 <th>JM</th>
                 <th>Šifra kod dob.</th>
                 <th class="broj">Količina</th>
-                <th class="broj">Nabavna bez PDV</th>
-                <th class="broj">PDV %</th>
+                <th class="broj" title="Cena jednog artikla bez PDV, pre rabata">Nabavna</th>
+                <th class="broj">Rabat % osn.</th>
+                <th class="broj">Rabat % pos.</th>
+                <th class="broj">Rabat % dod.</th>
+                <th>Tarifa</th>
+                <th class="broj" title="Nabavna cena posle rabata, bez PDV">Neto nab.</th>
                 <th class="broj">Iznos bez PDV</th>
                 <th class="broj">Iznos sa PDV</th>
               </tr>
@@ -133,7 +137,7 @@
             <tbody id="stavke-telo"></tbody>
             <tfoot>
               <tr>
-                <th colspan="7" class="desno">Ukupno</th>
+                <th colspan="11" class="desno">Ukupno</th>
                 <td class="broj jako" id="ukupno-bez">0,00</td>
                 <td class="broj jako" id="ukupno-sa">0,00</td>
               </tr>
@@ -141,8 +145,8 @@
           </table>
         </div>
         <p class="napomena upozorenje-tekst">
-          Promena količine ili nabavne cene menja i stanje artikla, njegovu prosečnu nabavnu cenu
-          i poslednju cenu kod dobavljača.
+          Promena količine, nabavne cene ili rabata menja i stanje artikla, njegovu prosečnu nabavnu cenu
+          i poslednju cenu kod dobavljača. Rabati se računaju jedan na drugi.
         </p>
       </div>
 
@@ -162,7 +166,11 @@
       <td><input name="sifra_dobavljac" type="text" maxlength="50" aria-label="Šifra kod dobavljača"></td>
       <td><input name="kolicina" type="number" min="0" step="any" inputmode="decimal" class="broj" aria-label="Količina"></td>
       <td><input name="nabavna_cena" type="number" min="0" step="any" inputmode="decimal" class="broj" aria-label="Nabavna cena bez PDV"></td>
-      <td><input name="pdv" type="number" min="0" max="100" step="any" inputmode="decimal" class="broj" aria-label="PDV"></td>
+      <td><input name="rabat_osnovni" type="number" min="0" max="100" step="any" inputmode="decimal" class="broj rabat" placeholder="0" aria-label="Rabat osnovni %"></td>
+      <td><input name="rabat_posebni" type="number" min="0" max="100" step="any" inputmode="decimal" class="broj rabat" placeholder="0" aria-label="Rabat posebni %"></td>
+      <td><input name="rabat_dodatni" type="number" min="0" max="100" step="any" inputmode="decimal" class="broj rabat" placeholder="0" aria-label="Rabat dodatni %"></td>
+      <td><select name="tarifa_id" class="tarifa" aria-label="Tarifa"></select></td>
+      <td class="broj prigusen" data-polje="neto"></td>
       <td class="broj" data-polje="iznos_bez"></td>
       <td class="broj" data-polje="iznos_sa"></td>
     </tr>

@@ -116,68 +116,119 @@ fieldset.grupa legend {
 .greska-polja { min-height: 0; font-size: 0.8rem; color: var(--greska); }
 .greska-polja:empty { display: none; }
 
-/* ---------- Stavke ---------- */
+/* ---------- Stavke (kartica po stavci: unos belo, rezultati sivo) ---------- */
 
-.stavke-tabela { display: grid; gap: 0; }
+.stavke-kartice { display: grid; gap: 12px; }
 
-/* Ista mreža za zaglavlje i svaki red */
-.stavke-zaglavlje,
-.stavka {
+/* style.css ima stari .stavka (dve kolone, bez ivice poslednje): ovde se to poništava */
+.stavke-kartice .stavka,
+.stavke-kartice .stavka:last-of-type {
+  position: relative;
   display: grid;
-  /* artikal | šifra dob. | količina | nabavna | PDV | prodajna | marža | iznos | × */
-  grid-template-columns: minmax(230px, 2.4fr) minmax(95px, 1fr) minmax(95px, 0.95fr) minmax(100px, 1fr) minmax(60px, 0.55fr) minmax(100px, 1fr) minmax(108px, 0.9fr) minmax(95px, 0.85fr) 2.4rem;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  background: var(--kartica);
+  border: 1px solid var(--linija);
+  border-radius: 10px;
+}
+.stavka:focus-within { border-color: #b7c6ee; box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.06); }
+.stavka input, .stavka select { width: 100%; padding: 8px 9px; }
+.stavka.ima-gresku { background: #fff8f7; border-color: #f3c3bd; }
+.stavka.nov-artikal .artikal-pretraga { border-color: var(--nov); background: var(--nov-pozadina); }
+
+.stavka-vrh {
+  display: grid;
+  grid-template-columns: 2rem minmax(260px, 1fr) minmax(140px, 220px) 2.4rem;
+  gap: 10px;
   align-items: start;
 }
-.stavke-zaglavlje {
-  padding: 0 0 8px;
+.redni-broj {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin-top: 1.35rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--akcenat);
+  background: var(--izabrano);
+  border-radius: 50%;
+}
+.stavka-vrh .ukloni-stavku { margin-top: 1.3rem; }
+
+.polje-st { display: grid; gap: 3px; min-width: 0; }
+.stavka .oznaka {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--prigusen);
-  border-bottom: 2px solid var(--linija);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.stavka {
-  position: relative;
-  padding: 10px 0;
-  border-bottom: 1px solid #eceff4;
+
+/* Unos: 9 belih polja u jednom redu na širokom ekranu */
+.stavka-unos {
+  display: grid;
+  grid-template-columns: minmax(170px, 2.2fr) repeat(8, minmax(84px, 1fr));
+  gap: 8px;
 }
-.stavka input { width: 100%; padding: 9px 10px; }
-.stavka.ima-gresku { background: #fff8f7; }
-.stavka.nov-artikal .artikal-pretraga { border-color: var(--nov); background: var(--nov-pozadina); }
+.stavka-unos input { text-align: right; font-variant-numeric: tabular-nums; }
+.stavka-unos input::placeholder { color: #b5bccb; }
+.stavka input[name="prodajna_cena"].promenjena { border-color: var(--akcenat); background: var(--izabrano); }
+.stavka input.minus { color: var(--greska); }
+
+/* Siva polja: samo prikaz */
+.stavka-artikal, .stavka-rezultati {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  background: var(--linija);
+  border: 1px solid var(--linija);
+  border-radius: 8px;
+}
+.stavka-artikal { grid-template-columns: 2.2fr 1.2fr repeat(3, 1fr); }
+.stavka-rezultati { grid-template-columns: repeat(10, 1fr); }
+.stavka-artikal > div, .stavka-rezultati > div { padding: 5px 8px; background: #f3f5f8; min-width: 0; }
+.stavka-artikal dt, .stavka-rezultati dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--prigusen);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stavka-artikal dd, .stavka-rezultati dd {
+  margin: 0;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stavka-rezultati dd { text-align: right; }
+.stavka-rezultati .jako { background: #e9eefb; }
+.stavka-rezultati .jako dd { font-weight: 700; }
+dd.minus { color: var(--greska); font-weight: 600; }
 
 .desno { text-align: right; }
 
-.sa-jedinicom { position: relative; }
-.sa-jedinicom input { padding-right: 2.6rem; }
+.sa-jedinicom { position: relative; display: block; }
+.sa-jedinicom input { padding-right: 2.4rem; }
 .sa-jedinicom .jm {
   position: absolute;
   top: 0;
-  right: 10px;
-  height: 2.6rem;
+  right: 8px;
+  bottom: 0;
   display: flex;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--prigusen);
   pointer-events: none;
 }
-
-.iznos {
-  padding-top: 10px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-/* Marža: dva reda (na cenu iz ulaza i na prosečnu cenu posle ulaza) */
-.marza { display: grid; gap: 2px; padding-top: 3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.marza-red { display: flex; justify-content: space-between; gap: 6px; font-size: 0.86rem; }
-.marza-red small { color: var(--prigusen); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
-.marza output { font-weight: 700; }
-.marza output.pozitivno { color: var(--uspeh); }
-.marza output.minus { color: var(--greska); }
-.stavka input[name="prodajna_cena"].promenjena { border-color: var(--akcenat); background: var(--izabrano); }
 
 .uputstvo-stavke { margin: 0; padding-left: 18px; font-size: 0.88rem; color: var(--prigusen); display: grid; gap: 2px; }
 .uputstvo-stavke strong { color: var(--tekst); }
@@ -302,12 +353,18 @@ dialog .dijalog-podnozje button { padding: 10px 18px; }
   .polja-dokument { grid-template-columns: 1fr; }
   fieldset.grupa.grupa-racun { grid-template-columns: 1fr; }
 }
-/* Stavke imaju 9 kolona: ispod ~1100px prelaze u dve kolone */
-@media (max-width: 1100px) {
-  .stavke-zaglavlje { display: none; }
-  .stavka { grid-template-columns: 1fr 1fr; }
-  .stavka .polje-artikal { grid-column: 1 / -1; }
-  .stavka .iznos { padding-top: 0; }
+/* Uži ekran: polja stavke se prelamaju u više redova */
+@media (max-width: 1250px) {
+  .stavka-unos { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .stavka-unos .tarifa-polje { grid-column: span 2; }
+  .stavka-rezultati { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .stavka-vrh { grid-template-columns: 2rem minmax(0, 1fr) 2.4rem; }
+  .stavka-vrh > .polje-st { grid-column: 2 / 3; }
+  .stavka-unos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stavka-artikal, .stavka-rezultati { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stavka-artikal > div:first-child { grid-column: 1 / -1; }
   .rezultati { width: 100%; }
 }
 
@@ -346,7 +403,7 @@ main.ulazi-strana { max-width: 1400px; }
 .jako { font-weight: 700; }
 
 /* Popup jednog ulaza */
-#dijalog-ulaz { width: min(1100px, 96vw); max-height: 92vh; padding: 0; background: var(--kartica); }
+#dijalog-ulaz { width: min(1400px, 97vw); max-height: 92vh; padding: 0; background: var(--kartica); }
 #forma-izmena { display: grid; gap: 0; padding: 0; background: transparent; border: 0; border-radius: 0; }
 .ulaz-dijalog-zaglavlje {
   display: flex;
@@ -385,6 +442,8 @@ main.ulazi-strana { max-width: 1400px; }
 .tabela-stavki td.broj { text-align: right; font-variant-numeric: tabular-nums; }
 .tabela-stavki input { width: 100%; min-width: 5.5rem; padding: 7px 8px; font-size: 0.92rem; }
 .tabela-stavki input.broj { text-align: right; }
+.tabela-stavki input.rabat { min-width: 4rem; }
+.tabela-stavki select.tarifa { min-width: 10rem; padding: 7px 6px; font-size: 0.88rem; }
 .tabela-stavki tfoot th, .tabela-stavki tfoot td {
   position: static;
   padding: 12px 10px;

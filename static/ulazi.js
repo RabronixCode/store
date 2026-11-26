@@ -5,9 +5,12 @@
 //                           otpremnica_broj, otpremnica_datum, valuta_datum, datum_vreme,
 //                           broj_stavki, ukupno_bez_pdv, ukupno_sa_pdv }]
 //   GET /ulazi/<id>   -> isto zaglavlje + stavke: [{ stavka_id, sifra, naziv, jedinica_mere, sifra_dobavljac,
-//                                                   kolicina, nabavna_cena, pdv, nabavna_cena_pdv }]
+//                                                   kolicina, nabavna_cena (neto), pdv, nabavna_cena_pdv,
+//                                                   cena_pre_rabata, rabat_osnovni/posebni/dodatni, tarifa_id }]
 //   PUT /ulazi/<id>   telo: { racun_broj, racun_poziv_na_broj, ulaz_datum, otpremnica_broj, otpremnica_datum,
-//                             valuta_datum, stavke: [{ stavka_id, sifra_dobavljac, kolicina, nabavna_cena, pdv }] }
+//                             valuta_datum, stavke: [{ stavka_id, sifra_dobavljac, kolicina,
+//                             nabavna_cena (PRE rabata), rabat_osnovni, rabat_posebni, rabat_dodatni, tarifa_id }] }
+//   GET /tarife -> [{ tarifa_id, naziv, stopa }]
 //                     -> izmenjen ulaz (kao GET /ulazi/<id>)
 
 const telo = document.getElementById('ulazi-telo');
@@ -184,6 +187,21 @@ const porukaIzmena = document.getElementById('poruka-izmena');
 const dugmeSacuvaj = document.getElementById('sacuvaj-izmene');
 
 let otvoren = null;        // ulaz kakav je na serveru (posle poslednjeg učitavanja/čuvanja)
+let tarife = [];
+const RABATI = ['rabat_osnovni', 'rabat_posebni', 'rabat_dodatni'];
+
+async function ucitajTarife() {
+    try {
+        tarife = await procitaj(await fetch('/tarife'), 'Tarife ne mogu da se učitaju.');
+    } catch (greska) {
+        javi(poruka, porukaGreske(greska), 'greska');
+    }
+}
+
+function stopa(tarifaId) {
+    const t = tarife.find((x) => x.tarifa_id === Number(tarifaId));
+    return t ? t.stopa : null;
+}
 let cuvanje = false;
 
 function procitajBroj(input) {
@@ -210,8 +228,12 @@ function popuniDijalog(u) {
         red.querySelector('[data-polje="jedinica_mere"]').textContent = s.jedinica_mere || '—';
         red.querySelector('[name="sifra_dobavljac"]').value = s.sifra_dobavljac ?? '';
         red.querySelector('[name="kolicina"]').value = s.kolicina;
-        red.querySelector('[name="nabavna_cena"]').value = s.nabavna_cena;
-        red.querySelector('[name="pdv"]').value = s.pdv;
+        red.querySelector('[name="nabavna_cena"]').value = s.cena_pre_rabata ?? s.nabavna_cena;
+        for (const r of RABATI) red.querySelector(`[name="${r}"]`).value = s[r] ? s[r] : '';
+        const select = red.querySelector('[name="tarifa_id"]');
+        select.replaceChildren(...tarife.map((t) => new Option(`${t.tarifa_id}  ${formatBroj(t.stopa)}%  ${t.naziv}`, t.tarifa_id)));
+        if (s.tarifa_id === null || s.tarifa_id === undefined) select.prepend(new Option('— izaberi —', ''));
+        select.value = s.tarifa_id ?? '';
         return red;
     }));
     osveziZbirove();
@@ -224,9 +246,16 @@ function osveziZbirove() {
     stavkeTelo.querySelectorAll('tr').forEach((red) => {
         const k = procitajBroj(red.querySelector('[name="kolicina"]'));
         const c = procitajBroj(red.querySelector('[name="nabavna_cena"]'));
-        const p = procitajBroj(red.querySelector('[name="pdv"]'));
+        const p = stopa(red.querySelector('[name="tarifa_id"]').value);
+        // rabati jedan na drugi -> neto nabavna cena (bez PDV)
+        const faktor = RABATI.reduce((f, r) => {
+            const x = procitajBroj(red.querySelector(`[name="${r}"]`));
+            return f * (1 - (x !== null && Number.isFinite(x) ? x : 0) / 100);
+        }, 1);
         const ok = [k, c, p].every((x) => x !== null && Number.isFinite(x));
-        const b = ok ? k * c : null, s = ok ? k * c * (1 + p / 100) : null;
+        const neto = c !== null && Number.isFinite(c) ? c * faktor : null;
+        red.querySelector('[data-polje="neto"]').textContent = neto === null ? '—' : formatBroj(neto, 4);
+        const b = ok ? k * neto : null, s = ok ? k * neto * (1 + p / 100) : null;
         red.querySelector('[data-polje="iznos_bez"]').textContent = ok ? formatBroj(b) : '—';
         red.querySelector('[data-polje="iznos_sa"]').textContent = ok ? formatBroj(s) : '—';
         if (ok) { bez += b; sa += s; }
@@ -243,10 +272,14 @@ function izmenjeneStavke() {
             sifra_dobavljac: red.querySelector('[name="sifra_dobavljac"]').value.trim() || null,
             kolicina: procitajBroj(red.querySelector('[name="kolicina"]')),
             nabavna_cena: procitajBroj(red.querySelector('[name="nabavna_cena"]')),
-            pdv: procitajBroj(red.querySelector('[name="pdv"]'))
+            rabat_osnovni: procitajBroj(red.querySelector('[name="rabat_osnovni"]')) ?? 0,
+            rabat_posebni: procitajBroj(red.querySelector('[name="rabat_posebni"]')) ?? 0,
+            rabat_dodatni: procitajBroj(red.querySelector('[name="rabat_dodatni"]')) ?? 0,
+            tarifa_id: red.querySelector('[name="tarifa_id"]').value === '' ? null : Number(red.querySelector('[name="tarifa_id"]').value)
         };
         const promenjena = nova.sifra_dobavljac !== (stara.sifra_dobavljac || null)
-            || nova.kolicina !== stara.kolicina || nova.nabavna_cena !== stara.nabavna_cena || nova.pdv !== stara.pdv;
+            || nova.kolicina !== stara.kolicina || nova.nabavna_cena !== (stara.cena_pre_rabata ?? stara.nabavna_cena)
+            || RABATI.some((r) => nova[r] !== (stara[r] || 0)) || nova.tarifa_id !== stara.tarifa_id;
         return { red, nova, promenjena };
     });
 }
@@ -320,8 +353,11 @@ function proveri() {
             return greska(red.querySelector('[name="kolicina"]'), `${naziv}: količina mora biti broj veći od 0.`);
         if (nova.nabavna_cena === null || !Number.isFinite(nova.nabavna_cena) || nova.nabavna_cena < 0)
             return greska(red.querySelector('[name="nabavna_cena"]'), `${naziv}: nabavna cena mora biti broj 0 ili veći.`);
-        if (nova.pdv === null || !Number.isFinite(nova.pdv) || nova.pdv < 0 || nova.pdv > 100)
-            return greska(red.querySelector('[name="pdv"]'), `${naziv}: PDV mora biti od 0 do 100.`);
+        for (const r of RABATI) {
+            if (!Number.isFinite(nova[r]) || nova[r] < 0 || nova[r] > 100)
+                return greska(red.querySelector(`[name="${r}"]`), `${naziv}: rabat mora biti od 0 do 100.`);
+        }
+        if (nova.tarifa_id === null) return greska(red.querySelector('[name="tarifa_id"]'), `${naziv}: izaberi tarifu.`);
     }
     return null;
 }
@@ -366,4 +402,4 @@ formaIzmena.addEventListener('submit', async (event) => {
     }
 });
 
-ucitaj();
+ucitajTarife().then(ucitaj);

@@ -104,35 +104,23 @@
         <div class="sekcija-naslov">
           <h2 id="naslov-stavke">Stavke</h2>
           <ul class="uputstvo-stavke">
-            <li><strong>Postojeći artikal:</strong> kucaj njegovu <strong>šifru ili naziv</strong> i izaberi ga sa spiska.
-              Ostala polja se popune sama (šifra kod dobavljača, poslednja nabavna cena, PDV, prodajna cena).</li>
-            <li><strong>Nov artikal:</strong> u isto polje upiši <strong>naziv novog artikla</strong>.
-              Ostale podatke (JM, bar kod…) unosiš u prozoru koji se otvori pri čuvanju.</li>
-            <li><strong>Marža</strong> se računa sama: na nabavnu cenu iz ovog ulaza i na prosečnu nabavnu cenu
-              koju će artikal imati posle ovog ulaza (obe sa PDV, jer prodajna cena sadrži PDV).</li>
+            <li><strong>Postojeći artikal:</strong> kucaj njegovu <strong>šifru ili naziv</strong> i izaberi ga sa spiska;
+              ostalo se popuni iz poslednjeg ulaza od ovog dobavljača. <strong>Nov artikal:</strong> upiši njegov naziv.</li>
+            <li><strong>Bela polja</strong> se kucaju, <strong>siva</strong> su rezultat. Rabati se računaju jedan na drugi.
+              Možeš da upišeš i <em>Neto nab. vrednost</em> (ukupno za stavku), pa se nabavna cena izračuna sama.</li>
+            <li><strong>Marža</strong> = (osnovica − neto nabavna) / neto nabavna, sve bez PDV. Upiši prodajnu cenu ili maržu,
+              drugo se izračuna.</li>
           </ul>
         </div>
 
-        <div class="stavke-tabela" role="table" aria-label="Stavke ulaza">
-          <div class="stavke-zaglavlje" role="row">
-            <span role="columnheader" title="Pretraga postojećeg artikla po šifri ili nazivu, ili naziv novog artikla">Artikal: šifra / naziv ili naziv novog <span class="obavezno">*</span></span>
-            <span role="columnheader" title="Šifra pod kojom DOBAVLJAČ vodi ovaj artikal (sa njegovog računa)">Šifra kod dobavljača</span>
-            <span role="columnheader" title="Količina koja je stigla ovim ulazom">Količina <span class="obavezno">*</span></span>
-            <span role="columnheader">Nabavna cena bez PDV <span class="obavezno">*</span></span>
-            <span role="columnheader">PDV % <span class="obavezno">*</span></span>
-            <span role="columnheader" title="Prodajna cena sa PDV. Za postojeći artikal je upisana trenutna; promena važi od čuvanja ulaza.">Prodajna cena</span>
-            <span role="columnheader" title="Marža na nabavnu cenu iz ovog ulaza i na prosečnu nabavnu cenu posle ulaza (sa PDV)">Marža</span>
-            <span role="columnheader" class="desno">Iznos bez PDV</span>
-            <span role="columnheader"><span class="samo-citac">Ukloni</span></span>
-          </div>
-          <div id="stavke"></div>
-        </div>
+        <div id="stavke" class="stavke-kartice" aria-label="Stavke ulaza"></div>
 
         <button type="button" id="dodaj-stavku" class="sekundarno dodaj-stavku">+ Dodaj stavku</button>
       </section>
 
       <!-- ---------- Zbir i čuvanje ---------- -->
       <section class="zbir-ulaza" aria-label="Zbir ulaza">
+        <div><span>Rabat ukupno</span><strong id="zbir-rabat">0,00</strong></div>
         <div><span>Ukupno bez PDV</span><strong id="zbir-bez">0,00</strong></div>
         <div><span>PDV</span><strong id="zbir-pdv">0,00</strong></div>
         <div class="glavni"><span>Ukupno sa PDV</span><strong id="zbir-sa">0,00 RSD</strong></div>
@@ -149,42 +137,92 @@
 
   <!-- Jedna stavka. JS kopira šablon; polja se prepoznaju po name / klasi. -->
   <template id="stavka-sablon">
-    <div class="stavka" role="row">
-      <div class="polje-artikal" role="cell">
-        <input class="artikal-pretraga" type="search" role="combobox" aria-expanded="false"
-               aria-autocomplete="list" autocomplete="off" maxlength="255"
-               placeholder="Traži šifru / naziv ili upiši naziv novog"
-               aria-label="Artikal: pretraga po šifri ili nazivu, ili naziv novog artikla">
-        <ul class="rezultati" role="listbox" hidden></ul>
-        <small class="artikal-info"></small>
-      </div>
-      <div role="cell">
-        <input name="sifra_dobavljac" type="text" maxlength="50" autocomplete="off"
-               placeholder="sa računa" aria-label="Šifra kod dobavljača">
-      </div>
-      <div role="cell" class="sa-jedinicom">
-        <input name="kolicina" type="number" min="0" step="any" inputmode="decimal" aria-label="Količina">
-        <span class="jm" aria-hidden="true"></span>
-      </div>
-      <div role="cell">
-        <input name="nabavna_cena" type="number" min="0" step="any" inputmode="decimal" aria-label="Nabavna cena bez PDV">
-      </div>
-      <div role="cell">
-        <input name="pdv" type="number" min="0" max="100" step="any" inputmode="decimal" value="20" aria-label="PDV u procentima">
-      </div>
-      <div role="cell">
-        <input name="prodajna_cena" type="number" min="0" step="any" inputmode="decimal" aria-label="Prodajna cena sa PDV">
-      </div>
-      <div role="cell" class="marza" aria-live="polite">
-        <span class="marza-red" title="Marža na nabavnu cenu iz ovog ulaza (sa PDV)"><small>ulaz</small> <output class="marza-ulaz">—</output></span>
-        <span class="marza-red" title="Marža na prosečnu (ponderisanu) nabavnu cenu posle ovog ulaza (sa PDV)"><small>prosek</small> <output class="marza-prosek">—</output></span>
-      </div>
-      <div role="cell" class="iznos desno"><output class="iznos-stavke">—</output></div>
-      <div role="cell">
+    <section class="stavka" aria-label="Stavka">
+      <div class="stavka-vrh">
+        <span class="redni-broj" aria-hidden="true"></span>
+        <div class="polje-artikal">
+          <span class="oznaka">Artikal <span class="obavezno">*</span></span>
+          <input class="artikal-pretraga" type="search" role="combobox" aria-expanded="false"
+                 aria-autocomplete="list" autocomplete="off" maxlength="255"
+                 placeholder="Traži šifru / naziv ili upiši naziv novog"
+                 aria-label="Artikal: pretraga po šifri ili nazivu, ili naziv novog artikla">
+          <ul class="rezultati" role="listbox" hidden></ul>
+          <small class="artikal-info"></small>
+        </div>
+        <label class="polje-st">
+          <span class="oznaka" title="Šifra pod kojom DOBAVLJAČ vodi ovaj artikal (sa njegovog računa)">Šifra kod dobavljača</span>
+          <input name="sifra_dobavljac" type="text" maxlength="50" autocomplete="off" placeholder="sa računa">
+        </label>
         <button type="button" class="ukloni-stavku" aria-label="Ukloni stavku" title="Ukloni stavku">×</button>
       </div>
+
+      <!-- Podaci o artikalu (samo prikaz) -->
+      <dl class="stavka-artikal">
+        <div><dt>Naziv</dt><dd data-prikaz="naziv">—</dd></div>
+        <div><dt>Bar kod</dt><dd data-prikaz="bar_kod">—</dd></div>
+        <div><dt>Stanje</dt><dd data-prikaz="stanje">—</dd></div>
+        <div><dt title="Trenutna prodajna cena artikla">Cenovnik</dt><dd data-prikaz="cenovnik">—</dd></div>
+        <div><dt title="Prosečna (ponderisana) nabavna cena bez PDV, sada">Prosečna nabavna</dt><dd data-prikaz="prosek_sada">—</dd></div>
+      </dl>
+
+      <!-- Unos (bela polja) -->
+      <div class="stavka-unos">
+        <label class="polje-st tarifa-polje">
+          <span class="oznaka">Tarifa <span class="obavezno">*</span></span>
+          <select name="tarifa_id"></select>
+        </label>
+        <label class="polje-st">
+          <span class="oznaka">Količina <span class="obavezno">*</span></span>
+          <span class="sa-jedinicom">
+            <input name="kolicina" type="number" min="0" step="any" inputmode="decimal">
+            <span class="jm" aria-hidden="true"></span>
+          </span>
+        </label>
+        <label class="polje-st">
+          <span class="oznaka" title="Cena JEDNOG artikla bez PDV sa računa, pre rabata">Nabavna (bez PDV) <span class="obavezno">*</span></span>
+          <input name="nabavna_cena" type="number" min="0" step="any" inputmode="decimal">
+        </label>
+        <label class="polje-st">
+          <span class="oznaka">Rabat % osnovni</span>
+          <input name="rabat_osnovni" type="number" min="0" max="100" step="any" inputmode="decimal" placeholder="0">
+        </label>
+        <label class="polje-st">
+          <span class="oznaka">Rabat % posebni</span>
+          <input name="rabat_posebni" type="number" min="0" max="100" step="any" inputmode="decimal" placeholder="0">
+        </label>
+        <label class="polje-st">
+          <span class="oznaka">Rabat % dodatni</span>
+          <input name="rabat_dodatni" type="number" min="0" max="100" step="any" inputmode="decimal" placeholder="0">
+        </label>
+        <label class="polje-st">
+          <span class="oznaka" title="Količina × neto nabavna cena (posle rabata), bez PDV. Može da se upiše: nabavna cena se izračuna.">Neto nab. vrednost</span>
+          <input name="neto_vrednost" type="number" min="0" step="any" inputmode="decimal">
+        </label>
+        <label class="polje-st">
+          <span class="oznaka" title="Marža na neto nabavnu cenu, bez PDV. Upiši je da se izračuna prodajna cena.">Marža %</span>
+          <input name="marza" type="number" step="any" inputmode="decimal">
+        </label>
+        <label class="polje-st">
+          <span class="oznaka" title="Prodajna cena sa PDV. Za postojeći artikal upisana je trenutna; promena važi od čuvanja ulaza.">Prodajna (sa PDV)</span>
+          <input name="prodajna_cena" type="number" min="0" step="any" inputmode="decimal">
+        </label>
+      </div>
+
+      <!-- Rezultati (siva polja) -->
+      <dl class="stavka-rezultati">
+        <div><dt title="Umanjenje cene jednog artikla zbog rabata">Rabat iznos</dt><dd data-prikaz="rabat_iznos">—</dd></div>
+        <div><dt title="Nabavna cena jednog artikla posle rabata, bez PDV">Neto nabavna</dt><dd data-prikaz="neto">—</dd></div>
+        <div><dt title="PDV koji plaćamo dobavljaču, po komadu (prethodni porez)">Prenet PDV</dt><dd data-prikaz="prenet">—</dd></div>
+        <div><dt title="Neto nabavna + PDV: koliko plaćamo dobavljaču po komadu">Dobavljaču</dt><dd data-prikaz="dobavljac">—</dd></div>
+        <div><dt title="Osnovica − neto nabavna, po komadu">Marža iznos</dt><dd data-prikaz="marza_iznos">—</dd></div>
+        <div><dt title="Prodajna cena bez PDV">Osnovica</dt><dd data-prikaz="osnovica">—</dd></div>
+        <div><dt title="Nabavna cena jednog artikla sa PDV (nabavna sa računa, pre rabata × (1 + PDV))">Kalk. cena</dt><dd data-prikaz="kalk_cena">—</dd></div>
+        <div><dt title="Prosečna nabavna cena bez PDV koju će artikal imati posle ovog ulaza">Prosek posle ulaza</dt><dd data-prikaz="prosek_posle">—</dd></div>
+        <div><dt title="Marža na prosečnu nabavnu cenu posle ulaza, bez PDV">Marža na prosek</dt><dd data-prikaz="marza_prosek">—</dd></div>
+        <div class="jako"><dt>Iznos sa PDV</dt><dd data-prikaz="iznos_sa">—</dd></div>
+      </dl>
       <small class="greska-stavke" role="alert"></small>
-    </div>
+    </section>
   </template>
 
   <template id="rezultat-sablon">
@@ -231,7 +269,7 @@
         <div><dt>Stavka</dt><dd data-polje="stavka"></dd></div>
         <div><dt>Šifra kod dobavljača</dt><dd data-polje="sifra_dobavljac"></dd></div>
         <div><dt>Količina</dt><dd data-polje="kolicina"></dd></div>
-        <div><dt>Nabavna cena / PDV</dt><dd data-polje="cena"></dd></div>
+        <div><dt>Nabavna / rabat / tarifa</dt><dd data-polje="cena"></dd></div>
       </dl>
 
       <label>Naziv artikla <span class="obavezno">*</span>
