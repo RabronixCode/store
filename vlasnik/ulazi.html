@@ -4,25 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Svi ulazi</title>
+  <link rel="stylesheet" href="/tema.css">
   <link rel="stylesheet" href="/style.css">
   <!-- artikli.css: zajednički izgled tabela (sortiranje); ulaz.css: popupi i polja -->
   <link rel="stylesheet" href="/artikli.css">
   <link rel="stylesheet" href="/ulaz.css">
 </head>
-<body>
+<body data-uloga="vlasnik">
+  <script src="/zaglavlje.js"></script>
   <!--
     Svi ulazi robe (samo vlasnik). Klik na red otvara popup sa artiklima ulaza,
     gde se mogu menjati podaci dokumenta i stavke (PUT /ulazi/<id>).
   -->
   <main class="ulazi-strana">
-    <nav class="glavni-meni">
-      <a href="/pocetna.html">POCETNA</a>
-      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
-      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
-      <a href="/vlasnik/artikli.html">Artikli</a>
-      <a href="/vlasnik/finansije.html">Finansije</a>
-      <a class="nav-dugme" href="/vlasnik/ulazi.html" aria-current="page">📋 Svi ulazi</a>
-    </nav>
 
     <header class="strana-zaglavlje">
       <div>

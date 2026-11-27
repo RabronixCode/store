@@ -1,174 +1,325 @@
-/* Jednostavan, čitljiv izgled koji radi i na telefonu i na računaru. */
-:root {
-  --pozadina: #f6f7f9;
-  --kartica: #ffffff;
-  --tekst: #1d2433;
-  --prigusen: #5b667a;
-  --linija: #d9dde5;
-  --akcenat: #2457d6;
-  --greska: #b3261e;
-  --uspeh: #1b7a3d;
-}
+/* =====================================================================
+   OSNOVNI IZGLED — zajednički za sve stranice.
+   Boje, font i veličine NISU ovde nego u tema.css (učitava se pre ovog fajla).
+   Ovde je raspored: slova, polja, dugmad, zaglavlje sa menijem, prozori.
+   ===================================================================== */
 
-* { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Sakriveno je uvek sakriveno (i kad element inače ima display: flex/grid) */
+[hidden] { display: none !important; }
+
+html {
+  font-size: var(--velicina-teksta);
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--pozadina);
+  font-family: var(--font-osnovni);
+  line-height: var(--prored);
   color: var(--tekst);
-  line-height: 1.5;
+  background: var(--pozadina);
+  -webkit-font-smoothing: antialiased;
 }
 
 main {
   max-width: 640px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 24px var(--razmak) 64px;
 }
 
-h1 { font-size: 1.5rem; margin: 0 0 16px; }
-h2 { font-size: 1.1rem; margin: 32px 0 8px; }
+h1, h2, h3 { line-height: 1.25; font-weight: var(--debljina-naslova); }
+h1 { font-size: 1.75rem; margin: 0 0 16px; letter-spacing: -0.01em; }
+h2 { font-size: 1.25rem; margin: 32px 0 10px; }
+h3 { font-size: 1.1rem; }
+
+a { color: var(--akcenat); text-underline-offset: 3px; }
+
+/* Jasan okvir fokusa za tastaturu (lako se vidi gde si) */
+:focus-visible { outline: 3px solid var(--akcenat); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+
+.samo-citac {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Forme i polja ---------- */
 
 form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
+  padding: 18px;
   background: var(--kartica);
   border: 1px solid var(--linija);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--zaobljenje);
 }
 
-label { display: grid; gap: 4px; font-size: 0.9rem; color: var(--prigusen); }
+label { display: grid; gap: 5px; font-size: 0.9rem; font-weight: 600; color: var(--prigusen); }
 
-/* 16px sprečava da telefon automatski zumira polje pri kucanju */
-input {
+input, select, textarea {
   font: inherit;
-  font-size: 16px;
-  color: var(--tekst);
-  padding: 10px 12px;
-  border: 1px solid var(--linija);
-  border-radius: 6px;
-}
-
-button {
-  font: inherit;
-  font-weight: 600;
-  color: #fff;
-  background: var(--akcenat);
-  border: 0;
-  border-radius: 6px;
-  padding: 12px;
-  cursor: pointer;
-}
-
-#poruka { min-height: 1.5em; margin: 12px 0 0; }
-#poruka.greska { color: var(--greska); }
-#poruka.uspeh { color: var(--uspeh); }
-
-/* Navigacija između stranica */
-nav { display: flex; gap: 16px; margin: 0 0 16px; font-size: 0.9rem; }
-nav a { color: var(--akcenat); text-decoration: none; }
-nav a:hover { text-decoration: underline; }
-nav a[aria-current="page"] { color: var(--tekst); font-weight: 600; }
-
-/* Glavni meni vlasnika: ostaje gore pri skrolovanju; "Svi ulazi" je dugme desno */
-nav.glavni-meni {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 8px 0;
-  background: var(--pozadina);
-  border-bottom: 1px solid var(--linija);
-}
-nav.glavni-meni a.nav-dugme {
-  margin-left: auto;
-  padding: 6px 14px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--akcenat);
-  border-radius: 8px;
-  white-space: nowrap;
-}
-nav.glavni-meni a.nav-dugme:hover { text-decoration: none; filter: brightness(1.1); }
-nav.glavni-meni a.nav-dugme[aria-current="page"] { color: var(--akcenat); background: #e3eafc; }
-
-/* select izgleda kao input */
-select {
-  font: inherit;
-  font-size: 16px;
+  font-size: 1rem;                 /* bar 16px: telefon ne zumira polje pri kucanju */
   color: var(--tekst);
   background: var(--kartica);
-  padding: 10px 12px;
-  border: 1px solid var(--linija);
-  border-radius: 6px;
+  min-height: var(--min-visina-dugmeta);
+  padding: 9px 12px;
+  border: 1.5px solid var(--linija);
+  border-radius: var(--zaobljenje-malo);
 }
+input[type="checkbox"], input[type="radio"] { min-height: 0; accent-color: var(--akcenat); }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--akcenat);
+  box-shadow: var(--fokus);
+}
+input::placeholder, textarea::placeholder { color: var(--boja-tekst-iskljuceno); }
+input:disabled, select:disabled { color: var(--prigusen); background: var(--povrsina-siva); }
 
-/* Stavke ulaza: svaka stavka je jedan red sa poljima, na telefonu u dve kolone */
 fieldset {
   display: grid;
   gap: 12px;
   margin: 0;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--linija);
-  border-radius: 8px;
+  border-radius: var(--zaobljenje);
 }
-legend { padding: 0 6px; font-size: 0.9rem; color: var(--prigusen); }
+legend { padding: 0 6px; font-size: 0.9rem; font-weight: 600; color: var(--prigusen); }
 
-.stavka {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* ---------- Dugmad ---------- */
+
+button, a.dugme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
-  align-items: end;
-  padding-bottom: 12px;
-  border-bottom: 1px dashed var(--linija);
+  min-height: var(--min-visina-dugmeta);
+  padding: 9px 18px;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--tekst-na-boji);
+  text-decoration: none;
+  background: var(--akcenat);
+  border: 1.5px solid transparent;
+  border-radius: var(--zaobljenje-malo);
+  cursor: pointer;
+  transition: background-color 0.12s, box-shadow 0.12s, color 0.12s;
 }
-.stavka:last-of-type { border-bottom: 0; padding-bottom: 0; }
+/* Hover: blago tamnije (radi i za providna dugmad sa ikonicom) */
+button:hover, a.dugme:hover { filter: brightness(0.93); }
+button:disabled { cursor: not-allowed; opacity: 0.5; filter: none; }
 
-@media (min-width: 560px) {
-  .stavka { grid-template-columns: 1fr 1fr 1fr 1fr auto; }
-}
-
-button.sekundarno {
+button.sekundarno, a.dugme.sekundarno-veza, a.dugme-pregled {
   color: var(--akcenat);
-  background: transparent;
-  border: 1px solid var(--akcenat);
+  background: var(--kartica);
+  border-color: var(--akcenat);
 }
+button.sekundarno:hover, a.dugme.sekundarno-veza:hover, a.dugme-pregled:hover { filter: none; background: var(--akcenat-svetlo); }
 button.opasno {
   color: var(--greska);
-  background: transparent;
-  border: 1px solid var(--greska);
+  background: var(--kartica);
+  border-color: var(--greska);
+}
+button.opasno:hover { filter: none; background: var(--greska-svetlo); }
+
+.dugmad { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
+
+/* Poruke o uspehu i grešci */
+#poruka { min-height: 1.5em; margin: 12px 0 0; font-weight: 600; }
+#poruka:empty { margin: 0; min-height: 0; }
+#poruka.greska, #poruka.uspeh {
+  padding: 10px 14px;
+  border-radius: var(--zaobljenje-malo);
+  border-left: 5px solid currentColor;
+}
+#poruka.greska { color: var(--greska); background: var(--greska-svetlo); }
+#poruka.uspeh { color: var(--uspeh-tamno); background: var(--uspeh-svetlo); }
+
+kbd {
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  background: var(--povrsina-siva);
+  border: 1px solid var(--linija);
+  border-radius: 4px;
 }
 
-/* Veze koje izgledaju kao dugmad */
-.dugmad { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
-a.dugme {
-  font-weight: 600;
-  color: #fff;
-  background: var(--akcenat);
-  border-radius: 6px;
-  padding: 10px 16px;
+/* Navigacija unutar stranice (stari stil; glavni meni je u zaglavlju) */
+nav { display: flex; gap: 16px; margin: 0 0 16px; font-size: 0.95rem; }
+nav a { text-decoration: none; }
+nav a:hover { text-decoration: underline; }
+nav a[aria-current="page"] { color: var(--tekst); font-weight: 600; }
+
+/* =====================================================================
+   ZAGLAVLJE APLIKACIJE (ubacuje ga zaglavlje.js)
+   Široki ekran: naziv | meni | korisnik. Uži ekran: naziv | dugme "Meni".
+   ===================================================================== */
+
+.app-zaglavlje {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  color: var(--zaglavlje-tekst);
+  background: var(--zaglavlje-pozadina);
+  box-shadow: var(--senka);
+}
+.app-zaglavlje-unutra {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  max-width: var(--sirina-strane);
+  min-height: 64px;
+  margin: 0 auto;
+  padding: 0 var(--razmak);
+}
+.ikona-svg {
+  width: 1.3em;
+  height: 1.3em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.preskoci {
+  position: absolute;
+  left: 8px;
+  top: -60px;
+  padding: 8px 14px;
+  font-weight: 700;
+  color: var(--tekst);
+  background: var(--kartica);
+  border-radius: var(--zaobljenje-malo);
+}
+.preskoci:focus { top: 8px; }
+
+.app-naziv {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--naziv-radnje-boja);
   text-decoration: none;
 }
-a.dugme:hover { opacity: 0.9; }
+.app-naziv .ikona-svg { width: 1.5em; height: 1.5em; }
 
-/* Iskačući prozor za nove artikle */
+.app-meni {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-size: 1rem;
+}
+.app-meni ul { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.app-meni a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--min-visina-dugmeta);
+  padding: 8px 14px;
+  font-weight: 600;
+  color: var(--zaglavlje-tekst);
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: var(--zaobljenje-malo);
+}
+.app-meni a:hover { color: var(--zaglavlje-aktivno); text-decoration: none; background: rgba(255, 255, 255, 0.10); }
+.app-meni a[aria-current="page"] {
+  color: var(--tekst);
+  background: var(--kartica);
+}
+.app-meni a[aria-current="page"] .ikona-svg { color: var(--akcenat); }
+
+.app-korisnik { display: flex; align-items: center; gap: 10px; flex: none; }
+.app-uloga {
+  padding: 3px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--zaglavlje-tekst);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+}
+.app-odjava {
+  color: var(--zaglavlje-tekst);
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+.app-odjava:hover { filter: none; color: var(--tekst); background: var(--kartica); }
+
+.meni-dugme {
+  display: none;
+  margin-left: auto;
+  color: var(--zaglavlje-tekst);
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+.meni-dugme:hover { filter: none; color: var(--tekst); background: var(--kartica); }
+.meni-dugme .meni-zatvori { display: none; }
+.meni-dugme span { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Uži ekrani (tablet, telefon): meni se otvara dugmetom, stavke jedna ispod druge */
+@media (max-width: 1239px) {
+  .meni-dugme { display: inline-flex; }
+  .app-meni {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px var(--razmak) 18px;
+    background: var(--zaglavlje-pozadina);
+    box-shadow: var(--senka-velika);
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+  .app-zaglavlje.otvoren .app-meni { display: flex; }
+  .app-zaglavlje.otvoren .meni-otvori { display: none; }
+  .app-zaglavlje.otvoren .meni-zatvori { display: inline-flex; }
+  .app-meni ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
+  .app-meni a { min-height: 54px; padding: 10px 16px; font-size: 1.1rem; background: rgba(255, 255, 255, 0.06); }
+  .app-korisnik { justify-content: space-between; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.2); }
+}
+@media (max-width: 480px) {
+  .app-naziv span { font-size: 1.05rem; }
+  .app-meni ul { grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   ISKAČUĆI PROZORI
+   ===================================================================== */
+
 dialog {
-  width: min(560px, 92vw);
+  width: min(600px, 94vw);
   max-height: 90vh;
   padding: 0;
   color: var(--tekst);
   background: var(--pozadina);
-  border: 1px solid var(--linija);
-  border-radius: 10px;
+  border: 0;
+  border-radius: var(--zaobljenje-veliko);
+  box-shadow: var(--senka-velika);
   overflow: auto;
 }
-dialog::backdrop { background: rgba(20, 24, 35, 0.55); }
+dialog::backdrop { background: var(--prekrivac); }
 
-.dijalog-zaglavlje { padding: 16px 16px 0; }
+.dijalog-zaglavlje { padding: 18px 18px 0; }
 .dijalog-zaglavlje h2 { margin: 0 0 8px; }
-.dijalog-zaglavlje p { margin: 0; color: var(--prigusen); font-size: 0.9rem; }
+.dijalog-zaglavlje p { margin: 0; color: var(--prigusen); font-size: 0.95rem; }
 
 #novi-artikli-lista { display: grid; gap: 16px; padding: 16px; }
 
@@ -178,7 +329,7 @@ dialog::backdrop { background: rgba(20, 24, 35, 0.55); }
   padding: 16px;
   background: var(--kartica);
   border: 1px solid var(--linija);
-  border-radius: 8px;
+  border-radius: var(--zaobljenje);
 }
 
 /* Podaci sa fakture, samo za prikaz */
@@ -189,17 +340,64 @@ dialog::backdrop { background: rgba(20, 24, 35, 0.55); }
   margin: 0;
   padding: 10px 12px;
   background: var(--pozadina);
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: var(--zaobljenje-malo);
+  font-size: 0.95rem;
 }
-.sazetak dt { color: var(--prigusen); font-size: 0.8rem; }
+.sazetak dt { color: var(--prigusen); font-size: 0.85rem; }
 .sazetak dd { margin: 0; font-weight: 600; word-break: break-word; }
 
 .dijalog-podnozje {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 10px;
   padding: 0 16px 16px;
 }
 
-/* Uža stranica, npr. za prijavu */
-main.uzak { max-width: 400px; }
+/* Stavke ulaza (stari raspored; ulaz.css ga zamenjuje karticama) */
+.stavka {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--linija);
+}
+.stavka:last-of-type { border-bottom: 0; padding-bottom: 0; }
+@media (min-width: 560px) {
+  .stavka { grid-template-columns: 1fr 1fr 1fr 1fr auto; }
+}
+
+/* =====================================================================
+   PRIJAVA
+   ===================================================================== */
+
+main.uzak { max-width: 460px; padding-top: 7vh; }
+.prijava-naslov { text-align: center; }
+.prijava-naslov h1 { margin: 10px 0 4px; font-size: 2rem; }
+.prijava-naslov p { margin: 0 0 22px; color: var(--prigusen); }
+.prijava-logo {
+  display: inline-grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  color: var(--tekst-na-boji);
+  background: var(--boja-tamna);
+  border-radius: 20px;
+}
+.prijava-logo .ikona-svg { width: 40px; height: 40px; }
+main.uzak form { padding: 26px; gap: 18px; box-shadow: var(--senka); }
+main.uzak label { font-size: 1rem; color: var(--tekst); }
+main.uzak input { min-height: 52px; font-size: 1.1rem; }
+main.uzak button[type="submit"] { min-height: 54px; font-size: 1.1rem; }
+
+/* Manje pokreta za one koji su to uključili u sistemu */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+/* Štampa: bez menija */
+@media print {
+  .app-zaglavlje { display: none; }
+  body { background: #fff; }
+}

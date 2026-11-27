@@ -4,8 +4,6 @@
   /* Visina jednog predloga u pretrazi. Lista prikazuje tačno 5 redova, ostalo se skroluje. */
   --visina-reda: 3rem;
   --vidljivih-redova: 5;
-  --izabrano: #eaf0fe;
-  --prelaz: #f4f7fe;
 }
 
 main.kasa { max-width: 1200px; }
@@ -47,12 +45,12 @@ main.kasa { max-width: 1200px; }
   border: 2px solid var(--linija);
   border-radius: 10px;
   background: var(--kartica);
-  box-shadow: 0 2px 6px rgba(20, 24, 35, 0.06);
+  box-shadow: var(--senka-mala);
 }
 #pretraga:focus {
   outline: none;
   border-color: var(--akcenat);
-  box-shadow: 0 0 0 4px rgba(36, 87, 214, 0.15);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--boja-akcenat) 15%, transparent);
 }
 
 /* Lista predloga: sakrivena atributom hidden, a ovde se display namerno ne podešava. */
@@ -68,7 +66,7 @@ main.kasa { max-width: 1200px; }
   background: var(--kartica);
   border: 1px solid var(--linija);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(20, 24, 35, 0.15);
+  box-shadow: var(--senka);
   /* 5 redova plus 2px za gornju i donju ivicu. Šesti i dalje se dobijaju skrolom. */
   max-height: calc(var(--visina-reda) * var(--vidljivih-redova) + 2px);
   overflow-y: auto;
@@ -141,7 +139,7 @@ main.kasa { max-width: 1200px; }
   font-size: 0.85rem;
   line-height: 1.6rem;
   text-align: center;
-  color: #fff;
+  color: var(--tekst-na-boji);
   background: var(--akcenat);
   border-radius: 999px;
 }
@@ -219,7 +217,7 @@ main.kasa { max-width: 1200px; }
 }
 .kolicina-kontrola:focus-within {
   border-color: var(--akcenat);
-  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--boja-akcenat) 15%, transparent);
 }
 .kolicina-kontrola button {
   width: 2.6rem;
@@ -233,8 +231,8 @@ main.kasa { max-width: 1200px; }
   border-radius: 0;
 }
 .kolicina-kontrola button:hover { background: var(--izabrano); }
-.kolicina-kontrola button:active { background: #d6e1fd; }
-.kolicina-kontrola .manje:hover { color: var(--greska); background: #fdecea; }
+.kolicina-kontrola button:active { background: var(--akcenat-srednje); }
+.kolicina-kontrola .manje:hover { color: var(--greska); background: var(--greska-svetlo); }
 .kolicina-kontrola input {
   width: 4.5rem;
   padding: 8px 4px;
@@ -249,7 +247,7 @@ main.kasa { max-width: 1200px; }
   -moz-appearance: textfield;   /* sklanja ugrađene strelice, imamo svoje dugmiće */
   appearance: textfield;
 }
-.kolicina-kontrola input:focus { outline: none; background: #fafbff; }
+.kolicina-kontrola input:focus { outline: none; background: var(--akcenat-blago); }
 .kolicina-kontrola input::-webkit-outer-spin-button,
 .kolicina-kontrola input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -268,7 +266,7 @@ main.kasa { max-width: 1200px; }
   background: transparent;
   border-radius: 6px;
 }
-.obrisi:hover { color: var(--greska); background: #fdecea; }
+.obrisi:hover { color: var(--greska); background: var(--greska-svetlo); }
 
 .zbir {
   display: flex;
@@ -285,6 +283,8 @@ main.kasa { max-width: 1200px; }
 
 @media (max-width: 719px) {
   .pretraga { width: 100%; }
+  .zbir { flex-wrap: wrap; gap: 4px 12px; font-size: 1.05rem; }
+  .zbir .iznos { font-size: 1.6rem; white-space: nowrap; }
 
   .korpa-tabela thead {              /* zaglavlje ostaje za čitače, ne vidi se */
     position: absolute;
@@ -340,17 +340,17 @@ a.dugme-pregled { padding: 8px 14px; font-weight: 600; }
   font-size: 1.3rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: #fff;
+  color: var(--tekst-na-boji);
   border-radius: 8px;
 }
 .dugme-placanje.gotovina { background: var(--uspeh); }
 .dugme-placanje.kartica { background: var(--akcenat); }
-.dugme-placanje.cek { background: #7a4ab8; }
+.dugme-placanje.cek { background: var(--boja-cek); }
 .dugme-placanje:not(:disabled):hover { filter: brightness(1.08); }
 .dugme-placanje:disabled { opacity: 0.45; cursor: not-allowed; }
 .dugme-placanje kbd, .dijalog-placanje kbd {
   padding: 1px 6px;
-  font: 600 0.72rem ui-monospace, Consolas, monospace;
+  font: 600 0.72rem var(--font-mono);
   letter-spacing: 0;
   color: inherit;
   background: rgba(255, 255, 255, 0.22);
@@ -365,7 +365,7 @@ dialog.dijalog-placanje { width: min(620px, 94vw); }
 .dijalog-placanje .dijalog-zaglavlje p strong { color: var(--tekst); font-size: 1.05rem; }
 .placanje-telo { display: grid; gap: 12px; padding: 14px 16px; }
 .placanje-stavke { width: 100%; border-collapse: collapse; font-size: 0.92rem; background: var(--kartica); border-radius: 8px; overflow: hidden; }
-.placanje-stavke th { padding: 6px 10px; font-size: 0.75rem; color: var(--prigusen); text-align: left; background: #eef1f6; }
+.placanje-stavke th { padding: 6px 10px; font-size: 0.8rem; color: var(--prigusen); text-align: left; background: var(--povrsina-siva); }
 .placanje-stavke td { padding: 6px 10px; border-top: 1px solid var(--linija); font-variant-numeric: tabular-nums; }
 .placanje-stavke th.desno, .placanje-stavke td.desno { text-align: right; white-space: nowrap; }
 .placanje-ukupno {
@@ -387,9 +387,9 @@ dialog.dijalog-placanje { width: min(620px, 94vw); }
 .placanje-kes #kusur.nedostaje { color: var(--greska); }
 .dijalog-placanje .dijalog-podnozje { padding: 12px 16px; border-top: 1px solid var(--linija); }
 .dijalog-placanje button.potvrdi { background: var(--uspeh); font-weight: 700; }
-.dijalog-placanje button.sekundarno kbd { background: #eef1f6; }
+.dijalog-placanje button.sekundarno kbd { background: var(--povrsina-siva); }
 .dijalog-placanje[data-nacin="kartica"] button.potvrdi { background: var(--akcenat); }
-.dijalog-placanje[data-nacin="cek"] button.potvrdi { background: #7a4ab8; }
+.dijalog-placanje[data-nacin="cek"] button.potvrdi { background: var(--boja-cek); }
 #poruka a { margin-left: 6px; font-weight: 700; color: var(--akcenat); }
 
 @media (max-width: 640px) {

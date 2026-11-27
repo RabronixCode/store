@@ -4,24 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ulaz robe</title>
+  <link rel="stylesheet" href="/tema.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/ulaz.css">
 </head>
-<body>
+<body data-uloga="vlasnik">
+  <script src="/zaglavlje.js"></script>
   <!--
     Novi ulaz robe (samo vlasnik; ruta /vlasnik/ulaz.html u main.py proverava rolu).
     Sve se šalje JEDNIM zahtevom POST /ulazi: zaglavlje, stavke i novi artikli.
     Ako bilo šta ne prođe, server ne upisuje ništa.
   -->
   <main class="ulaz-strana">
-    <nav class="glavni-meni">
-      <a href="/pocetna.html">POCETNA</a>
-      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
-      <a href="/vlasnik/ulaz.html" aria-current="page">Ulaz robe</a>
-      <a href="/vlasnik/artikli.html">Artikli</a>
-      <a href="/vlasnik/finansije.html">Finansije</a>
-      <a class="nav-dugme" href="/vlasnik/ulazi.html">📋 Svi ulazi</a>
-    </nav>
 
     <header class="strana-zaglavlje">
       <div>

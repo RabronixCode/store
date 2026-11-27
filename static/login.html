@@ -4,11 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Prijava</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/tema.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+  <script src="/zaglavlje.js"></script>
   <main class="uzak">
-    <h1>Prijava</h1>
+    <header class="prijava-naslov">
+      <span class="prijava-logo"><svg class="ikona-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l2-5h14l2 5M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></svg></span>
+      <h1>Prijava</h1>
+      <p>Upiši korisničko ime i lozinku.</p>
+    </header>
 
     <!-- method="post" je zaštita: kad JavaScript ne bi radio, lozinka ne bi završila u adresi (GET).
          Slanje na server radi login.js (fetch), a ne ovaj atribut. -->

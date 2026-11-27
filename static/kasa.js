@@ -1,10 +1,3 @@
-// ---------- Odjava ----------
-
-document.getElementById('odjava').addEventListener('click', async (event) => {
-    event.preventDefault();
-    await fetch('/logout');
-    window.location.href = '/login.html';
-});
 
 
 // ---------- Elementi i stanje ----------

@@ -4,22 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Početna</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/tema.css">
+  <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="asistent.css">
 </head>
-<body>
+<body data-uloga="vlasnik">
+  <script src="/zaglavlje.js"></script>
   <!-- Početna vlasnika (ruta /pocetna.html u main.py kasira šalje na kasu). -->
   <main class="pocetna">
-    <h1>POCETNA</h1>
+    <header class="pocetna-pozdrav">
+      <h1 id="pozdrav">Dobro došli</h1>
+      <p id="danasnji-datum"></p>
+    </header>
 
-    <nav class="glavni-meni">
-      <a href="/pocetna.html" aria-current="page">POCETNA</a>
-      <a href="../vlasnik/dobavljaci.html">Dobavljači</a>
-      <a href="../vlasnik/ulaz.html">Ulaz robe</a>
-      <a href="../vlasnik/artikli.html">Artikli</a>
-      <a href="../vlasnik/finansije.html">Finansije</a>
-      <a class="nav-dugme" href="../vlasnik/ulazi.html">📋 Svi ulazi</a>
+    <nav class="plocice" aria-label="Brzi pristup">
+      <a class="plocica glavna" href="/vlasnik/ulaz.html">
+        <span class="plocica-ikona"><svg class="ikona-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M7 9l5 5 5-5M4 15v5h16v-5"/></svg></span>
+        <span class="plocica-tekst"><strong>Ulaz robe</strong><span>Unesi račun ili otpremnicu dobavljača</span></span>
+      </a>
+      <a class="plocica" href="/vlasnik/artikli.html">
+        <span class="plocica-ikona"><svg class="ikona-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10"/></svg></span>
+        <span class="plocica-tekst"><strong>Artikli</strong><span>Cene, stanje, tarife, minimum</span></span>
+      </a>
+      <a class="plocica" href="/vlasnik/dobavljaci.html">
+        <span class="plocica-ikona"><svg class="ikona-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2zM13 9h5l3 3v4h-8M5 18a2 2 0 1 0 4 0a2 2 0 1 0-4 0M15 18a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/></svg></span>
+        <span class="plocica-tekst"><strong>Dobavljači</strong><span>Podaci, kontakti, tekući računi</span></span>
+      </a>
+      <a class="plocica" href="/vlasnik/ulazi.html">
+        <span class="plocica-ikona"><svg class="ikona-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span>
+        <span class="plocica-tekst"><strong>Svi ulazi</strong><span>Pregled i izmena primljene robe</span></span>
+      </a>
+      <a class="plocica" href="/vlasnik/finansije.html">
+        <span class="plocica-ikona"><svg class="ikona-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-8M21 20H3"/></svg></span>
+        <span class="plocica-tekst"><strong>Finansije</strong><span>Prodaja, zarada, mini bilans</span></span>
+      </a>
     </nav>
+
 
     <!-- ---------- AI asistent ---------- -->
     <section class="asistent" aria-labelledby="asistent-naslov">
@@ -62,8 +82,6 @@
       </form>
     </section>
 
-    <p class="odjava-red">Prijavljen: <strong>vlasnik</strong>
-      <button id="odjava" class="sekundarno" type="button">Odjavi se</button></p>
     <p id="poruka" role="status"></p>
   </main>
 

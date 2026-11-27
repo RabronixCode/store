@@ -18,7 +18,7 @@ main.finansije { max-width: 1400px; }
   border-bottom: 3px solid transparent;
   border-radius: 8px 8px 0 0;
 }
-.jezicci [role="tab"]:hover { color: var(--tekst); background: #eef2fb; }
+.jezicci [role="tab"]:hover { color: var(--tekst); background: var(--akcenat-svetlo); }
 .jezicci [role="tab"][aria-selected="true"] { color: var(--akcenat); border-bottom-color: var(--akcenat); }
 
 /* ---------- Filteri ---------- */
@@ -34,7 +34,7 @@ main.finansije { max-width: 1400px; }
   border: 1px solid var(--linija);
   border-radius: 10px;
 }
-.filteri label { display: grid; gap: 3px; font-size: 0.78rem; font-weight: 700; color: var(--prigusen); }
+.filteri label { display: grid; gap: 3px; font-size: 0.8rem; font-weight: 700; color: var(--prigusen); }
 .filteri label.siroko { flex: 1 1 200px; }
 .filteri input, .filteri select { padding: 8px 10px; font-size: 0.92rem; }
 .filteri select { width: auto; min-width: 9rem; }
@@ -45,7 +45,7 @@ main.finansije { max-width: 1400px; }
 
 /* ---------- Kartice zbira ---------- */
 
-.kartice-zbira { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 0 0 6px; }
+.kartice-zbira { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 6px; }
 .kartice-zbira:empty { display: none; }
 .kartica-zbira {
   display: grid;
@@ -56,28 +56,28 @@ main.finansije { max-width: 1400px; }
   border-left: 5px solid var(--linija);
   border-radius: 10px;
 }
-.kartica-zbira span { font-size: 0.78rem; font-weight: 700; color: var(--prigusen); }
+.kartica-zbira span { font-size: 0.8rem; font-weight: 700; color: var(--prigusen); }
 .kartica-zbira strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
-.kartica-zbira.glavna { background: #1d2433; border-color: #1d2433; }
-.kartica-zbira.glavna span { color: #c9d0dd; }
-.kartica-zbira.glavna strong { color: #fff; }
+.kartica-zbira.glavna { background: var(--boja-tamna); border-color: var(--boja-tamna); }
+.kartica-zbira.glavna span { color: var(--tekst-na-tamnoj-blag); }
+.kartica-zbira.glavna strong { color: var(--tekst-na-boji); }
 .kartica-zbira.plus { border-left-color: var(--uspeh); }
 .kartica-zbira.plus strong { color: var(--uspeh); }
 .kartica-zbira.minus { border-left-color: var(--greska); }
 .kartica-zbira.minus strong { color: var(--greska); }
 .kartica-zbira.gotovina { border-left-color: var(--uspeh); }
 .kartica-zbira.kartica { border-left-color: var(--akcenat); }
-.kartica-zbira.cek { border-left-color: #7a4ab8; }
+.kartica-zbira.cek { border-left-color: var(--boja-cek); }
 .kartice-zbira.male .kartica-zbira strong { font-size: 1.05rem; }
 .panel .pomoc { margin: 4px 0 10px; font-size: 0.85rem; color: var(--prigusen); }
 
 .znacka-cene {
   display: inline-block;
   padding: 1px 7px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #8a4106;
-  background: #fdecd6;
+  color: var(--boja-upozorenje);
+  background: var(--upozorenje-svetlo);
   border-radius: 999px;
   vertical-align: middle;
   white-space: nowrap;
@@ -89,12 +89,12 @@ main.finansije { max-width: 1400px; }
 .fin-tabela { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .fin-tabela th {
   padding: 0;
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-align: left;
   color: var(--prigusen);
-  background: #f3f5f8;
+  background: var(--povrsina-siva);
   border-bottom: 1px solid var(--linija);
   white-space: nowrap;
 }
@@ -110,10 +110,10 @@ main.finansije { max-width: 1400px; }
   background: transparent;
   border-radius: 0;
 }
-.fin-tabela th .sortiraj:hover { color: var(--tekst); background: #e9edf4; }
+.fin-tabela th .sortiraj:hover { color: var(--tekst); background: var(--povrsina-siva); }
 .fin-tabela th[aria-sort="ascending"] .sortiraj::after { content: " ▲"; color: var(--akcenat); }
 .fin-tabela th[aria-sort="descending"] .sortiraj::after { content: " ▼"; color: var(--akcenat); }
-.fin-tabela td { padding: 8px 10px; border-bottom: 1px solid #eef0f4; font-variant-numeric: tabular-nums; }
+.fin-tabela td { padding: 8px 10px; border-bottom: 1px solid var(--linija-blaga); font-variant-numeric: tabular-nums; }
 .fin-tabela td.desno { text-align: right; white-space: nowrap; }
 .fin-tabela td.minus { color: var(--greska); font-weight: 600; }
 .fin-tabela td.plus { color: var(--uspeh); font-weight: 600; }
@@ -123,19 +123,19 @@ main.finansije { max-width: 1400px; }
   font-weight: 800;
   text-transform: none;
   color: var(--tekst);
-  background: #eef2fb;
+  background: var(--akcenat-svetlo);
   border-top: 2px solid var(--linija);
 }
 .fin-tabela tr.klik { cursor: pointer; }
-.fin-tabela tr.klik:hover td { background: #f4f7fe; }
+.fin-tabela tr.klik:hover td { background: var(--akcenat-blago); }
 .fin-tabela tr.klik:focus-visible { outline: 2px solid var(--akcenat); outline-offset: -2px; }
-.fin-tabela tr[aria-expanded="true"] td { background: #eef2fb; }
+.fin-tabela tr[aria-expanded="true"] td { background: var(--akcenat-svetlo); }
 .fin-tabela tr[aria-expanded="true"] .strelica { display: inline-block; transform: rotate(90deg); }
 .strelica { color: var(--akcenat); transition: transform 0.15s; display: inline-block; }
-.fin-tabela tr.prosireno > td { padding: 6px 10px 14px 28px; background: #f8f9fc; }
+.fin-tabela tr.prosireno > td { padding: 6px 10px 14px 28px; background: var(--povrsina-blaga); }
 .fin-tabela.ugnezdena { font-size: 0.85rem; background: var(--kartica); border: 1px solid var(--linija); }
 .fin-tabela .prazno-red { padding: 18px; text-align: center; color: var(--prigusen); }
-.tekuci { padding: 1px 6px; font-size: 0.7rem; color: var(--akcenat); background: #e3eafc; border-radius: 999px; }
+.tekuci { padding: 1px 6px; font-size: 0.8rem; color: var(--akcenat); background: var(--akcenat-svetlo); border-radius: 999px; }
 
 .udeo { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 9rem; }
 .udeo-traka { display: inline-block; max-width: 5rem; height: 8px; background: var(--akcenat); border-radius: 4px; opacity: 0.75; }
@@ -145,17 +145,17 @@ main.finansije { max-width: 1400px; }
 .grafik { margin: 8px 0 8px; padding: 12px 14px; background: var(--kartica); border: 1px solid var(--linija); border-radius: 10px; }
 .grafik figcaption { display: flex; flex-wrap: wrap; gap: 18px; margin: 0 0 6px; font-size: 0.85rem; font-weight: 600; }
 .legenda::before { content: ""; display: inline-block; width: 14px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: middle; }
-.legenda.promet::before { background: #8fa9ec; }
+.legenda.promet::before { background: var(--akcenat-jako); }
 .legenda.razlika::before { height: 3px; background: var(--uspeh); }
 #grafik-bilans svg { display: block; width: 100%; height: auto; }
-#grafik-bilans .mreza { stroke: #e6e9ef; stroke-width: 1; }
-#grafik-bilans .osa-nula { stroke: #9aa2b1; stroke-width: 1.5; }
+#grafik-bilans .mreza { stroke: var(--linija-blaga); stroke-width: 1; }
+#grafik-bilans .osa-nula { stroke: var(--boja-tekst-iskljuceno); stroke-width: 1.5; }
 #grafik-bilans .oznaka-y { font-size: 12px; fill: var(--prigusen); text-anchor: end; }
 #grafik-bilans .oznaka-x { font-size: 12px; fill: var(--prigusen); text-anchor: middle; }
-#grafik-bilans .stub { fill: #8fa9ec; }
+#grafik-bilans .stub { fill: var(--akcenat-jako); }
 #grafik-bilans .stub:hover { fill: var(--akcenat); }
 #grafik-bilans .linija { fill: none; stroke: var(--uspeh); stroke-width: 3; stroke-linejoin: round; }
-#grafik-bilans .tacka { fill: #fff; stroke: var(--uspeh); stroke-width: 2.5; }
+#grafik-bilans .tacka { fill: var(--boja-povrsina); stroke: var(--uspeh); stroke-width: 2.5; }
 
 /* ---------- Dijalog dana ---------- */
 
@@ -165,7 +165,7 @@ dialog.fin-dijalog { width: min(1100px, 96vw); max-height: 92vh; }
 .fd-zaglavlje h2 { margin: 0 0 2px; }
 .fd-zaglavlje p { margin: 0; color: var(--prigusen); font-size: 0.9rem; }
 .fd-x { padding: 2px 10px; font-size: 1.5rem; line-height: 1; color: var(--prigusen); background: transparent; }
-.fd-x:hover { color: var(--greska); background: #fdecea; }
+.fd-x:hover { color: var(--greska); background: var(--greska-svetlo); }
 .fd-telo { display: grid; gap: 12px; padding: 14px 18px; overflow-y: auto; }
 
 @media (max-width: 640px) {

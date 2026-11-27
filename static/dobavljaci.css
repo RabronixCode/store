@@ -16,7 +16,7 @@ form.novi-dobavljac input { width: 16rem; }
 form.novi-dobavljac input:focus {
   outline: none;
   border-color: var(--akcenat);
-  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--boja-akcenat) 15%, transparent);
 }
 form.novi-dobavljac button {
   display: inline-flex;
@@ -24,7 +24,7 @@ form.novi-dobavljac button {
   gap: 8px;
   padding: 10px 16px;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(36, 87, 214, 0.25);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--boja-akcenat) 25%, transparent);
 }
 form.novi-dobavljac button span { font-size: 1.2rem; line-height: 1; }
 
@@ -40,7 +40,7 @@ form.novi-dobavljac button span { font-size: 1.2rem; line-height: 1; }
 .pretraga-dobavljaca input:focus {
   outline: none;
   border-color: var(--akcenat);
-  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--boja-akcenat) 15%, transparent);
 }
 
 /* ---------- Spisak dobavljača ---------- */
@@ -73,13 +73,13 @@ form.novi-dobavljac button span { font-size: 1.2rem; line-height: 1; }
   background: transparent;
   border-radius: 6px;
 }
-.ikona:hover { color: var(--akcenat); background: #dfe7fd; }
+.ikona:hover { color: var(--akcenat); background: var(--akcenat-srednje); }
 .strelica {
   display: inline-block;
   width: 1.5rem;
   font-size: 1.5rem;
   line-height: 1;
-  color: #b4bac6;
+  color: var(--boja-tekst-iskljuceno);
   vertical-align: middle;
   text-align: center;
   transition: transform 0.15s, color 0.15s;
@@ -125,14 +125,14 @@ tr.menja-se .strelica { visibility: hidden; }
 .kartica-broj strong { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
 
 /* Nabavna cena je najvažnija na ovoj stranici: blago istaknuta kolona */
-.tabela-dobavljac th.istaknuto { background: #e8eefc; }
-.tabela-dobavljac td.istaknuto { background: #f5f8ff; }
+.tabela-dobavljac th.istaknuto { background: var(--akcenat-svetlo); }
+.tabela-dobavljac td.istaknuto { background: var(--akcenat-blago); }
 .tabela-dobavljac th.istaknuto .sortiraj { color: var(--akcenat); }
 
 .pozitivno { color: var(--uspeh); font-weight: 600; }
 
 .ulaz-celija { line-height: 1.25; }
-.ulaz-celija small { display: block; font-size: 0.75rem; color: #9aa2b1; }
+.ulaz-celija small { display: block; font-size: 0.8rem; color: var(--boja-tekst-iskljuceno); }
 
 /* Mnogo kolona: malo zbijenije, da cela tabela stane na običan ekran */
 .tabela-dobavljac { font-size: 0.92rem; }

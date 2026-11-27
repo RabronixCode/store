@@ -4,26 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dobavljač</title>
+  <link rel="stylesheet" href="/tema.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/artikli.css">
   <link rel="stylesheet" href="/dobavljaci.css">
   <link rel="stylesheet" href="/dobavljac-detalji.css">
 </head>
-<body>
+<body data-uloga="vlasnik">
+  <script src="/zaglavlje.js"></script>
   <!--
     Jedan dobavljač: /vlasnik/dobavljac.html?id=<dobavljac_id>
     Gore: osnovni podaci (GET /dobavljaci/<id>). Kartice: artikli (GET /dobavljaci/<id>/artikli),
     kontakti, tekući računi i radne jedinice (dodavanje, izmena, brisanje).
   -->
   <main class="dobavljac">
-    <nav class="glavni-meni">
-      <a href="/pocetna.html">POCETNA</a>
-      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
-      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
-      <a href="/vlasnik/artikli.html">Artikli</a>
-      <a href="/vlasnik/finansije.html">Finansije</a>
-      <a class="nav-dugme" href="/vlasnik/ulazi.html">📋 Svi ulazi</a>
-    </nav>
 
     <a class="nazad" href="/vlasnik/dobavljaci.html">← Svi dobavljači</a>
 

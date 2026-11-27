@@ -4,26 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Izdati računi</title>
+  <link rel="stylesheet" href="/tema.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/kasa.css">
   <link rel="stylesheet" href="/racuni.css">
 </head>
-<body>
+<body data-uloga="kasir">
+  <script src="/zaglavlje.js"></script>
   <!--
     Pregled izdatih računa (kasir). Servira je ruta /kasa/racuni.html.
     Server: GET /racuni?od=&do=, GET /racuni/<id>, POST /storna, PDF: /racuni/<id>/pdf, /storna/<id>/pdf
   -->
   <main class="kasa izdati">
-    <header class="kasa-zaglavlje">
-      <nav>
-        <a href="/kasa/kasa.html">Kasa</a>
-        <a href="/kasa/racuni.html" aria-current="page">Pregled izdatih računa</a>
-      </nav>
-      <div class="zaglavlje-dugmad">
-        <a class="dugme dugme-pregled" href="/kasa/kasa.html">← Nazad na kasu</a>
-        <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
-      </div>
-    </header>
 
     <h1>Izdati računi</h1>
 

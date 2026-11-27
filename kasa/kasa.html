@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kasa</title>
+  <link rel="stylesheet" href="/tema.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/kasa.css">
 </head>
-<body>
+<body data-uloga="kasir">
+  <script src="/zaglavlje.js"></script>
   <!--
     Ova stranica ide u folder kasa/ (van static), kao i vlasnik/ stranice.
     Servira je samo Python ruta, pa tamo staviš proveru role.
@@ -28,22 +30,13 @@
       .dugme-placanje         KEŠ / KARTICA / ČEK (data-nacin), disabled dok je korpa prazna
       #dijalog-placanje       potvrda: artikli, ukupno, način plaćanja (i kusur za keš)
       #poruka                 uspeh ili greška
-      #odjava                 dugme "Odjavi se"
+      Zaglavlje sa menijem i odjavom ubacuje /zaglavlje.js
 
     Stanja koja CSS očekuje od JS-a (klase i atributi):
       tr.stavka-korpe[aria-selected="true"]  izabran red (bira se klikom, briše se tasterom Delete)
       .stanje.malo                           stanje je 0 ili manje (crveno)
   -->
   <main class="kasa">
-    <header class="kasa-zaglavlje">
-      <nav>
-        <a href="/kasa/kasa.html" aria-current="page">Kasa</a>
-      </nav>
-      <div class="zaglavlje-dugmad">
-        <a class="dugme dugme-pregled" href="/kasa/racuni.html">🧾 Pregled izdatih računa</a>
-        <button id="odjava" class="sekundarno" type="button">Odjavi se</button>
-      </div>
-    </header>
 
     <h1>Kasa</h1>
 

@@ -418,10 +418,6 @@ formaStorno.addEventListener('submit', async (event) => {
 
 // ---------- Odjava i početak ----------
 
-document.getElementById('odjava').addEventListener('click', async () => {
-    await fetch('/logout');
-    window.location.href = '/login.html';
-});
 
 postaviPeriod('danas');
 ucitaj();

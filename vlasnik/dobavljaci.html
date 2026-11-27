@@ -4,26 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dobavljači</title>
+  <link rel="stylesheet" href="/tema.css">
   <link rel="stylesheet" href="/style.css">
   <!-- artikli.css: zajednički izgled tabela (sortiranje, filteri) -->
   <link rel="stylesheet" href="/artikli.css">
   <link rel="stylesheet" href="/dobavljaci.css">
   <link rel="stylesheet" href="/dobavljac-detalji.css">
 </head>
-<body>
+<body data-uloga="vlasnik">
+  <script src="/zaglavlje.js"></script>
   <!--
     Spisak svih dobavljača. Klik na red vodi na /vlasnik/dobavljac.html?id=<id>
     (podaci, kontakti, računi, radne jedinice i artikli). Olovka otvara izmenu svih podataka.
   -->
   <main class="dobavljaci">
-    <nav class="glavni-meni">
-      <a href="/pocetna.html">POCETNA</a>
-      <a href="/vlasnik/dobavljaci.html" aria-current="page">Dobavljači</a>
-      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
-      <a href="/vlasnik/artikli.html">Artikli</a>
-      <a href="/vlasnik/finansije.html">Finansije</a>
-      <a class="nav-dugme" href="/vlasnik/ulazi.html">📋 Svi ulazi</a>
-    </nav>
 
     <header class="artikli-zaglavlje">
       <div>

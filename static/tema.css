@@ -1,0 +1,105 @@
+/* =====================================================================
+   TEMA APLIKACIJE — jedino mesto za izgled.
+   ---------------------------------------------------------------------
+   Ovde menjaš boje, font, veličinu slova, zaobljenja i širinu stranice.
+   Ostali .css fajlovi koriste samo ove promenljive (var(--...)), pa je
+   dovoljno promeniti vrednost ovde i promena važi svuda.
+
+   Najčešće izmene:
+     - veća / manja slova svuda:  --velicina-teksta  (npr. 20px ili 16px)
+     - glavna boja (dugmad, veze): --boja-akcenat
+     - font:                       --font-osnovni
+   Svetle i tamne nijanse glavnih boja (pozadine znački, izbor reda...)
+   računaju se same iz glavnih boja (color-mix), pa ih ne treba menjati.
+   ===================================================================== */
+
+:root {
+  /* ---------- Slova ---------- */
+  --font-osnovni: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --velicina-teksta: 18px;      /* osnovna veličina; sve ostalo se računa od nje (rem) */
+  --prored: 1.55;               /* razmak između redova teksta */
+  --debljina-naslova: 700;
+
+  /* ---------- Glavne boje ---------- */
+  --boja-akcenat: #1f56c9;      /* dugmad, veze, izabrano */
+  --boja-uspeh: #18743a;        /* sačuvano, plus, gotovina */
+  --boja-greska: #b3261e;       /* greške, brisanje, storno, minus */
+  --boja-upozorenje: #94450a;   /* upozorenja, "nema PIB", "više cena" */
+  --boja-cek: #6b3fae;          /* plaćanje čekom */
+  --boja-nov: #0f766e;          /* nov artikal u ulazu robe */
+
+  --boja-tekst: #172033;        /* glavni tekst */
+  --boja-tekst-blag: #4a5568;   /* opisi, oznake polja (dovoljno taman za čitanje) */
+  --boja-tekst-iskljuceno: #737d8f; /* prazna polja, nedostupno */
+  --boja-pozadina: #f2f4f8;     /* pozadina stranice */
+  --boja-povrsina: #ffffff;     /* kartice, tabele, polja */
+  --boja-linija: #cfd6e1;       /* ivice */
+  --boja-tamna: #1b2436;        /* tamne kartice (UKUPNO) i zaglavlje aplikacije */
+  --tekst-na-boji: #ffffff;     /* tekst na obojenim dugmadima */
+
+  /* ---------- Zaglavlje aplikacije (meni) ---------- */
+  --zaglavlje-pozadina: var(--boja-tamna);
+  --zaglavlje-tekst: #e8edf6;
+  --zaglavlje-aktivno: #ffffff;
+  --naziv-radnje-boja: #ffffff;
+
+  /* ---------- Oblik i razmaci ---------- */
+  --zaobljenje-malo: 6px;
+  --zaobljenje: 10px;
+  --zaobljenje-veliko: 14px;
+  --razmak: 16px;
+  --sirina-strane: 1400px;      /* najveća širina sadržaja */
+  --min-visina-dugmeta: 44px;   /* dovoljno veliko za prst i za stariji vid */
+  --senka-mala: 0 1px 3px rgba(20, 24, 35, 0.08);
+  --senka: 0 4px 14px rgba(20, 24, 35, 0.10);
+  --senka-velika: 0 24px 64px rgba(20, 24, 35, 0.30);
+  --prekrivac: rgba(20, 24, 35, 0.55);   /* zatamnjenje iza iskačućih prozora */
+
+  /* =================================================================
+     Izvedene nijanse (računaju se iz glavnih boja; obično se ne menjaju)
+     ================================================================= */
+  --akcenat-blago: color-mix(in srgb, var(--boja-akcenat) 4%, white);
+  --akcenat-svetlo: color-mix(in srgb, var(--boja-akcenat) 10%, white);
+  --akcenat-srednje: color-mix(in srgb, var(--boja-akcenat) 22%, white);
+  --akcenat-jako: color-mix(in srgb, var(--boja-akcenat) 50%, white);
+  --akcenat-tamno: color-mix(in srgb, var(--boja-akcenat) 75%, black);
+  --akcenat-providno: color-mix(in srgb, var(--boja-akcenat) 25%, transparent);
+  --fokus: 0 0 0 4px color-mix(in srgb, var(--boja-akcenat) 30%, transparent);
+
+  --uspeh-svetlo: color-mix(in srgb, var(--boja-uspeh) 12%, white);
+  --uspeh-tamno: color-mix(in srgb, var(--boja-uspeh) 80%, black);
+  --greska-blago: color-mix(in srgb, var(--boja-greska) 4%, white);
+  --greska-svetlo: color-mix(in srgb, var(--boja-greska) 10%, white);
+  --greska-ivica: color-mix(in srgb, var(--boja-greska) 30%, white);
+  --upozorenje-svetlo: color-mix(in srgb, var(--boja-upozorenje) 12%, white);
+  --upozorenje-ivica: color-mix(in srgb, var(--boja-upozorenje) 35%, white);
+  --cek-svetlo: color-mix(in srgb, var(--boja-cek) 12%, white);
+  --cek-tamno: color-mix(in srgb, var(--boja-cek) 80%, black);
+  --nov-pozadina: color-mix(in srgb, var(--boja-nov) 10%, white);
+
+  --povrsina-blaga: color-mix(in srgb, var(--boja-pozadina) 50%, var(--boja-povrsina));
+  --povrsina-siva: color-mix(in srgb, var(--boja-linija) 30%, var(--boja-povrsina));   /* zaglavlja tabela */
+  --linija-blaga: color-mix(in srgb, var(--boja-linija) 45%, var(--boja-povrsina));    /* linije između redova */
+  --tekst-na-tamnoj-blag: color-mix(in srgb, var(--tekst-na-boji) 75%, var(--boja-tamna));
+
+  /* =================================================================
+     Kratka imena koja koriste ostali CSS fajlovi (ne menjati ovde,
+     menja se gornja vrednost)
+     ================================================================= */
+  --pozadina: var(--boja-pozadina);
+  --kartica: var(--boja-povrsina);
+  --tekst: var(--boja-tekst);
+  --prigusen: var(--boja-tekst-blag);
+  --linija: var(--boja-linija);
+  --akcenat: var(--boja-akcenat);
+  --greska: var(--boja-greska);
+  --uspeh: var(--boja-uspeh);
+  --upozorenje: var(--boja-upozorenje);
+  --izabrano: var(--akcenat-svetlo);
+  --prelaz: var(--akcenat-blago);
+  --zaglavlje: var(--povrsina-siva);
+  --novo: var(--uspeh-svetlo);
+  --upozorenje-pozadina: var(--upozorenje-svetlo);
+  --opasnost-pozadina: var(--greska-svetlo);
+}
