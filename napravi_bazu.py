@@ -156,3 +156,7 @@ migracija_tarifa_artikla.migriraj(konekcija)
 # Kasa: način plaćanja, status računa i storno
 import migracija_kasa_storno
 migracija_kasa_storno.migriraj(konekcija)
+
+# PDV stopa na stavci računa (Finansije)
+import migracija_pdv_prodaje
+migracija_pdv_prodaje.migriraj(konekcija)

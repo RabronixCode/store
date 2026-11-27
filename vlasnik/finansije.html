@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finansije</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/finansije.css">
+</head>
+<body>
+  <!--
+    Finansije (samo vlasnik). Server: /finansije/artikli, /finansije/dani, /finansije/dan,
+    /finansije/dobavljaci, /finansije/bilans, /finansije/filteri. Sve vrednosti su posle storna.
+  -->
+  <main class="finansije">
+    <nav class="glavni-meni">
+      <a href="/pocetna.html">POCETNA</a>
+      <a href="/vlasnik/dobavljaci.html">Dobavljači</a>
+      <a href="/vlasnik/ulaz.html">Ulaz robe</a>
+      <a href="/vlasnik/artikli.html">Artikli</a>
+      <a href="/vlasnik/finansije.html" aria-current="page">Finansije</a>
+      <a class="nav-dugme" href="/vlasnik/ulazi.html">📋 Svi ulazi</a>
+    </nav>
+
+    <header class="fin-zaglavlje">
+      <h1>Finansije</h1>
+      <p class="podnaslov">Prodaja iz izdatih računa. Sve vrednosti su <strong>posle storna</strong>; prodajna vrednost je sa PDV.</p>
+    </header>
+
+    <div class="jezicci" role="tablist" aria-label="Izveštaji">
+      <button type="button" role="tab" id="tab-artikli" aria-controls="panel-artikli" aria-selected="true">Prodaja po artiklima</button>
+      <button type="button" role="tab" id="tab-dani" aria-controls="panel-dani" aria-selected="false" tabindex="-1">Prodaja po transakcijama</button>
+      <button type="button" role="tab" id="tab-dobavljaci" aria-controls="panel-dobavljaci" aria-selected="false" tabindex="-1">Prodaja po dobavljačima</button>
+      <button type="button" role="tab" id="tab-bilans" aria-controls="panel-bilans" aria-selected="false" tabindex="-1">Mini bilans</button>
+    </div>
+
+    <p id="poruka" role="status"></p>
+
+    <!-- ===== Prodaja po artiklima ===== -->
+    <section id="panel-artikli" role="tabpanel" aria-labelledby="tab-artikli" class="panel">
+      <form class="filteri" data-izvestaj="artikli" novalidate>
+        <label>Od <input type="datetime-local" name="od"></label>
+        <label>Do <input type="datetime-local" name="do"></label>
+        <label class="siroko">Artikal <input type="search" name="artikal" placeholder="šifra ili naziv" autocomplete="off"></label>
+        <label>Kategorija <select name="kategorija" data-lista="kategorije"><option value="">Sve</option></select></label>
+        <label>Dobavljač <select name="dobavljac_id" data-lista="dobavljaci"><option value="">Svi</option></select></label>
+        <label>Plaćanje
+          <select name="nacin">
+            <option value="">Sve</option>
+            <option value="gotovina">Gotovina</option>
+            <option value="kartica">Kartica</option>
+            <option value="cek">Ček</option>
+          </select>
+        </label>
+        <button type="submit">Prikaži</button>
+        <div class="brzo" role="group" aria-label="Brz izbor perioda">
+          <button type="button" class="sekundarno" data-period="danas">Danas</button>
+          <button type="button" class="sekundarno" data-period="mesec">Ovaj mesec</button>
+          <button type="button" class="sekundarno" data-period="prosli">Prošli mesec</button>
+          <button type="button" class="sekundarno" data-period="godina">Ova godina</button>
+        </div>
+      </form>
+      <section class="kartice-zbira" data-zbir="artikli" aria-label="Zbir"></section>
+      <p class="pomoc">Isti artikal prodat po različitim cenama je u posebnim redovima (oznaka <span class="znacka-cene">više cena</span>).
+        Razlika = prodajna vrednost − (nabavna vrednost + porez).</p>
+      <div class="tabela-okvir"><table class="fin-tabela" id="tabela-artikli"></table></div>
+    </section>
+
+    <!-- ===== Prodaja po transakcijama (po danima) ===== -->
+    <section id="panel-dani" role="tabpanel" aria-labelledby="tab-dani" class="panel" hidden>
+      <form class="filteri" data-izvestaj="dani" novalidate>
+        <label>Od <input type="date" name="od"></label>
+        <label>Do <input type="date" name="do"></label>
+        <label class="siroko">Artikal <input type="search" name="artikal" placeholder="šifra ili naziv" autocomplete="off"></label>
+        <button type="submit">Prikaži</button>
+        <div class="brzo" role="group" aria-label="Brz izbor perioda">
+          <button type="button" class="sekundarno" data-period="danas">Danas</button>
+          <button type="button" class="sekundarno" data-period="nedelja">Poslednjih 7 dana</button>
+          <button type="button" class="sekundarno" data-period="mesec">Ovaj mesec</button>
+          <button type="button" class="sekundarno" data-period="prosli">Prošli mesec</button>
+        </div>
+      </form>
+      <section class="kartice-zbira" data-zbir="dani" aria-label="Zbir"></section>
+      <p class="pomoc">Klikni na dan da vidiš sve artikle prodate tog dana. Kad je upisan artikal, iznosi su samo za taj artikal.</p>
+      <div class="tabela-okvir"><table class="fin-tabela klikabilna" id="tabela-dani"></table></div>
+    </section>
+
+    <!-- ===== Prodaja po dobavljačima ===== -->
+    <section id="panel-dobavljaci" role="tabpanel" aria-labelledby="tab-dobavljaci" class="panel" hidden>
+      <form class="filteri" data-izvestaj="dobavljaci" novalidate>
+        <label>Od <input type="datetime-local" name="od"></label>
+        <label>Do <input type="datetime-local" name="do"></label>
+        <label>Dobavljač <select name="dobavljac_id" data-lista="dobavljaci"><option value="">Svi</option></select></label>
+        <label class="siroko">Artikal <input type="search" name="artikal" placeholder="šifra ili naziv" autocomplete="off"></label>
+        <button type="submit">Prikaži</button>
+        <div class="brzo" role="group" aria-label="Brz izbor perioda">
+          <button type="button" class="sekundarno" data-period="danas">Danas</button>
+          <button type="button" class="sekundarno" data-period="mesec">Ovaj mesec</button>
+          <button type="button" class="sekundarno" data-period="prosli">Prošli mesec</button>
+          <button type="button" class="sekundarno" data-period="godina">Ova godina</button>
+        </div>
+      </form>
+      <section class="kartice-zbira" data-zbir="dobavljaci" aria-label="Zbir"></section>
+      <p class="pomoc">Artikal pripada dobavljaču od koga je poslednji put primljen (ulaz robe). Klikni na dobavljača da vidiš njegove artikle.</p>
+      <div class="tabela-okvir"><table class="fin-tabela klikabilna" id="tabela-dobavljaci"></table></div>
+    </section>
+
+    <!-- ===== Mini bilans ===== -->
+    <section id="panel-bilans" role="tabpanel" aria-labelledby="tab-bilans" class="panel" hidden>
+      <form class="filteri" data-izvestaj="bilans" novalidate>
+        <label>Od meseca <input type="month" name="od"></label>
+        <label>Do meseca <input type="month" name="do"></label>
+        <label class="siroko">Artikal <input type="search" name="artikal" placeholder="šifra ili naziv" autocomplete="off"></label>
+        <button type="submit">Prikaži</button>
+        <div class="brzo" role="group" aria-label="Brz izbor perioda">
+          <button type="button" class="sekundarno" data-period="godina">Ova godina</button>
+          <button type="button" class="sekundarno" data-period="12">Poslednjih 12 meseci</button>
+        </div>
+      </form>
+      <section class="kartice-zbira" data-zbir="bilans" aria-label="Zbir"></section>
+      <figure class="grafik">
+        <figcaption>
+          <span class="legenda promet">Promet (prodajna vrednost)</span>
+          <span class="legenda razlika">Razlika</span>
+        </figcaption>
+        <div id="grafik-bilans"></div>
+      </figure>
+      <p class="pomoc">Razlika = prodajna vrednost − (nabavna vrednost + porez). Za tekući mesec broj dana je do danas.</p>
+      <div class="tabela-okvir"><table class="fin-tabela" id="tabela-bilans"></table></div>
+    </section>
+  </main>
+
+  <!-- Artikli jednog dana -->
+  <dialog id="dijalog-dan" class="fin-dijalog" aria-labelledby="dan-naslov">
+    <div class="fd-okvir">
+      <header class="fd-zaglavlje">
+        <div>
+          <h2 id="dan-naslov">Dan</h2>
+          <p id="dan-podaci"></p>
+        </div>
+        <button type="button" class="fd-x" data-zatvori aria-label="Zatvori">×</button>
+      </header>
+      <div class="fd-telo">
+        <section class="kartice-zbira male" id="dan-zbir" aria-label="Zbir dana"></section>
+        <div class="tabela-okvir"><table class="fin-tabela" id="tabela-dan"></table></div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/finansije.js"></script>
+</body>
+</html>

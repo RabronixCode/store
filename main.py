@@ -29,6 +29,7 @@ from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
 import racuni as racuni_db
+import finansije as finansije_db
 from racun_pdf import izdaj_racun, izdaj_storno, FOLDER_PDF
 import asistent
 import dobavljaci as dobavljaci_db
@@ -534,6 +535,10 @@ async def stranica_pocetna(korisnik = Depends(trenutni_korisnik)):
         return RedirectResponse('/kasa/kasa.html')
     return FileResponse("static/pocetna.html", headers={"Cache-Control": "no-store"})
 
+@app.get("/vlasnik/finansije.html")
+async def stranica_finansije(korisnik = Depends(samo_vlasnik)):
+    return FileResponse("vlasnik/finansije.html", headers={"Cache-Control": "no-store"})
+
 @app.get("/kasa/kasa.html")
 async def stranica_kasa(korisnik = Depends(trenutni_korisnik)):
     if korisnik != 'kasir':
@@ -834,6 +839,71 @@ async def napravi_storno(storno: Storno, korisnik = Depends(kasir_ili_vlasnik)):
     return {"storno_id": storno_id, "pdf": f"/storna/{storno_id}/pdf", "ukupno": podaci["ukupno"],
             "po_nacinu": podaci["po_nacinu"], "broj_stavki": len(podaci["stavke"]),
             "racuni": sorted({s["racun_id"] for s in podaci["stavke"]})}
+
+# ---------- Finansije (samo vlasnik) ----------
+
+Tekst = Annotated[str, Query(max_length=100)]
+
+def _datum_granica(tekst, kraj):
+    """'2026-11-27' -> '2026-11-27 00:00:00' ili '2026-11-27 23:59:59'. Prazno: danas."""
+    try:
+        d = date.fromisoformat(tekst) if tekst else date.today()
+    except ValueError:
+        raise BadInput(f"Neispravan datum: {tekst}", 400)
+    return d.isoformat() + (" 23:59:59" if kraj else " 00:00:00")
+
+def _period(pocetak, kraj):
+    if pocetak > kraj:
+        raise BadInput("Početak perioda je posle kraja. Proveri „od“ i „do“.", 400)
+    return pocetak, kraj
+
+@app.get('/finansije/filteri')
+async def finansije_filteri(korisnik = Depends(samo_vlasnik)):
+    return citaj_iz_baze(finansije_db.filteri)
+
+@app.get('/finansije/artikli')
+async def finansije_artikli(od: Tekst = "", do: Tekst = "", artikal: Tekst = "", kategorija: Tekst = "",
+                            nacin: Tekst = "", dobavljac_id: Annotated[int | None, Query(gt=0)] = None,
+                            korisnik = Depends(samo_vlasnik)):
+    p = _period(_granica_perioda(od, False), _granica_perioda(do, True))
+    stavke = citaj_iz_baze(finansije_db.stavke_prodaje, *p, artikal, dobavljac_id, kategorija, nacin)
+    return {"od": p[0], "do": p[1], **finansije_db.po_artiklima(stavke)}
+
+@app.get('/finansije/dani')
+async def finansije_dani(od: Tekst = "", do: Tekst = "", artikal: Tekst = "", korisnik = Depends(samo_vlasnik)):
+    p = _period(_datum_granica(od, False), _datum_granica(do, True))
+    stavke = citaj_iz_baze(finansije_db.stavke_prodaje, *p, artikal)
+    return {"od": p[0], "do": p[1], **finansije_db.po_danima(stavke)}
+
+@app.get('/finansije/dan')
+async def finansije_dan(datum: Tekst, artikal: Tekst = "", korisnik = Depends(samo_vlasnik)):
+    p = (_datum_granica(datum, False), _datum_granica(datum, True))
+    stavke = citaj_iz_baze(finansije_db.stavke_prodaje, *p, artikal)
+    return {"datum": p[0][:10], **finansije_db.po_artiklima(stavke), **{"po_nacinu": finansije_db.po_danima(stavke)["zbir"]}}
+
+@app.get('/finansije/dobavljaci')
+async def finansije_dobavljaci(od: Tekst = "", do: Tekst = "", artikal: Tekst = "",
+                               dobavljac_id: Annotated[int | None, Query(gt=0)] = None,
+                               korisnik = Depends(samo_vlasnik)):
+    p = _period(_granica_perioda(od, False), _granica_perioda(do, True))
+    stavke = citaj_iz_baze(finansije_db.stavke_prodaje, *p, artikal, dobavljac_id)
+    return {"od": p[0], "do": p[1], **finansije_db.po_dobavljacima(stavke)}
+
+@app.get('/finansije/bilans')
+async def finansije_bilans(od: Annotated[str, Query(pattern=r"^\d{4}-\d{2}$")] = "",
+                           do: Annotated[str, Query(pattern=r"^\d{4}-\d{2}$")] = "",
+                           artikal: Tekst = "", korisnik = Depends(samo_vlasnik)):
+    danas = date.today()
+    od = od or f"{danas.year}-01"
+    do = do or f"{danas.year}-{danas.month:02d}"
+    if od > do:
+        raise BadInput("Početni mesec je posle krajnjeg.", 400)
+    g, m = map(int, do.split("-"))
+    if not (1 <= m <= 12 and 1 <= int(od[5:]) <= 12):
+        raise BadInput("Neispravan mesec.", 400)
+    poslednji = (date(g + (m == 12), m % 12 + 1, 1) - timedelta(days=1)).isoformat()
+    stavke = citaj_iz_baze(finansije_db.stavke_prodaje, f"{od}-01 00:00:00", f"{poslednji} 23:59:59", artikal)
+    return {"od": od, "do": do, **finansije_db.bilans(stavke, od, do, danas)}
 
 @app.get('/storna/{storno_id}/pdf')
 async def pdf_storna(storno_id: int, korisnik = Depends(kasir_ili_vlasnik)):

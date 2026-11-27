@@ -34,8 +34,11 @@ def vrati_artikal_za_racun(konekcija, sifra):
 
 def sacuvaj_stavka_racuna(konekcija, racun_id, sifra, naziv, jedinica_mere, kolicina, cena_po_komadu, nabavna_cena):
     veza = konekcija.cursor()
-    upit = "INSERT INTO stavka_racuna (racun_id, sifra, naziv, jedinica_mere, kolicina, cena_po_komadu, nabavna_cena) VALUES (?,?,?,?,?,?,?)"
-    vrednosti = (racun_id, sifra, naziv, jedinica_mere, kolicina, cena_po_komadu, nabavna_cena)
+    # pdv: stopa iz tarife artikla u trenutku prodaje (za porez u Finansijama)
+    upit = """INSERT INTO stavka_racuna (racun_id, sifra, naziv, jedinica_mere, kolicina, cena_po_komadu, nabavna_cena, pdv)
+              VALUES (?,?,?,?,?,?,?, COALESCE((SELECT t.stopa FROM artikal a JOIN tarifa t ON t.tarifa_id = a.tarifa_id
+                                                WHERE a.sifra = ?), 20))"""
+    vrednosti = (racun_id, sifra, naziv, jedinica_mere, kolicina, cena_po_komadu, nabavna_cena, sifra)
     veza.execute(upit, vrednosti)
 
 
