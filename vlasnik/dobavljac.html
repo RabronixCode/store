@@ -12,6 +12,7 @@
 </head>
 <body data-uloga="vlasnik">
   <script src="/zaglavlje.js"></script>
+  <script src="/izvoz.js" defer></script>
   <!--
     Jedan dobavljač: /vlasnik/dobavljac.html?id=<dobavljac_id>
     Gore: osnovni podaci (GET /dobavljaci/<id>). Kartice: artikli (GET /dobavljaci/<id>/artikli),
@@ -100,7 +101,7 @@
         <input id="pretraga" type="search" placeholder="Traži po nazivu ili šifri…" aria-label="Traži artikal">
       </div>
       <div class="tabela-okvir">
-        <table class="tabela-artikli tabela-dobavljac">
+        <table class="tabela-artikli tabela-dobavljac" data-izvoz="Artikli dobavljača" data-izvoz-opis-iz="#naziv-dobavljaca">
           <caption class="samo-citac">Artikli dobavljača. Klik na zaglavlje sortira.</caption>
           <thead>
             <tr class="naslovi">

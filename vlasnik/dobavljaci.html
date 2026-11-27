@@ -13,6 +13,7 @@
 </head>
 <body data-uloga="vlasnik">
   <script src="/zaglavlje.js"></script>
+  <script src="/izvoz.js" defer></script>
   <!--
     Spisak svih dobavljača. Klik na red vodi na /vlasnik/dobavljac.html?id=<id>
     (podaci, kontakti, računi, radne jedinice i artikli). Olovka otvara izmenu svih podataka.
@@ -39,7 +40,7 @@
     </div>
 
     <div class="tabela-okvir">
-      <table class="tabela-artikli tabela-dobavljaci">
+      <table class="tabela-artikli tabela-dobavljaci" data-izvoz="Dobavljači" data-izvoz-opis-iz="#brojac">
         <caption class="samo-citac">Svi dobavljači. Klik na red otvara dobavljača.</caption>
         <thead>
           <tr class="naslovi">

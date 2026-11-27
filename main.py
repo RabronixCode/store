@@ -2,7 +2,7 @@ import traceback
 
 from fastapi import Cookie, Depends, FastAPI, File, Form, Query, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response as OdgovorFajl
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 from typing import Annotated
@@ -29,6 +29,8 @@ from lozinke import hash_password, verifikuj
 from sesije import napravi_sesiju, sesija_gotova, proveri_kolacic_vrati_rolu
 from racuni import sacuvaj_racun, vrati_artikal_za_racun, sacuvaj_stavka_racuna
 import racuni as racuni_db
+import izvoz as izvoz_db
+from urllib.parse import quote as _url_quote
 import finansije as finansije_db
 from racun_pdf import izdaj_racun, izdaj_storno, FOLDER_PDF
 import asistent
@@ -858,6 +860,26 @@ def _period(pocetak, kraj):
     if pocetak > kraj:
         raise BadInput("Početak perioda je posle kraja. Proveri „od“ i „do“.", 400)
     return pocetak, kraj
+
+# ---------- Izvoz tabela u Excel (svaki prijavljen korisnik; podatke šalje stranica) ----------
+
+Celija = str | int | float | dict | None
+
+class IzvozTabele(BaseModel):
+    naslov: Annotated[str, StringConstraints(max_length=200)] = "Tabela"
+    opis: Annotated[str, StringConstraints(max_length=500)] = ""
+    izvezeno: Annotated[str, StringConstraints(max_length=40)] = ""
+    kolone: Annotated[list[Annotated[str, StringConstraints(max_length=200)]], Field(min_length=1, max_length=80)]
+    redovi: Annotated[list[Annotated[list[Celija], Field(max_length=80)]], Field(max_length=50_000)]
+    zbir: Annotated[list[Annotated[list[Celija], Field(max_length=80)]], Field(max_length=20)] = []
+
+@app.post('/izvoz/xlsx')
+async def izvoz_xlsx(podaci: IzvozTabele, korisnik = Depends(trenutni_korisnik)):
+    sadrzaj = izvoz_db.napravi_xlsx(podaci.naslov, podaci.opis, podaci.kolone, podaci.redovi, podaci.zbir, podaci.izvezeno)
+    ime = f"{podaci.naslov or 'tabela'}.xlsx"
+    ascii_ime = "".join(z if z.isascii() and (z.isalnum() or z in "._- ") else "_" for z in ime)
+    return OdgovorFajl(sadrzaj, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                       headers={"Content-Disposition": f"attachment; filename=\"{ascii_ime}\"; filename*=UTF-8''{_url_quote(ime)}"})
 
 @app.get('/finansije/filteri')
 async def finansije_filteri(korisnik = Depends(samo_vlasnik)):

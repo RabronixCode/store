@@ -10,6 +10,7 @@
 </head>
 <body data-uloga="vlasnik">
   <script src="/zaglavlje.js"></script>
+  <script src="/izvoz.js" defer></script>
   <!--
     Stranica za vlasnika: spisak svih artikala.
     Servira je ruta /vlasnik/artikli.html u main.py (samo za vlasnika).
@@ -43,7 +44,7 @@
     <p id="poruka" role="status"></p>
 
     <div class="tabela-okvir">
-      <table class="tabela-artikli">
+      <table class="tabela-artikli" data-izvoz="Artikli" data-izvoz-opis-iz="#brojac">
         <caption class="samo-citac">Svi artikli. Klik na zaglavlje sortira, polja ispod filtriraju.</caption>
         <thead>
           <!-- Red 1: naziv kolone; klik sortira (rastuće → opadajuće → bez sortiranja) -->
@@ -170,7 +171,7 @@
       <p id="lista-opis"></p>
     </header>
     <div class="lista-okvir">
-      <table class="tabela-lista">
+      <table class="tabela-lista" data-izvoz="Artikli" data-izvoz-naslov-iz="#lista-naslov" data-izvoz-opis-iz="#lista-opis">
         <thead><tr id="lista-zaglavlje"></tr></thead>
         <tbody id="lista-telo"></tbody>
       </table>

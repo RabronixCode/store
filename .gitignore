@@ -7,3 +7,6 @@ prodavnica.db
 __pycache__/
 /izvestaji
 .env
+
+# Lične beleške (ne idu na GitHub)
+/render_priprema.txt

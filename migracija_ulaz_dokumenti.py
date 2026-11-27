@@ -62,6 +62,8 @@ def kolone(konekcija, tabela):
     return [red[1] for red in konekcija.execute(f"PRAGMA table_info({tabela})")]
 
 
+import backup_baze
+backup_baze.napravi_kopiju("pre-migracije-ulaz_dokumenti")   # kopija baze pre izmene
 konekcija = konektuj_se()
 
 if "otpremnica_broj" in kolone(konekcija, "ulaz"):

@@ -11,6 +11,7 @@
 </head>
 <body data-uloga="kasir">
   <script src="/zaglavlje.js"></script>
+  <script src="/izvoz.js" defer></script>
   <!--
     Pregled izdatih računa (kasir). Servira je ruta /kasa/racuni.html.
     Server: GET /racuni?od=&do=, GET /racuni/<id>, POST /storna, PDF: /racuni/<id>/pdf, /storna/<id>/pdf
@@ -60,7 +61,7 @@
     </div>
 
     <div class="tabela-okvir">
-      <table class="tabela-racuni">
+      <table class="tabela-racuni" data-izvoz="Izdati računi" data-izvoz-opis-iz="#opis-perioda">
         <caption class="samo-citac">Izdati računi u periodu. Klik na red otvara račun.</caption>
         <thead>
           <tr>
@@ -106,7 +107,7 @@
         <button type="button" class="dr-x" data-zatvori aria-label="Zatvori">×</button>
       </header>
       <div class="dr-telo">
-        <table class="tabela-stavke-racuna">
+        <table class="tabela-stavke-racuna" data-izvoz="Račun" data-izvoz-naslov-iz="#racun-naslov" data-izvoz-opis-iz="#racun-podaci">
           <caption class="samo-citac">Artikli na računu</caption>
           <thead>
             <tr>

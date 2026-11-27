@@ -8,6 +8,8 @@ Može da se pokrene više puta: ako kolona već postoji, ne radi ništa.
 
 from db import konektuj_se
 
+import backup_baze
+backup_baze.napravi_kopiju("pre-migracije-minimalno_stanje")   # kopija baze pre izmene
 konekcija = konektuj_se()
 kolone = [red[1] for red in konekcija.execute("PRAGMA table_info(artikal)")]
 

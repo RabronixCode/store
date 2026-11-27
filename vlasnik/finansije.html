@@ -10,6 +10,7 @@
 </head>
 <body data-uloga="vlasnik">
   <script src="/zaglavlje.js"></script>
+  <script src="/izvoz.js" defer></script>
   <!--
     Finansije (samo vlasnik). Server: /finansije/artikli, /finansije/dani, /finansije/dan,
     /finansije/dobavljaci, /finansije/bilans, /finansije/filteri. Sve vrednosti su posle storna.
@@ -54,10 +55,11 @@
           <button type="button" class="sekundarno" data-period="godina">Ova godina</button>
         </div>
       </form>
+      <p class="opis-filtera" id="opis-artikli"></p>
       <section class="kartice-zbira" data-zbir="artikli" aria-label="Zbir"></section>
       <p class="pomoc">Isti artikal prodat po različitim cenama je u posebnim redovima (oznaka <span class="znacka-cene">više cena</span>).
         Razlika = prodajna vrednost − (nabavna vrednost + porez).</p>
-      <div class="tabela-okvir"><table class="fin-tabela" id="tabela-artikli"></table></div>
+      <div class="tabela-okvir"><table class="fin-tabela" id="tabela-artikli" data-izvoz="Prodaja po artiklima" data-izvoz-opis-iz="#opis-artikli"></table></div>
     </section>
 
     <!-- ===== Prodaja po transakcijama (po danima) ===== -->
@@ -74,9 +76,10 @@
           <button type="button" class="sekundarno" data-period="prosli">Prošli mesec</button>
         </div>
       </form>
+      <p class="opis-filtera" id="opis-dani"></p>
       <section class="kartice-zbira" data-zbir="dani" aria-label="Zbir"></section>
       <p class="pomoc">Klikni na dan da vidiš sve artikle prodate tog dana. Kad je upisan artikal, iznosi su samo za taj artikal.</p>
-      <div class="tabela-okvir"><table class="fin-tabela klikabilna" id="tabela-dani"></table></div>
+      <div class="tabela-okvir"><table class="fin-tabela klikabilna" id="tabela-dani" data-izvoz="Prodaja po transakcijama" data-izvoz-opis-iz="#opis-dani"></table></div>
     </section>
 
     <!-- ===== Prodaja po dobavljačima ===== -->
@@ -94,9 +97,10 @@
           <button type="button" class="sekundarno" data-period="godina">Ova godina</button>
         </div>
       </form>
+      <p class="opis-filtera" id="opis-dobavljaci"></p>
       <section class="kartice-zbira" data-zbir="dobavljaci" aria-label="Zbir"></section>
       <p class="pomoc">Artikal pripada dobavljaču od koga je poslednji put primljen (ulaz robe). Klikni na dobavljača da vidiš njegove artikle.</p>
-      <div class="tabela-okvir"><table class="fin-tabela klikabilna" id="tabela-dobavljaci"></table></div>
+      <div class="tabela-okvir"><table class="fin-tabela klikabilna" id="tabela-dobavljaci" data-izvoz="Prodaja po dobavljačima" data-izvoz-opis-iz="#opis-dobavljaci"></table></div>
     </section>
 
     <!-- ===== Mini bilans ===== -->
@@ -111,6 +115,7 @@
           <button type="button" class="sekundarno" data-period="12">Poslednjih 12 meseci</button>
         </div>
       </form>
+      <p class="opis-filtera" id="opis-bilans"></p>
       <section class="kartice-zbira" data-zbir="bilans" aria-label="Zbir"></section>
       <figure class="grafik">
         <figcaption>
@@ -120,7 +125,7 @@
         <div id="grafik-bilans"></div>
       </figure>
       <p class="pomoc">Razlika = prodajna vrednost − (nabavna vrednost + porez). Za tekući mesec broj dana je do danas.</p>
-      <div class="tabela-okvir"><table class="fin-tabela" id="tabela-bilans"></table></div>
+      <div class="tabela-okvir"><table class="fin-tabela" id="tabela-bilans" data-izvoz="Mini bilans" data-izvoz-opis-iz="#opis-bilans"></table></div>
     </section>
   </main>
 
@@ -136,7 +141,7 @@
       </header>
       <div class="fd-telo">
         <section class="kartice-zbira male" id="dan-zbir" aria-label="Zbir dana"></section>
-        <div class="tabela-okvir"><table class="fin-tabela" id="tabela-dan"></table></div>
+        <div class="tabela-okvir"><table class="fin-tabela" id="tabela-dan" data-izvoz="Prodaja za dan" data-izvoz-naslov-iz="#dan-naslov" data-izvoz-opis-iz="#dan-podaci"></table></div>
       </div>
     </div>
   </dialog>

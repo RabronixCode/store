@@ -153,6 +153,8 @@ def migriraj(konekcija):
 
 
 if __name__ == "__main__":
+    import backup_baze
+    backup_baze.napravi_kopiju("pre-migracije-dobavljaci_detalji")   # kopija baze pre izmene
     k = konektuj_se()
     k.isolation_level = None
     migriraj(k)

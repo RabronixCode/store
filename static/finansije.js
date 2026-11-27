@@ -107,7 +107,10 @@ function nacrtajTabelu(tabela, kolone, redovi, opcije = {}) {
     const celija = (k, red) => {
         const td = el('td', { className: [k.tip && k.tip !== 'tekst' ? 'desno' : '', k.klasa ? k.klasa(red) : ''].join(' ').trim() });
         const v = k.prikaz ? k.prikaz(red) : red[k.kljuc];
-        if (v instanceof Node) td.append(v);
+        if (v instanceof Node) {
+            td.append(v);
+            td.dataset.izvoz = k.izvoz ? k.izvoz(red) : v.textContent;
+        }
         else td.textContent = v === null || v === undefined || v === '' ? '—'
             : k.tip === 'novac' ? formatNovac(v) : k.tip === 'kolicina' ? formatKolicina(v) : v;
         return td;
@@ -166,7 +169,8 @@ const KOLONE_ARTIKALA = [
         kljuc: 'naziv', naslov: 'Naziv', tip: 'tekst', klasa: () => 'jako',
         prikaz: (r) => (r.vise_cena
             ? el('span', {}, r.naziv, ' ', el('span', { className: 'znacka-cene', textContent: 'više cena' }))
-            : r.naziv)
+            : r.naziv),
+        izvoz: (r) => r.naziv,
     },
     { kljuc: 'jedinica_mere', naslov: 'JM', tip: 'tekst', klasa: () => 'prigusen' },
     { kljuc: 'cena', naslov: 'Prodajna cena', tip: 'novac', opis: 'Cena po kojoj je prodato (sa PDV)' },
@@ -218,6 +222,20 @@ function parametri(forma) {
 
 const izvestaji = {};      // ime -> async function(forma)
 
+// "Period: 01.11.2026. 00:00 – 27.11.2026. 23:59 · Artikal: hleb · Dobavljač: agro dm"
+function opisFiltera(forma) {
+    const e = forma.elements;
+    const vreme = (v) => (e.od.type === 'month' ? nazivMeseca(v)
+        : e.od.type === 'date' ? formatDatum(v) : `${formatDatum(v)} ${v.slice(11, 16)}`);
+    const delovi = [`Period: ${vreme(e.od.value)} – ${vreme(e.do.value)}`];
+    for (const polje of forma.querySelectorAll('input[type="search"], select')) {
+        if (!polje.value) continue;
+        const oznaka = polje.closest('label')?.firstChild?.textContent.trim() || polje.name;
+        delovi.push(`${oznaka}: ${polje.tagName === 'SELECT' ? polje.selectedOptions[0].textContent : polje.value.trim()}`);
+    }
+    return delovi.join(' · ');
+}
+
 async function pokreni(forma) {
     const od = forma.elements.od.value, doo = forma.elements.do.value;
     if (!od || !doo) return javi('Upiši period „od“ i „do“.', 'greska');
@@ -228,6 +246,7 @@ async function pokreni(forma) {
     const moj = (forma._zahtev = (forma._zahtev || 0) + 1);
     try {
         await izvestaji[forma.dataset.izvestaj](forma, () => forma._zahtev === moj);
+        if (forma._zahtev === moj) document.getElementById(`opis-${forma.dataset.izvestaj}`).textContent = opisFiltera(forma);
     } catch (g) {
         javi(porukaGreske(g), 'greska');
     } finally {
@@ -269,7 +288,8 @@ izvestaji.artikli = async (forma, aktuelan) => {
 
 const KOLONE_DANA = [
     { kljuc: 'datum', naslov: 'Datum', tip: 'tekst', klasa: () => 'jako',
-      prikaz: (r) => el('span', {}, formatDatum(r.datum), ' ', el('small', { className: 'prigusen', textContent: danUNedelji(r.datum) })) },
+      prikaz: (r) => el('span', {}, formatDatum(r.datum), ' ', el('small', { className: 'prigusen', textContent: danUNedelji(r.datum) })),
+      izvoz: (r) => formatDatum(r.datum) },
     { kljuc: 'broj_racuna', naslov: 'Računa', tip: 'broj', uZbiru: true },
     { kljuc: 'gotovina', naslov: 'Gotovina', tip: 'novac', uZbiru: true },
     { kljuc: 'kartica', naslov: 'Kartice', tip: 'novac', uZbiru: true },
@@ -327,7 +347,8 @@ dijalogDan.addEventListener('click', (e) => { if (e.target === dijalogDan) dijal
 
 const KOLONE_DOBAVLJACA = [
     { kljuc: 'dobavljac', naslov: 'Dobavljač', tip: 'tekst', klasa: () => 'jako',
-      prikaz: (r) => el('span', {}, el('span', { className: 'strelica', textContent: '▸ ' }), r.dobavljac) },
+      prikaz: (r) => el('span', {}, el('span', { className: 'strelica', textContent: '▸ ' }), r.dobavljac),
+      izvoz: (r) => r.dobavljac },
     { kljuc: 'broj_artikala', naslov: 'Artikala', tip: 'broj' },
     { kljuc: 'broj_racuna', naslov: 'Računa', tip: 'broj' },
     { kljuc: 'prodajna', naslov: 'Prodajna vrednost', tip: 'novac', uZbiru: true, klasa: () => 'jako' },
@@ -337,7 +358,8 @@ const KOLONE_DOBAVLJACA = [
     { kljuc: 'udeo', naslov: 'Udeo u prometu', tip: 'broj',
       prikaz: (r) => el('span', { className: 'udeo' },
           el('span', { className: 'udeo-traka', style: `width:${Math.max(2, r.udeo)}%` }),
-          el('span', { textContent: `${formatNovac(r.udeo)} %` })) },
+          el('span', { textContent: `${formatNovac(r.udeo)} %` })),
+      izvoz: (r) => `${formatNovac(r.udeo)} %` },
 ];
 
 izvestaji.dobavljaci = async (forma, aktuelan) => {
@@ -361,7 +383,8 @@ izvestaji.dobavljaci = async (forma, aktuelan) => {
 
 const KOLONE_BILANSA = [
     { kljuc: 'mesec', naslov: 'Mesec', tip: 'tekst', klasa: () => 'jako',
-      prikaz: (r) => el('span', {}, nazivMeseca(r.mesec), r.tekuci ? el('small', { className: 'tekuci', textContent: ' tekući' }) : '') },
+      prikaz: (r) => el('span', {}, nazivMeseca(r.mesec), r.tekuci ? el('small', { className: 'tekuci', textContent: ' tekući' }) : ''),
+      izvoz: (r) => nazivMeseca(r.mesec) + (r.tekuci ? ' (tekući)' : '') },
     { kljuc: 'broj_dana', naslov: 'Broj dana', tip: 'broj', uZbiru: true },
     { kljuc: 'nabavna', naslov: 'Nabavna vrednost', tip: 'novac', uZbiru: true },
     { kljuc: 'porez', naslov: 'Porez', tip: 'novac', uZbiru: true },

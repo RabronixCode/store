@@ -12,6 +12,7 @@
 </head>
 <body data-uloga="vlasnik">
   <script src="/zaglavlje.js"></script>
+  <script src="/izvoz.js" defer></script>
   <!--
     Svi ulazi robe (samo vlasnik). Klik na red otvara popup sa artiklima ulaza,
     gde se mogu menjati podaci dokumenta i stavke (PUT /ulazi/<id>).
@@ -45,7 +46,7 @@
     <p id="poruka" role="status"></p>
 
     <div class="tabela-okvir">
-      <table class="tabela-artikli tabela-ulazi">
+      <table class="tabela-artikli tabela-ulazi" data-izvoz="Ulazi robe" data-izvoz-opis-iz="#brojac">
         <caption class="samo-citac">Svi ulazi. Klik na zaglavlje sortira, klik na red otvara ulaz.</caption>
         <thead>
           <tr class="naslovi">
@@ -113,7 +114,7 @@
         <p class="napomena">Obavezno: broj računa ili otpremnice i datum računa ili otpremnice. Dobavljač se ne menja.</p>
 
         <div class="lista-okvir-ulaz">
-          <table class="tabela-stavki">
+          <table class="tabela-stavki" data-izvoz="Stavke ulaza" data-izvoz-naslov-iz="#ulaz-naslov" data-izvoz-opis-iz="#ulaz-podnaslov">
             <thead>
               <tr>
                 <th class="broj">Šifra</th>
