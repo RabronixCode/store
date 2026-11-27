@@ -6,7 +6,6 @@ ph = PasswordHasher()
 
 # 1. Hash a password
 hashed_password = ph.hash("correct horse battery staple")
-print(hashed_password)
 # Output example: $argon2id$v=19$m=65536,t=3,p=4$c29tZXNhbHQ...
 
 # 2. Verify a password

@@ -440,7 +440,7 @@ app.frontend("/", directory="static", check_dir=True, fallback=None)
 
 
 origins = [
-    "http://localhost:8000",
+    "http://localhost:8000"
 ]
 
 app.add_middleware(
@@ -624,8 +624,10 @@ async def izmeni_ulaz(ulaz_id: int, izmena: IzmenaUlaza, korisnik = Depends(samo
     return pisi_u_bazu(sacuvaj_izmene_ulaza, ulaz_id, izmena)
 
 @app.get('/artikli')
-async def pretrazi_artikle(request: Request, korisnik = Depends(trenutni_korisnik)):
-    return vrati_artikle(request.query_params['q'], request.query_params['limit'])
+async def pretrazi_artikle(q: Annotated[str, Query(max_length=100)] = "",
+                           limit: Annotated[int, Query(ge=1, le=50)] = 50,
+                           korisnik = Depends(trenutni_korisnik)):
+    return vrati_artikle(q, limit)
 
 # Stranica Artikli (samo vlasnik)
 
@@ -926,7 +928,7 @@ async def proveri_login(korisnik: Korisnik, response: Response):
             httponly=True,
             samesite="lax",
             max_age=28800,
-            secure=True
+            secure=False #ovo mora da se promeni u produkciji
         )
         return "AAAA"
 
@@ -958,7 +960,7 @@ NAZIVI_POLJA = {
     "tarifa_id": "tarifa", "novi_artikal": "novi artikal", "nacin_placanja": "način plaćanja",
     "racuni": "računi",
     "naziv": "naziv", "jedinica_mere": "jedinica mere", "prodajna_cena": "prodajna cena",
-    "minimalno_stanje": "minimalno stanje", "kategorija": "kategorija", "bar_kod": "bar kod", "q": "pretraga",
+    "minimalno_stanje": "minimalno stanje", "kategorija": "kategorija", "bar_kod": "bar kod", "q": "pretraga", "limit": "broj rezultata",
 }
 
 def _broj(x):
@@ -1075,7 +1077,6 @@ def korisnik_postoji(k):
         rezultat = proveri_korisnika(konekcija, k)
         if len(rezultat) > 0 and verifikuj(k.password, rezultat[0][1]):
             sesija_id = secrets.token_urlsafe(64)
-            print(sesija_id)
             napravi_sesiju(konekcija, rezultat[0][0], sesija_id, datetime.now(), datetime.now() + timedelta(hours=8))
             konekcija.commit()
             return sesija_id
@@ -1092,7 +1093,6 @@ def zavrsi_sesiju(trenutna_sesija):
     try:
         konekcija = konektuj_se()
         konekcija.row_factory = sqlite3.Row
-        print(trenutna_sesija)
         sesija_gotova(konekcija, trenutna_sesija, datetime.now())
         konekcija.commit()
     except Exception:
@@ -1106,7 +1106,6 @@ def vrati_artikle(text, limit):
         konekcija.row_factory = sqlite3.Row
 
         artikli = prikazi_artikle(konekcija, za_like(text), limit)
-        print(artikli)
         return artikli
     except:
         raise
